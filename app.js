@@ -158,6 +158,27 @@ function playSound(type) {
       osc.stop(now + 0.32);
       break;
     }
+    case 'warning': {
+      // Short lower pitch buzzer sound for warnings
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(160, now);
+      
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+      
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(450, now);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.14);
+      break;
+    }
     case 'victory': {
       // Classic triumphant arpeggio: C5 -> E5 -> G5 -> C6
       const playNote = (freq, start, duration) => {
@@ -911,43 +932,96 @@ function handleClockKeyPress(key) {
       hourEl.innerText = gameState.clockInputHour === '' ? 'HH' : gameState.clockInputHour;
       hourEl.classList.toggle('typing', gameState.clockInputHour !== '');
     } else {
-      gameState.clockInputMinute = gameState.clockInputMinute.slice(0, -1);
-      minEl.innerText = gameState.clockInputMinute === '' ? 'MM' : gameState.clockInputMinute;
-      minEl.classList.toggle('typing', gameState.clockInputMinute !== '');
+      if (gameState.clockInputMinute !== '') {
+        gameState.clockInputMinute = gameState.clockInputMinute.slice(0, -1);
+        minEl.innerText = gameState.clockInputMinute === '' ? 'MM' : gameState.clockInputMinute;
+        minEl.classList.toggle('typing', gameState.clockInputMinute !== '');
+      } else {
+        // Backspace on empty minutes focuses hour and deletes its last character
+        gameState.activeClockInput = 'hour';
+        minEl.classList.remove('active');
+        hourEl.classList.add('active');
+        gameState.clockInputHour = gameState.clockInputHour.slice(0, -1);
+        hourEl.innerText = gameState.clockInputHour === '' ? 'HH' : gameState.clockInputHour;
+        hourEl.classList.toggle('typing', gameState.clockInputHour !== '');
+      }
     }
   } else if (key === 'enter') {
     if (gameState.clockInputHour !== '' && gameState.clockInputMinute !== '') {
       submitClockAnswer();
+    } else {
+      const clockCard = document.getElementById('clock-card');
+      clockCard.classList.add('animate-shake');
+      setTimeout(() => clockCard.classList.remove('animate-shake'), 400);
+      playSound('warning');
+      setMascotExpression('setup', "Enter both hour and minutes first! ⏰");
     }
   } else {
     // Type number
     if (gameState.activeClockInput === 'hour') {
-      if (gameState.clockInputHour.length < 2) {
-        gameState.clockInputHour += key;
-        const val = parseInt(gameState.clockInputHour);
-        if (val > 12) {
+      if (gameState.clockInputHour.length === 0) {
+        if (key === '0') {
+          gameState.clockInputHour = '0';
+        } else {
           gameState.clockInputHour = key;
-        }
-        hourEl.innerText = gameState.clockInputHour;
-        hourEl.classList.add('typing');
-        
-        // Auto-advance
-        const currentValStr = gameState.clockInputHour;
-        if (currentValStr.length === 2 || parseInt(currentValStr) >= 2) {
-          setTimeout(() => {
+          // Auto-advance if digit is 2-9
+          if (parseInt(key, 10) >= 2) {
             gameState.activeClockInput = 'minute';
             hourEl.classList.remove('active');
             minEl.classList.add('active');
-          }, 300);
+          }
+        }
+      } else if (gameState.clockInputHour.length === 1) {
+        const combined = gameState.clockInputHour + key;
+        const val = parseInt(combined, 10);
+        if (val <= 12) {
+          gameState.clockInputHour = combined;
+          gameState.activeClockInput = 'minute';
+          hourEl.classList.remove('active');
+          minEl.classList.add('active');
+        } else {
+          // If hour is '1' and typed key is >= 3 (like typing 1 then 3 for 1:30)
+          if (gameState.clockInputHour === '1' && parseInt(key, 10) >= 3) {
+            gameState.activeClockInput = 'minute';
+            hourEl.classList.remove('active');
+            minEl.classList.add('active');
+            gameState.clockInputMinute = key;
+            minEl.innerText = gameState.clockInputMinute;
+            minEl.classList.add('typing');
+          } else {
+            // Replace the hour with the new key, auto-advance if >= 2
+            gameState.clockInputHour = key;
+            if (parseInt(key, 10) >= 2) {
+              gameState.activeClockInput = 'minute';
+              hourEl.classList.remove('active');
+              minEl.classList.add('active');
+            }
+          }
+        }
+      } else {
+        // If hour already has 2 digits (e.g. manually clicked back to hour)
+        gameState.clockInputHour = key;
+        if (parseInt(key, 10) >= 2) {
+          gameState.activeClockInput = 'minute';
+          hourEl.classList.remove('active');
+          minEl.classList.add('active');
         }
       }
+      hourEl.innerText = gameState.clockInputHour === '' ? 'HH' : gameState.clockInputHour;
+      hourEl.classList.toggle('typing', gameState.clockInputHour !== '');
     } else {
+      // Typing minutes
       if (gameState.clockInputMinute.length < 2) {
         gameState.clockInputMinute += key;
-        const val = parseInt(gameState.clockInputMinute);
+        const val = parseInt(gameState.clockInputMinute, 10);
         if (val > 59) {
           gameState.clockInputMinute = key;
         }
+        minEl.innerText = gameState.clockInputMinute;
+        minEl.classList.add('typing');
+      } else {
+        // Overwrite if they type a third digit
+        gameState.clockInputMinute = key;
         minEl.innerText = gameState.clockInputMinute;
         minEl.classList.add('typing');
       }
@@ -960,8 +1034,8 @@ function submitClockAnswer() {
 
   const q = gameState.currentQuestions[gameState.currentQuestionIndex];
   
-  const typedH = parseInt(gameState.clockInputHour);
-  const typedM = parseInt(gameState.clockInputMinute);
+  const typedH = parseInt(gameState.clockInputHour, 10) || 0;
+  const typedM = parseInt(gameState.clockInputMinute, 10) || 0;
   const typedMStr = typedM < 10 ? `0${typedM}` : `${typedM}`;
   const typedTimeStr = `${typedH}:${typedMStr}`;
 
