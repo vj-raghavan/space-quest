@@ -81,7 +81,7 @@ server.listen(PORT, '0.0.0.0', () => {
   
   console.clear();
   console.log('=====================================================');
-  console.log('🚀  SPACE MULTIPLICATION QUEST IS LAUNCHED!  🚀');
+  console.log('🚀  SPACE QUEST IS LAUNCHED!  🚀');
   console.log('=====================================================');
   console.log('\nTo play on this computer, open:');
   console.log(`👉 \x1b[36mhttp://localhost:${PORT}\x1b[0m`);

@@ -1,4 +1,4 @@
-// --- Space Multiplication Quest - Core Logic ---
+// --- Space Quest - Core Logic ---
 
 // --- State Management ---
 const gameState = {
