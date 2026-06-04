@@ -995,10 +995,22 @@ body {
   translate: 0 -20px;
 }
 
-/* iPad responsive configurations */
+/* --- RESPONSIVE LAYOUTS & DEVICE ADAPTATION --- */
+
+/* Tablet & Smaller Screens Layouts (e.g., iPad and portrait viewports) */
 @media (max-width: 768px) {
+  .game-container {
+    padding: 12px;
+  }
+  
+  .glass-panel {
+    padding: 16px;
+    border-radius: 20px;
+  }
+
   .setup-grid {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
   
   .gameplay-area {
@@ -1009,7 +1021,8 @@ body {
   .gameplay-mascot-container {
     flex-direction: row;
     justify-content: center;
-    gap: 12px;
+    gap: 16px;
+    padding: 8px 0;
   }
 
   .mascot-avatar-game {
@@ -1017,14 +1030,16 @@ body {
     height: 90px;
   }
 
+  /* Chat bubble adjusts to row layout */
   .bubble-left::after {
-    border-bottom-color: rgba(255, 255, 255, 0.95);
-    border-top: 0;
-    border-right-color: transparent;
-    bottom: -12px;
-    top: auto;
-    left: 50%;
-    transform: translateX(-50%);
+    border-right-color: rgba(255, 255, 255, 0.95);
+    border-left: 0;
+    border-top: 12px solid transparent;
+    border-bottom: 12px solid transparent;
+    top: 50%;
+    left: -12px;
+    bottom: auto;
+    transform: translateY(-50%);
   }
 
   .equation-display {
@@ -1033,8 +1048,164 @@ body {
   
   .results-stats-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
   }
 }
+
+/* Mobile Devices & Small Screens (e.g., iPhones and Android phones) */
+@media (max-width: 600px) {
+  .app-header {
+    padding: 12px 16px;
+  }
+
+  .logo {
+    font-size: 1.25rem;
+  }
+
+  .welcome-box h1 {
+    font-size: 1.8rem;
+  }
+
+  .welcome-box .subtitle {
+    font-size: 0.95rem;
+  }
+
+  /* Stacks 4 operation tab buttons into a tidy 2x2 grid */
+  .operation-tabs-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding: 6px;
+  }
+
+  .op-tab-btn {
+    padding: 10px 8px;
+    font-size: 0.95rem;
+    border-radius: 10px;
+  }
+
+  /* Math Card & Question Display scaling */
+  .equation-display {
+    font-size: 2.4rem;
+    gap: 8px;
+  }
+
+  #answer-display {
+    min-width: 100px !important;
+  }
+
+  /* Compact Numpad to prevent page scrolling */
+  .custom-numpad-container {
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .num-key {
+    height: 48px;
+    font-size: 1.5rem;
+    border-radius: 12px;
+  }
+
+  /* Compact Clock Quest rendering */
+  .clock-card {
+    padding: 16px;
+    min-height: 280px;
+  }
+
+  #analog-clock {
+    width: 180px;
+    height: 180px;
+  }
+
+  .clock-input-container {
+    margin-top: 16px;
+    gap: 8px;
+  }
+
+  .clock-input-box {
+    width: 68px;
+    height: 48px;
+    font-size: 1.5rem;
+    border-radius: 12px;
+  }
+
+  .clock-input-colon {
+    font-size: 1.8rem;
+  }
+
+  /* Mascot stacked behavior for phone viewports */
+  .gameplay-mascot-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .bubble {
+    max-width: 100%;
+    width: auto;
+    font-size: 0.95rem;
+    padding: 10px 14px;
+    margin: 0 16px;
+  }
+
+  /* Adjust bubble tail to point down to the mascot avatar */
+  .bubble-left::after {
+    border-top: 12px solid rgba(255, 255, 255, 0.95) !important;
+    border-bottom: 0 !important;
+    border-left: 12px solid transparent !important;
+    border-right: 12px solid transparent !important;
+    bottom: -12px !important;
+    top: auto !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+  }
+
+  /* Results stats page adjustment */
+  .results-layout {
+    padding: 16px;
+  }
+
+  #results-headline {
+    font-size: 1.8rem;
+  }
+
+  .results-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .stat-card {
+    padding: 8px 4px;
+  }
+
+  .stat-num {
+    font-size: 1.4rem;
+  }
+
+  .badges-row {
+    gap: 8px;
+  }
+}
+
+/* Super Compact Viewports (e.g. older/smaller mobile screens) */
+@media (max-width: 380px) {
+  .tables-selector-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .table-btn {
+    font-size: 1.25rem;
+  }
+
+  .digits-selector-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .digit-level-btn {
+    padding: 12px;
+  }
+}
+
 
 /* Respect user preference for reduced motion */
 @media (prefers-reduced-motion: reduce) {
