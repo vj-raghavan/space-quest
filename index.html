@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Space Multiplication Quest! 🚀</title>
+  <!-- Google Fonts: Fredoka is rounded, bubbly, and very kid-friendly -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Starry Background Space Effect -->
+  <div class="space-background">
+    <div class="stars"></div>
+    <div class="twinkling"></div>
+    <div class="nebula"></div>
+  </div>
+
+  <!-- Audio elements could be loaded but we synthesize sounds via Web Audio API.
+       We still have a global sound toggle button in the header -->
+  <header class="app-header">
+    <div class="logo">🚀 Space Quest!</div>
+    <button id="sound-toggle" class="icon-btn" aria-label="Toggle Sound" title="Toggle Sound">
+      <span class="icon">🔊</span>
+    </button>
+  </header>
+
+  <main class="game-container">
+    
+    <!-- 1. SETUP / PREPARATION SCREEN -->
+    <section id="screen-setup" class="screen">
+      <div class="welcome-box glass-panel">
+        <h1 class="glow-text">Ready for Blast Off?</h1>
+        <p id="setup-subtitle" class="subtitle">Select your multiplication tables and prepare your rocket!</p>
+      </div>
+
+      <!-- Operation Selection Tabs -->
+      <div class="operation-tabs-container glass-panel">
+        <button class="op-tab-btn active" data-op="multiply">✖️ Multiplication</button>
+        <button class="op-tab-btn" data-op="add">➕ Addition</button>
+        <button class="op-tab-btn" data-op="subtract">➖ Subtraction</button>
+        <button class="op-tab-btn" data-op="clock">⏰ Clock Reader</button>
+      </div>
+
+      <div class="setup-grid">
+        <!-- Tables Selector for Multiplication -->
+        <div class="setup-card glass-panel" id="config-multiplication">
+          <h2>🎯 Choose Tables to Test</h2>
+          <div class="table-presets">
+            <button class="preset-btn" data-preset="easy">Easy (2, 5, 10)</button>
+            <button class="preset-btn" data-preset="medium">Medium (3, 4, 6, 11)</button>
+            <button class="preset-btn" data-preset="hard">Hard (7, 8, 9, 12)</button>
+            <button class="preset-btn" data-preset="cosmic">Cosmic (13, 14, 15)</button>
+            <button class="preset-btn" data-preset="all">Super Hero (1 - 15)</button>
+          </div>
+          
+          <div class="tables-selector-grid">
+            <!-- Table buttons generated via JavaScript to keep it clean and interactive -->
+          </div>
+          <div class="selector-actions">
+            <button id="btn-select-all" class="text-link-btn">Select All</button>
+            <button id="btn-clear-all" class="text-link-btn">Clear All</button>
+          </div>
+        </div>
+
+        <!-- Digit Level Selector for Addition/Subtraction -->
+        <div class="setup-card glass-panel hidden" id="config-digits">
+          <h2>🎯 Choose Number Size</h2>
+          <p class="subtitle" style="margin-bottom: 8px; color: var(--neon-cyan);">Select the size of numbers for your mission!</p>
+          <div class="digits-selector-grid">
+            <button class="digit-level-btn selected" data-level="single">
+              <span class="level-emoji">🌠</span>
+              <span class="level-title">Single Digits</span>
+              <span class="level-range">(1 to 9)</span>
+            </button>
+            <button class="digit-level-btn" data-level="double">
+              <span class="level-emoji">🚀</span>
+              <span class="level-title">Double Digits</span>
+              <span class="level-range">(10 to 99)</span>
+            </button>
+            <button class="digit-level-btn" data-level="triple">
+              <span class="level-emoji">🌌</span>
+              <span class="level-title">Triple Digits</span>
+              <span class="level-range">(100 to 999)</span>
+            </button>
+            <button class="digit-level-btn" data-level="mixed">
+              <span class="level-emoji">☄️</span>
+              <span class="level-title">Mixed Dust</span>
+              <span class="level-range">(All Sizes)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Clock Selector for Clock Reader Quest -->
+        <div class="setup-card glass-panel hidden" id="config-clock">
+          <h2>🎯 Choose Orbit Difficulty</h2>
+          <p class="subtitle" style="margin-bottom: 8px; color: var(--neon-cyan);">Select the level of time mastery for your orbit!</p>
+          <div class="digits-selector-grid">
+            <button class="digit-level-btn selected" data-level="hour">
+              <span class="level-emoji">🌅</span>
+              <span class="level-title">Hour Planets</span>
+              <span class="level-range">(On the Hour, e.g. 3:00)</span>
+            </button>
+            <button class="digit-level-btn" data-level="quarter">
+              <span class="level-emoji">🚀</span>
+              <span class="level-title">Half & Quarters</span>
+              <span class="level-range">(Half & Quarters, e.g. 2:30)</span>
+            </button>
+            <button class="digit-level-btn" data-level="five-min">
+              <span class="level-emoji">🌌</span>
+              <span class="level-title">Five-Min Sectors</span>
+              <span class="level-range">(5-Min intervals, e.g. 4:25)</span>
+            </button>
+            <button class="digit-level-btn" data-level="precision">
+              <span class="level-emoji">☄️</span>
+              <span class="level-title">Precision Flight</span>
+              <span class="level-range">(Any Minute, e.g. 8:12)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Options Selector -->
+        <div class="setup-card glass-panel secondary-setup">
+          <h2>⚙️ Mission Settings</h2>
+          
+          <div class="settings-group">
+            <span class="settings-label">Number of Questions:</span>
+            <div class="toggle-group" id="question-count-group">
+              <button class="toggle-option active" data-value="10">10</button>
+              <button class="toggle-option" data-value="15">15</button>
+              <button class="toggle-option" data-value="20">20</button>
+            </div>
+          </div>
+
+          <div class="settings-group">
+            <span class="settings-label">Game Mode:</span>
+            <div class="toggle-group" id="game-mode-group">
+              <button class="toggle-option active" data-value="adventure">🪐 Quest Mode (No timer)</button>
+              <button class="toggle-option" data-value="timed">⚡ Time Trial (8s per question)</button>
+            </div>
+          </div>
+
+          <!-- Mascot Banner -->
+          <div class="mascot-setup-banner">
+            <img src="assets/cosmo.png" alt="Cosmo the Space Mascot" class="mascot-avatar-small">
+            <div class="bubble bubble-right">
+              <p id="setup-mascot-speech">Hi! I'm Cosmo! Select your tables, and let's go explore the math galaxy together! 💫</p>
+            </div>
+          </div>
+
+          <button id="btn-start-game" class="btn btn-primary btn-glow">Launch Rocket! 🚀</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. GAMEPLAY SCREEN -->
+    <section id="screen-game" class="screen hidden">
+      <!-- Game Header (Stats & Progress) -->
+      <div class="game-header glass-panel">
+        <div class="hud-item score-hud">
+          <span class="hud-label">SCORE</span>
+          <span id="game-score" class="hud-value animate-pop">0</span>
+        </div>
+
+        <div class="hud-item combo-hud">
+          <span class="hud-label">COMBO</span>
+          <div id="game-combo-container" class="combo-bubble">
+            <span id="game-combo">x1</span>
+          </div>
+        </div>
+
+        <div class="hud-item question-hud">
+          <span class="hud-label">MISSION STATUS</span>
+          <span id="game-question-index" class="hud-value">1 / 10</span>
+        </div>
+      </div>
+
+      <!-- Rocket Progress Track -->
+      <div class="progress-track-container glass-panel">
+        <div class="earth-icon">🌍</div>
+        <div class="progress-line">
+          <div id="rocket-ship" class="rocket-ship">🚀</div>
+        </div>
+        <div class="planet-icon">🪐</div>
+      </div>
+
+      <!-- Main Game Area -->
+      <div class="gameplay-area">
+        
+        <!-- Interactive Mascot Cosmo -->
+        <div class="gameplay-mascot-container">
+          <div class="bubble bubble-left">
+            <p id="game-mascot-speech">Solve this formula to fuel the rocket! You can do it! 🌟</p>
+          </div>
+          <img src="assets/cosmo.png" alt="Cosmo" class="mascot-avatar-game" id="mascot-img">
+        </div>
+
+        <!-- Math Card and Input -->
+        <div class="math-column">
+          <!-- Timer Bar (shows in Timed mode) -->
+          <div id="timer-container" class="timer-container hidden">
+            <div id="timer-bar" class="timer-bar"></div>
+          </div>
+
+          <div class="math-card glass-panel" id="math-card">
+            <div class="equation-display">
+              <span id="num-1">7</span>
+              <span class="operator" id="game-operator">×</span>
+              <span id="num-2">8</span>
+              <span class="equals">=</span>
+              <span id="answer-display" class="answer-empty">?</span>
+            </div>
+            <div id="visual-helper" class="visual-helper-container hidden">
+              <!-- Dots or arrays representing the multiplication visually when user needs a hint -->
+            </div>
+          </div>
+
+          <!-- Clock Card (displays in Clock mode) -->
+          <div class="clock-card glass-panel hidden" id="clock-card">
+            <svg id="analog-clock" viewBox="0 0 200 200" width="220" height="220">
+              <!-- Outer frame dial will be styled in CSS -->
+              <circle cx="100" cy="100" r="95" class="clock-dial-frame" />
+              <!-- Inner layout circles -->
+              <circle cx="100" cy="100" r="90" class="clock-dial-ring" />
+              <!-- Hours text group & minutes ticks are drawn programmatically in app.js for flexibility and sharpness -->
+              <g id="clock-numerals-group"></g>
+              <g id="clock-ticks-group"></g>
+              
+              <!-- Hands -->
+              <line id="clock-hour-hand" x1="100" y1="100" x2="100" y2="60" class="clock-hand hour-hand" />
+              <line id="clock-min-hand" x1="100" y1="100" x2="100" y2="40" class="clock-hand min-hand" />
+              <circle cx="100" cy="100" r="6" class="clock-center-pin" />
+            </svg>
+            
+            <div class="clock-input-container">
+              <div class="clock-input-box active" id="clock-input-hour">HH</div>
+              <div class="clock-input-colon">:</div>
+              <div class="clock-input-box" id="clock-input-min">MM</div>
+            </div>
+          </div>
+          
+          <!-- Answer Input Pad -->
+          <div class="custom-numpad-container glass-panel">
+            <div class="numpad-row">
+              <button class="num-key" data-key="1">1</button>
+              <button class="num-key" data-key="2">2</button>
+              <button class="num-key" data-key="3">3</button>
+            </div>
+            <div class="numpad-row">
+              <button class="num-key" data-key="4">4</button>
+              <button class="num-key" data-key="5">5</button>
+              <button class="num-key" data-key="6">6</button>
+            </div>
+            <div class="numpad-row">
+              <button class="num-key" data-key="7">7</button>
+              <button class="num-key" data-key="8">8</button>
+              <button class="num-key" data-key="9">9</button>
+            </div>
+            <div class="numpad-row">
+              <button class="num-key key-danger" data-key="delete">⌫</button>
+              <button class="num-key" data-key="0">0</button>
+              <button class="num-key key-success" data-key="enter">GO!</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 3. RESULTS SCREEN -->
+    <section id="screen-results" class="screen hidden">
+      <div class="results-layout glass-panel">
+        
+        <div class="stars-celebration">
+          <div class="star-wrapper"><span class="star-rating" id="star-1">⭐</span></div>
+          <div class="star-wrapper"><span class="star-rating" id="star-2">⭐</span></div>
+          <div class="star-wrapper"><span class="star-rating" id="star-3">⭐</span></div>
+        </div>
+
+        <h1 id="results-headline" class="glow-text">Super Space Explorer!</h1>
+        <p id="results-subhead" class="results-quote">Cosmo is so proud of you! You aced the mission!</p>
+
+        <!-- Stats Grid -->
+        <div class="results-stats-grid">
+          <div class="stat-card">
+            <span class="stat-num" id="res-score">1200</span>
+            <span class="stat-lbl">Final Score</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-num" id="res-accuracy">100%</span>
+            <span class="stat-lbl">Accuracy</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-num" id="res-speed">1.8s</span>
+            <span class="stat-lbl">Avg Response Time</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-num" id="res-max-combo">5x</span>
+            <span class="stat-lbl">Max Combo</span>
+          </div>
+        </div>
+
+        <!-- Badges Unlocked Section -->
+        <div class="badges-container">
+          <h3>🏆 Badges Unlocked</h3>
+          <div id="badges-unlocked-list" class="badges-row">
+            <!-- JavaScript injected badges -->
+          </div>
+        </div>
+
+        <!-- High Score persistent banner -->
+        <div id="new-highscore-badge" class="highscore-badge hidden">
+          👑 NEW HIGH SCORE! 👑
+        </div>
+
+        <!-- Detail Review of Answers -->
+        <div class="review-container">
+          <h3>📋 Mission Log (Question Details)</h3>
+          <div id="review-list" class="review-list">
+            <!-- JS populated details of wrong and correct answers -->
+          </div>
+        </div>
+
+        <!-- Mascot Cosmo in Results -->
+        <div class="results-mascot">
+          <img src="assets/cosmo.png" alt="Cosmo Mascot" class="mascot-avatar-results">
+          <div class="bubble bubble-top">
+            <p id="results-mascot-speech">Amazing work! We should keep practicing to level up even more! 🛰️</p>
+          </div>
+        </div>
+
+        <div class="results-actions">
+          <button id="btn-restart" class="btn btn-primary">Start New Quest 🚀</button>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Confetti Layer -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <script src="app.js"></script>
+</body>
+</html>
