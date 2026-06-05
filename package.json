@@ -1,0 +1,25 @@
+{
+  "name": "multiplication-tester",
+  "version": "1.0.0",
+  "description": "Encourage your kids to learn Mathematics (Addition, Subtraction and Multiplication) along with learning to read analog clocks. I plan on adding more feature to this as this gets traction.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vj-raghavan/space-quest.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/vj-raghavan/space-quest/issues"
+  },
+  "homepage": "https://github.com/vj-raghavan/space-quest#readme",
+  "dependencies": {
+    "playwright": "^1.60.0"
+  }
+}

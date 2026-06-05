@@ -801,6 +801,28 @@ function setupNumpad() {
     });
   });
 
+  // Allow clicking on clock inputs to manually switch focus
+  const hourEl = document.getElementById('clock-input-hour');
+  const minEl = document.getElementById('clock-input-min');
+  
+  if (hourEl && minEl) {
+    hourEl.addEventListener('click', () => {
+      if (gameState.activeOp === 'clock') {
+        gameState.activeClockInput = 'hour';
+        minEl.classList.remove('active');
+        hourEl.classList.add('active');
+      }
+    });
+
+    minEl.addEventListener('click', () => {
+      if (gameState.activeOp === 'clock') {
+        gameState.activeClockInput = 'minute';
+        hourEl.classList.remove('active');
+        minEl.classList.add('active');
+      }
+    });
+  }
+
   // Physical keyboard support for desktop preview
   document.addEventListener('keydown', (e) => {
     const activeScreen = document.getElementById('screen-game');
@@ -812,6 +834,12 @@ function setupNumpad() {
       handleKeyPress('delete');
     } else if (e.key === 'Enter') {
       handleKeyPress('enter');
+    } else if (e.key === ':' || e.key === '.') {
+      if (gameState.activeOp === 'clock') {
+        gameState.activeClockInput = 'minute';
+        document.getElementById('clock-input-hour').classList.remove('active');
+        document.getElementById('clock-input-min').classList.add('active');
+      }
     }
   });
 }
