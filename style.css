@@ -1458,6 +1458,20 @@ body {
   color: var(--neon-cyan);
 }
 
+/* 'waiting' state: shown when hour '1' is typed and system waits for a second digit */
+.clock-input-box.waiting {
+  border-color: var(--gold-yellow);
+  color: var(--gold-yellow);
+  background: rgba(253, 203, 110, 0.08);
+  box-shadow: 0 0 15px rgba(253, 203, 110, 0.35), inset 0 2px 4px rgba(0,0,0,0.2);
+  animation: waitingPulse 0.7s infinite alternate;
+}
+
+@keyframes waitingPulse {
+  0% { border-color: rgba(253, 203, 110, 0.5); box-shadow: 0 0 8px rgba(253, 203, 110, 0.2); }
+  100% { border-color: var(--gold-yellow); box-shadow: 0 0 20px rgba(253, 203, 110, 0.5); }
+}
+
 .clock-input-colon {
   font-size: 2.2rem;
   font-weight: 700;

@@ -24,7 +24,8 @@ const gameState = {
   clockLevel: 'hour',    // 'hour', 'quarter', 'five-min', 'precision'
   activeClockInput: 'hour', // 'hour' or 'minute'
   clockInputHour: '',
-  clockInputMinute: ''
+  clockInputMinute: '',
+  clockHourAutoAdvanceTimer: null
 };
 
 // Mascot Cosmo phrases
@@ -683,10 +684,14 @@ function loadQuestion() {
     const minAngle = min * 6; // 6 deg per minute
     const hourAngle = (hour % 12) * 30 + (min * 0.5); // 30 deg per hour + 0.5 deg per min
 
-    hourHand.setAttribute('transform', `rotate(${hourAngle} 100 100)`);
-    minHand.setAttribute('transform', `rotate(${minAngle} 100 100)`);
+    hourHand.style.transform = `rotate(${hourAngle}deg)`;
+    minHand.style.transform = `rotate(${minAngle}deg)`;
 
     // Reset clock text inputs
+    if (gameState.clockHourAutoAdvanceTimer) {
+      clearTimeout(gameState.clockHourAutoAdvanceTimer);
+      gameState.clockHourAutoAdvanceTimer = null;
+    }
     gameState.activeClockInput = 'hour';
     gameState.clockInputHour = '';
     gameState.clockInputMinute = '';
@@ -699,6 +704,9 @@ function loadQuestion() {
     minInputEl.style.color = '';
     hourInputEl.className = 'clock-input-box active';
     minInputEl.className = 'clock-input-box';
+
+    // Update question counter for clock mode too
+    document.getElementById('game-question-index').innerText = `${gameState.currentQuestionIndex + 1} / ${gameState.questionCount}`;
 
     setMascotExpression('game', `What time is shown on the space clock? Enter hour and minutes! ⏰`);
   } else {
@@ -808,16 +816,27 @@ function setupNumpad() {
   if (hourEl && minEl) {
     hourEl.addEventListener('click', () => {
       if (gameState.activeOp === 'clock') {
+        // Cancel any pending auto-advance timer
+        if (gameState.clockHourAutoAdvanceTimer) {
+          clearTimeout(gameState.clockHourAutoAdvanceTimer);
+          gameState.clockHourAutoAdvanceTimer = null;
+        }
         gameState.activeClockInput = 'hour';
         minEl.classList.remove('active');
         hourEl.classList.add('active');
+        hourEl.classList.remove('waiting');
       }
     });
 
     minEl.addEventListener('click', () => {
       if (gameState.activeOp === 'clock') {
+        // User manually moves to minute — cancel any pending timer
+        if (gameState.clockHourAutoAdvanceTimer) {
+          clearTimeout(gameState.clockHourAutoAdvanceTimer);
+          gameState.clockHourAutoAdvanceTimer = null;
+        }
         gameState.activeClockInput = 'minute';
-        hourEl.classList.remove('active');
+        hourEl.classList.remove('active', 'waiting');
         minEl.classList.add('active');
       }
     });
@@ -836,8 +855,13 @@ function setupNumpad() {
       handleKeyPress('enter');
     } else if (e.key === ':' || e.key === '.') {
       if (gameState.activeOp === 'clock') {
+        // Cancel any pending timer and advance to minute
+        if (gameState.clockHourAutoAdvanceTimer) {
+          clearTimeout(gameState.clockHourAutoAdvanceTimer);
+          gameState.clockHourAutoAdvanceTimer = null;
+        }
         gameState.activeClockInput = 'minute';
-        document.getElementById('clock-input-hour').classList.remove('active');
+        document.getElementById('clock-input-hour').classList.remove('active', 'waiting');
         document.getElementById('clock-input-min').classList.add('active');
       }
     }
@@ -987,52 +1011,85 @@ function handleClockKeyPress(key) {
   } else {
     // Type number
     if (gameState.activeClockInput === 'hour') {
+      // Cancel any pending auto-advance timer when a new key is pressed
+      if (gameState.clockHourAutoAdvanceTimer) {
+        clearTimeout(gameState.clockHourAutoAdvanceTimer);
+        gameState.clockHourAutoAdvanceTimer = null;
+        hourEl.classList.remove('waiting');
+      }
+
+      function advanceToMinute(minuteStartKey) {
+        gameState.activeClockInput = 'minute';
+        hourEl.classList.remove('active', 'waiting');
+        minEl.classList.add('active');
+        if (minuteStartKey !== undefined) {
+          // Put this digit into the minute field
+          gameState.clockInputMinute = minuteStartKey;
+          minEl.innerText = gameState.clockInputMinute;
+          minEl.classList.add('typing');
+        }
+      }
+
       if (gameState.clockInputHour.length === 0) {
         if (key === '0') {
+          // '0' alone is not a valid hour - keep on hour field but show '0'
           gameState.clockInputHour = '0';
         } else {
           gameState.clockInputHour = key;
-          // Auto-advance if digit is 2-9
-          if (parseInt(key, 10) >= 2) {
-            gameState.activeClockInput = 'minute';
-            hourEl.classList.remove('active');
-            minEl.classList.add('active');
+          const digit = parseInt(key, 10);
+          if (digit >= 2) {
+            // Digits 2-9: unambiguous single-digit hour, advance immediately
+            advanceToMinute();
+          } else {
+            // Digit '1': ambiguous (could be 1, 10, 11, 12)
+            // Start a timer — if no second digit comes within 900ms, treat as hour 1
+            hourEl.classList.add('waiting'); // amber pulse while waiting
+            gameState.clockHourAutoAdvanceTimer = setTimeout(() => {
+              gameState.clockHourAutoAdvanceTimer = null;
+              if (gameState.activeClockInput === 'hour' && gameState.clockInputHour === '1') {
+                const hEl = document.getElementById('clock-input-hour');
+                const mEl = document.getElementById('clock-input-min');
+                hEl.classList.remove('waiting', 'active');
+                mEl.classList.add('active');
+                gameState.activeClockInput = 'minute';
+              }
+            }, 900);
           }
         }
       } else if (gameState.clockInputHour.length === 1) {
         const combined = gameState.clockInputHour + key;
-        const val = parseInt(combined, 10);
-        if (val <= 12) {
+        const combinedVal = parseInt(combined, 10);
+        if (gameState.clockInputHour === '0') {
+          // After typing '0', any digit becomes the hour (treat '0' as invalid, replace)
+          gameState.clockInputHour = key;
+          if (parseInt(key, 10) >= 2) advanceToMinute();
+        } else if (combinedVal <= 12 && combinedVal >= 10) {
+          // Two-digit hours: 10, 11, 12 — combine and advance
           gameState.clockInputHour = combined;
-          gameState.activeClockInput = 'minute';
-          hourEl.classList.remove('active');
-          minEl.classList.add('active');
+          advanceToMinute();
         } else {
-          // If hour is '1' and typed key is >= 3 (like typing 1 then 3 for 1:30)
-          if (gameState.clockInputHour === '1' && parseInt(key, 10) >= 3) {
-            gameState.activeClockInput = 'minute';
-            hourEl.classList.remove('active');
-            minEl.classList.add('active');
-            gameState.clockInputMinute = key;
-            minEl.innerText = gameState.clockInputMinute;
-            minEl.classList.add('typing');
-          } else {
-            // Replace the hour with the new key, auto-advance if >= 2
-            gameState.clockInputHour = key;
-            if (parseInt(key, 10) >= 2) {
-              gameState.activeClockInput = 'minute';
-              hourEl.classList.remove('active');
-              minEl.classList.add('active');
-            }
-          }
+          // The second digit does NOT form a valid 2-digit hour (e.g. '1' + '5' = 15 > 12)
+          // Keep the current hour as-is, treat the new digit as the start of minutes
+          advanceToMinute(key);
         }
       } else {
-        // If hour already has 2 digits (e.g. manually clicked back to hour)
+        // Hour already has 2 digits (e.g. user clicked back) — replace with new key
         gameState.clockInputHour = key;
         if (parseInt(key, 10) >= 2) {
-          gameState.activeClockInput = 'minute';
-          hourEl.classList.remove('active');
-          minEl.classList.add('active');
+          advanceToMinute();
+        } else if (parseInt(key, 10) >= 1) {
+          // Same ambiguous '1' logic
+          hourEl.classList.add('waiting');
+          gameState.clockHourAutoAdvanceTimer = setTimeout(() => {
+            gameState.clockHourAutoAdvanceTimer = null;
+            if (gameState.activeClockInput === 'hour') {
+              const hEl = document.getElementById('clock-input-hour');
+              const mEl = document.getElementById('clock-input-min');
+              hEl.classList.remove('waiting', 'active');
+              mEl.classList.add('active');
+              gameState.activeClockInput = 'minute';
+            }
+          }, 900);
         }
       }
       hourEl.innerText = gameState.clockInputHour === '' ? 'HH' : gameState.clockInputHour;
