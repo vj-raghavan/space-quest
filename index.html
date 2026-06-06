@@ -55,14 +55,17 @@
     <section id="screen-setup" class="screen">
       <div class="welcome-box glass-panel">
         <h1 class="glow-text">Ready for Blast Off?</h1>
-        <p id="setup-subtitle" class="subtitle">Select your multiplication tables and prepare your rocket!</p>
+        <p id="setup-subtitle" class="subtitle">Select your cosmic mission and prepare your rocket!</p>
       </div>
 
       <!-- Operation Selection Tabs -->
       <div class="operation-tabs-container glass-panel">
         <button class="op-tab-btn active" data-op="multiply">✖️ Multiplication</button>
+        <button class="op-tab-btn" data-op="divide">➗ Division</button>
         <button class="op-tab-btn" data-op="add">➕ Addition</button>
         <button class="op-tab-btn" data-op="subtract">➖ Subtraction</button>
+        <button class="op-tab-btn" data-op="sequence">☄️ Sequences</button>
+        <button class="op-tab-btn" data-op="compare">⚖️ Compare</button>
         <button class="op-tab-btn" data-op="clock">⏰ Clock Reader</button>
         <button class="op-tab-btn" data-op="fraction">🍕 Fractions</button>
       </div>
@@ -172,6 +175,52 @@
           </div>
         </div>
 
+        <!-- Sequence Level Selector -->
+        <div class="setup-card glass-panel hidden" id="config-sequence">
+          <h2>🎯 Choose Sequence Level</h2>
+          <p class="subtitle" style="margin-bottom: 8px; color: var(--neon-cyan);">Pick your pattern sequence difficulty!</p>
+          <div class="digits-selector-grid">
+            <button class="digit-level-btn selected" data-level="easy">
+              <span class="level-emoji">🌠</span>
+              <span class="level-title">Star Steps</span>
+              <span class="level-range">Easy steps (+2, +5, -3...)</span>
+            </button>
+            <button class="digit-level-btn" data-level="medium">
+              <span class="level-emoji">🚀</span>
+              <span class="level-title">Nebula Skip</span>
+              <span class="level-range">Alternating steps or double digits</span>
+            </button>
+            <button class="digit-level-btn" data-level="hard">
+              <span class="level-emoji">🌌</span>
+              <span class="level-title">Supernova Growth</span>
+              <span class="level-range">Exponentials, geometry & Fibonacci</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Comparison Level Selector -->
+        <div class="setup-card glass-panel hidden" id="config-compare">
+          <h2>🎯 Choose Orbit Comparison</h2>
+          <p class="subtitle" style="margin-bottom: 8px; color: var(--neon-cyan);">Select the level of comparison challenge!</p>
+          <div class="digits-selector-grid">
+            <button class="digit-level-btn selected" data-level="easy">
+              <span class="level-emoji">🌠</span>
+              <span class="level-title">Asteroid Sizes</span>
+              <span class="level-range">Compare numbers (e.g. 5 vs 8)</span>
+            </button>
+            <button class="digit-level-btn" data-level="medium">
+              <span class="level-emoji">🚀</span>
+              <span class="level-title">Double Warp</span>
+              <span class="level-range">Compare formulas vs numbers (e.g. 3+4 vs 8)</span>
+            </button>
+            <button class="digit-level-btn" data-level="hard">
+              <span class="level-emoji">🌌</span>
+              <span class="level-title">Galactic Force</span>
+              <span class="level-range">Compare two formulas (e.g. 3x4 vs 2x6)</span>
+            </button>
+          </div>
+        </div>
+
         <!-- Options Selector -->
         <div class="setup-card glass-panel secondary-setup">
           <h2>⚙️ Mission Settings</h2>
@@ -256,12 +305,15 @@
           </div>
 
           <div class="math-card glass-panel" id="math-card">
-            <div class="equation-display">
+            <div class="equation-display" id="equation-display">
               <span id="num-1">7</span>
               <span class="operator" id="game-operator">×</span>
               <span id="num-2">8</span>
               <span class="equals">=</span>
               <span id="answer-display" class="answer-empty">?</span>
+            </div>
+            <div id="sequence-display" class="sequence-display hidden">
+              <!-- Generated programmatically in app.js -->
             </div>
             <div id="visual-helper" class="visual-helper-container hidden">
               <!-- Dots or arrays representing the multiplication visually when user needs a hint -->
@@ -315,9 +367,47 @@
               <div class="fraction-input-box" id="fraction-input-den">?</div>
             </div>
           </div>
+
+          <!-- Compare Card (displays in Compare mode) -->
+          <div class="compare-card glass-panel hidden" id="compare-card">
+            <div class="compare-equation-container">
+              <div class="compare-expr" id="compare-lhs">5 × 4</div>
+              <div class="compare-relation answer-empty" id="compare-relation">?</div>
+              <div class="compare-expr" id="compare-rhs">3 × 7</div>
+            </div>
+            
+            <!-- SVG Balance Scale Visual -->
+            <div class="scale-visual-container">
+              <svg id="compare-scale" viewBox="0 0 200 120" width="220" height="130">
+                <!-- Base stand -->
+                <path d="M 80 110 L 120 110 L 110 110 L 110 70 L 90 70 L 90 110 Z" fill="rgba(255,255,255,0.2)" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" />
+                <circle cx="100" cy="50" r="6" fill="var(--neon-cyan)" />
+                
+                <!-- The tilting beam group -->
+                <g id="scale-beam-group" style="transform-origin: 100px 50px; transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                  <!-- Main beam -->
+                  <line x1="40" y1="50" x2="160" y2="50" stroke="rgba(255,255,255,0.6)" stroke-width="4" stroke-linecap="round" />
+                  
+                  <!-- Left hanging chains -->
+                  <line x1="40" y1="50" x2="25" y2="85" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" />
+                  <line x1="40" y1="50" x2="55" y2="85" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" />
+                  
+                  <!-- Right hanging chains -->
+                  <line x1="160" y1="50" x2="145" y2="85" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" />
+                  <line x1="160" y1="50" x2="175" y2="85" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" />
+                  
+                  <!-- Left pan (plate) -->
+                  <path d="M 20 85 L 60 85 A 20 10 0 0 1 20 85 Z" fill="var(--neon-purple)" opacity="0.8" />
+                  
+                  <!-- Right pan (plate) -->
+                  <path d="M 140 85 L 180 85 A 20 10 0 0 1 140 85 Z" fill="var(--neon-pink)" opacity="0.8" />
+                </g>
+              </svg>
+            </div>
+          </div>
           
           <!-- Answer Input Pad -->
-          <div class="custom-numpad-container glass-panel">
+          <div class="custom-numpad-container glass-panel" id="custom-numpad">
             <div class="numpad-row">
               <button class="num-key" data-key="1">1</button>
               <button class="num-key" data-key="2">2</button>
@@ -337,6 +427,15 @@
               <button class="num-key key-danger" data-key="delete">⌫</button>
               <button class="num-key" data-key="0">0</button>
               <button class="num-key key-success" data-key="enter">GO!</button>
+            </div>
+          </div>
+
+          <!-- Comparison Input Pad -->
+          <div class="comparison-numpad-container glass-panel hidden" id="comparison-input-pad">
+            <div class="numpad-row">
+              <button class="compare-key" data-key="<">&lt;</button>
+              <button class="compare-key" data-key="=">=</button>
+              <button class="compare-key" data-key=">">&gt;</button>
             </div>
           </div>
         </div>
@@ -417,6 +516,18 @@
 
   <!-- Confetti Layer -->
   <canvas id="confetti-canvas"></canvas>
+
+  <!-- Trivia Popup Dialog -->
+  <div id="trivia-popup" class="trivia-overlay hidden">
+    <div class="trivia-box glass-panel">
+      <div class="trivia-header">
+        <span class="trivia-title-emoji">🌌</span>
+        <h2 class="trivia-title">Cosmo's Cosmic Discovery!</h2>
+      </div>
+      <p id="trivia-content" class="trivia-text">Did you know that neutron stars are so dense, a single teaspoon of them would weigh 6 billion tons? 🛰️</p>
+      <button id="btn-close-trivia" class="btn btn-primary">Wow! Cool! 🚀</button>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>

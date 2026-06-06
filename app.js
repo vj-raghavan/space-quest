@@ -19,7 +19,7 @@ const gameState = {
   audioEnabled: true,
   audioCtx: null,
   totalTestsCompleted: 0,
-  activeOp: 'multiply', // 'multiply', 'add', 'subtract', 'clock', 'fraction'
+  activeOp: 'multiply', // 'multiply', 'divide', 'add', 'subtract', 'sequence', 'compare', 'clock', 'fraction'
   digitLevel: 'single', // 'single', 'double', 'triple', 'mixed'
   clockLevel: 'hour',    // 'hour', 'quarter', 'five-min', 'precision'
   activeClockInput: 'hour', // 'hour' or 'minute'
@@ -30,7 +30,10 @@ const gameState = {
   activeFractionInput: 'numerator', // 'numerator' or 'denominator'
   fractionInputNumerator: '',
   fractionInputDenominator: '',
-  fractionAutoAdvanceTimer: null
+  fractionAutoAdvanceTimer: null,
+  sequenceLevel: 'easy',     // 'easy', 'medium', 'hard'
+  compareLevel: 'easy',      // 'easy', 'medium', 'hard'
+  compareCurrentChoice: ''   // '<', '=', '>'
 };
 
 // Mascot Cosmo phrases
@@ -73,6 +76,12 @@ const BADGES = [
   { id: 'addition_master', name: 'Addition Master', emoji: '💫', desc: 'Got 100% accuracy on Triple-digit Addition!' },
   { id: 'subtraction_cadet', name: 'Subtraction Cadet', emoji: '➖', desc: 'Got 100% accuracy on Double-digit Subtraction!' },
   { id: 'subtraction_master', name: 'Subtraction Master', emoji: '⚡', desc: 'Got 100% accuracy on Triple-digit Subtraction!' },
+  { id: 'division_cadet', name: 'Division Cadet', emoji: '➗', desc: 'Got 100% accuracy on Divisors 2, 5, or 10!' },
+  { id: 'division_master', name: 'Division Master', emoji: '🌀', desc: 'Mastered complex space Division operations!' },
+  { id: 'pattern_cadet', name: 'Pattern Cadet', emoji: '☄️', desc: 'Got 100% accuracy on Star Steps sequences!' },
+  { id: 'pattern_master', name: 'Pattern Master', emoji: '🎆', desc: 'Aced Supernova Growth sequence challenges!' },
+  { id: 'scale_cadet', name: 'Scale Cadet', emoji: '⚖️', desc: 'Got 100% accuracy comparing simple cosmic weights!' },
+  { id: 'scale_master', name: 'Scale Master', emoji: '🪐', desc: 'Aced heavy formula comparison orbits!' },
   { id: 'clock_cadet', name: 'Clock Cadet', emoji: '⏰', desc: 'Mastered reading Clocks on the hour!' },
   { id: 'clock_master', name: 'Clock Master', emoji: '🕰️', desc: 'Mastered 5-Minute interval Clock reading!' },
   { id: 'time_lord', name: 'Time Lord', emoji: '🛸', desc: 'Aced Precision Clock Reading!' },
@@ -80,6 +89,25 @@ const BADGES = [
   { id: 'fraction_pilot', name: 'Fraction Pilot', emoji: '✂️', desc: 'Mastered simplifying fractions to lowest terms!' },
   { id: 'fraction_lord', name: 'Fraction Lord', emoji: '🌠', desc: 'Conquered adding and subtracting fractions!' },
   { id: 'galaxy_hero', name: 'Galaxy Hero', emoji: '🪐', desc: 'Completed 5 or more space missions!' }
+];
+
+// Cosmo's Cosmic Space Facts database
+const SPACE_TRIVIA = [
+  "One space suit costs about $12 million to make! 🛰️",
+  "A day on Venus is longer than a year on Venus! 🌅",
+  "There are more trees on Earth than stars in the Milky Way! 🌲",
+  "Neptune's winds are the fastest in the Solar System, reaching 1,200 mph! 🌬️",
+  "On Mars, sunsets are blue because of fine dust in the atmosphere! 🌇",
+  "Jupiter is so massive that 1,300 Earths could easily fit inside it! 🪐",
+  "Neutron stars are so dense, a single teaspoon of them would weigh 6 billion tons! 🌌",
+  "Light from the Sun takes exactly 8 minutes and 20 seconds to reach Earth! ☀️",
+  "The footprint of astronauts on the Moon will stay there for 100 million years! 👣",
+  "Olympus Mons on Mars is the tallest volcano in the solar system, three times taller than Mount Everest! 🌋",
+  "In space, liquid water boils instantly and then freezes into ice crystals! 💧",
+  "Saturn's rings are made of billions of chunks of ice, dust, and rock! 💍",
+  "The Milky Way galaxy is spinning at 1.3 million miles per hour! 🌀",
+  "Halley's Comet passes by Earth once every 75 years! ☄️",
+  "Venus is the hottest planet in our Solar System, with temperatures reaching 880°F! 🌡️"
 ];
 
 // --- Math Utilities ---
@@ -384,40 +412,50 @@ function initSetupUI() {
       const configDigits = document.getElementById('config-digits');
       const configClock = document.getElementById('config-clock');
       const configFraction = document.getElementById('config-fraction');
+      const configSequence = document.getElementById('config-sequence');
+      const configCompare = document.getElementById('config-compare');
       const subtitle = document.getElementById('setup-subtitle');
+      const multiHeading = configMulti.querySelector('h2');
+
+      // Hide all configurations first
+      configMulti.classList.add('hidden');
+      configDigits.classList.add('hidden');
+      configClock.classList.add('hidden');
+      configFraction.classList.add('hidden');
+      if (configSequence) configSequence.classList.add('hidden');
+      if (configCompare) configCompare.classList.add('hidden');
 
       if (op === 'multiply') {
         configMulti.classList.remove('hidden');
-        configDigits.classList.add('hidden');
-        configClock.classList.add('hidden');
-        configFraction.classList.add('hidden');
+        if (multiHeading) multiHeading.innerText = "🎯 Choose Tables to Test";
         subtitle.innerText = "Select your multiplication tables and prepare your rocket!";
         setMascotExpression('setup', "Hi! I'm Cosmo! Select your tables, and let's go explore the math galaxy together! 💫");
+      } else if (op === 'divide') {
+        configMulti.classList.remove('hidden');
+        if (multiHeading) multiHeading.innerText = "🎯 Choose Divisors to Test";
+        subtitle.innerText = "Select your division divisors and prepare your rocket!";
+        setMascotExpression('setup', "Division Zone! Divide numbers to split our rocket thruster cells! ➗");
       } else if (op === 'add') {
-        configMulti.classList.add('hidden');
         configDigits.classList.remove('hidden');
-        configClock.classList.add('hidden');
-        configFraction.classList.add('hidden');
         subtitle.innerText = "Select your addition number size and prepare your rocket!";
         setMascotExpression('setup', "Addition Zone! Add numbers together to generate high engine pressure! ➕");
       } else if (op === 'subtract') {
-        configMulti.classList.add('hidden');
         configDigits.classList.remove('hidden');
-        configClock.classList.add('hidden');
-        configFraction.classList.add('hidden');
         subtitle.innerText = "Select your subtraction number size and prepare your rocket!";
         setMascotExpression('setup', "Subtraction Zone! Decrease numbers to steer our spacecraft! ➖");
+      } else if (op === 'sequence') {
+        if (configSequence) configSequence.classList.remove('hidden');
+        subtitle.innerText = "Select your sequence level and prepare your rocket!";
+        setMascotExpression('setup', "Sequence Zone! Find the cosmic pattern to guide our ship through asteroid fields! ☄️");
+      } else if (op === 'compare') {
+        if (configCompare) configCompare.classList.remove('hidden');
+        subtitle.innerText = "Select your comparison difficulty and prepare your rocket!";
+        setMascotExpression('setup', "Comparison Zone! Balance the gravitational weights of space sectors! ⚖️");
       } else if (op === 'clock') {
-        configMulti.classList.add('hidden');
-        configDigits.classList.add('hidden');
         configClock.classList.remove('hidden');
-        configFraction.classList.add('hidden');
         subtitle.innerText = "Select your time difficulty and prepare your rocket!";
         setMascotExpression('setup', "Clock Zone! Read the clock face to align our satellite dish! ⏰");
       } else if (op === 'fraction') {
-        configMulti.classList.add('hidden');
-        configDigits.classList.add('hidden');
-        configClock.classList.add('hidden');
         configFraction.classList.remove('hidden');
         subtitle.innerText = "Select your fraction level and prepare your rocket!";
         setMascotExpression('setup', "Fraction Zone! Slice the space pizza and master fractions! 🍕");
@@ -452,6 +490,26 @@ function initSetupUI() {
       document.querySelectorAll('#config-fraction .digit-level-btn').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
       gameState.fractionLevel = btn.dataset.level;
+    });
+  });
+
+  // Sequence difficulty level buttons
+  document.querySelectorAll('#config-sequence .digit-level-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      playSound('tap');
+      document.querySelectorAll('#config-sequence .digit-level-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      gameState.sequenceLevel = btn.dataset.level;
+    });
+  });
+
+  // Compare difficulty level buttons
+  document.querySelectorAll('#config-compare .digit-level-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      playSound('tap');
+      document.querySelectorAll('#config-compare .digit-level-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      gameState.compareLevel = btn.dataset.level;
     });
   });
 
@@ -530,6 +588,18 @@ function initSetupUI() {
   // Restart click on Results
   document.getElementById('btn-restart').addEventListener('click', resetToSetup);
 
+  // Trivia Close click
+  const closeTriviaBtn = document.getElementById('btn-close-trivia');
+  if (closeTriviaBtn) {
+    closeTriviaBtn.addEventListener('click', () => {
+      playSound('tap');
+      const triviaPopup = document.getElementById('trivia-popup');
+      if (triviaPopup) {
+        triviaPopup.classList.add('hidden');
+      }
+    });
+  }
+
   // Sound toggle
   const soundBtn = document.getElementById('sound-toggle');
   soundBtn.addEventListener('click', () => {
@@ -584,6 +654,8 @@ function showScreen(screenId) {
   if (screenId === 'screen-setup') {
     stopConfetti();
     setMascotExpression('setup');
+    const triviaPopup = document.getElementById('trivia-popup');
+    if (triviaPopup) triviaPopup.classList.add('hidden');
   }
 }
 
@@ -606,6 +678,23 @@ function generateQuestions() {
           num2: swap ? t : multiplier,
           expected: t * multiplier,
           op: 'multiply'
+        });
+      }
+    });
+  } else if (gameState.activeOp === 'divide') {
+    if (gameState.selectedTables.length === 0) {
+      gameState.selectedTables = [2];
+    }
+    
+    // Create division combinations using selected tables as divisors
+    gameState.selectedTables.forEach(d => {
+      for (let quotient = 1; quotient <= 12; quotient++) {
+        const dividend = quotient * d;
+        pool.push({
+          num1: dividend,
+          num2: d,
+          expected: quotient,
+          op: 'divide'
         });
       }
     });
@@ -695,6 +784,194 @@ function generateQuestions() {
         const rn = diffN / g, rd = d / g;
         pool.push({ num1: n1, num2: n2, expected: `${rn}/${rd}`, op: 'fraction', subtype: 'subtract', denom: d });
       }
+    }
+  } else if (gameState.activeOp === 'sequence') {
+    const level = gameState.sequenceLevel;
+    const targetCount = Math.max(50, gameState.questionCount);
+
+    for (let i = 0; i < targetCount; i++) {
+      if (level === 'easy') {
+        const start = Math.floor(Math.random() * 10) + 1;
+        const step = Math.floor(Math.random() * 5) + 1;
+        const isAddition = Math.random() > 0.4;
+        const terms = [];
+        if (isAddition) {
+          for (let j = 0; j < 5; j++) {
+            terms.push(start + j * step);
+          }
+        } else {
+          const startHigh = start + 4 * step;
+          for (let j = 0; j < 5; j++) {
+            terms.push(startHigh - j * step);
+          }
+        }
+        pool.push({
+          op: 'sequence',
+          subtype: 'easy',
+          terms: terms.slice(0, 4),
+          expected: terms[4]
+        });
+      } else if (level === 'medium') {
+        const coin = Math.random() > 0.5;
+        if (coin) {
+          const stepVal = Math.floor(Math.random() * 8) + 3;
+          const add = Math.random() > 0.5;
+          const termsDouble = [];
+          const startD = add ? Math.floor(Math.random() * 40) + 10 : Math.floor(Math.random() * 40) + 50;
+          for (let j = 0; j < 5; j++) {
+            termsDouble.push(add ? startD + j * stepVal : startD - j * stepVal);
+          }
+          pool.push({
+            op: 'sequence',
+            subtype: 'medium',
+            terms: termsDouble.slice(0, 4),
+            expected: termsDouble[4]
+          });
+        } else {
+          const start = Math.floor(Math.random() * 10) + 2;
+          const step1 = Math.floor(Math.random() * 4) + 2;
+          const step2 = Math.floor(Math.random() * 2) + 1;
+          const terms = [start];
+          for (let j = 1; j < 5; j++) {
+            if (j % 2 === 1) {
+              terms.push(terms[j - 1] + step1);
+            } else {
+              terms.push(terms[j - 1] - step2);
+            }
+          }
+          pool.push({
+            op: 'sequence',
+            subtype: 'medium',
+            terms: terms.slice(0, 4),
+            expected: terms[4]
+          });
+        }
+      } else {
+        const isFib = Math.random() > 0.5;
+        if (isFib) {
+          const start1 = Math.floor(Math.random() * 3) + 1;
+          const start2 = start1 + Math.floor(Math.random() * 3) + 1;
+          const terms = [start1, start2];
+          for (let j = 2; j < 5; j++) {
+            terms.push(terms[j - 1] + terms[j - 2]);
+          }
+          pool.push({
+            op: 'sequence',
+            subtype: 'hard',
+            terms: terms.slice(0, 4),
+            expected: terms[4]
+          });
+        } else {
+          const factor = Math.random() > 0.6 ? 3 : 2;
+          const start = Math.floor(Math.random() * 4) + 1;
+          const terms = [];
+          for (let j = 0; j < 5; j++) {
+            terms.push(start * Math.pow(factor, j));
+          }
+          pool.push({
+            op: 'sequence',
+            subtype: 'hard',
+            terms: terms.slice(0, 4),
+            expected: terms[4]
+          });
+        }
+      }
+    }
+  } else if (gameState.activeOp === 'compare') {
+    const level = gameState.compareLevel;
+    const targetCount = Math.max(50, gameState.questionCount);
+
+    for (let i = 0; i < targetCount; i++) {
+      let lhsText = '', rhsText = '';
+      let lhsVal = 0, rhsVal = 0;
+
+      if (level === 'easy') {
+        lhsVal = Math.floor(Math.random() * 40) + 1;
+        if (Math.random() < 0.2) {
+          rhsVal = lhsVal;
+        } else {
+          rhsVal = Math.floor(Math.random() * 40) + 1;
+        }
+        lhsText = `${lhsVal}`;
+        rhsText = `${rhsVal}`;
+      } else if (level === 'medium') {
+        const formIsLeft = Math.random() > 0.5;
+        const opType = ['add', 'subtract', 'multiply'][Math.floor(Math.random() * 3)];
+        let fVal = 0, text = '';
+        if (opType === 'add') {
+          const a = Math.floor(Math.random() * 20) + 1;
+          const b = Math.floor(Math.random() * 20) + 1;
+          fVal = a + b;
+          text = `${a} + ${b}`;
+        } else if (opType === 'subtract') {
+          const a = Math.floor(Math.random() * 30) + 10;
+          const b = Math.floor(Math.random() * a) + 1;
+          fVal = a - b;
+          text = `${a} − ${b}`;
+        } else {
+          const a = Math.floor(Math.random() * 9) + 2;
+          const b = Math.floor(Math.random() * 8) + 2;
+          fVal = a * b;
+          text = `${a} × ${b}`;
+        }
+
+        let numVal = 0;
+        if (Math.random() < 0.2) {
+          numVal = fVal;
+        } else {
+          const diff = Math.floor(Math.random() * 9) - 4;
+          numVal = Math.max(1, fVal + diff);
+        }
+
+        if (formIsLeft) {
+          lhsVal = fVal; lhsText = text;
+          rhsVal = numVal; rhsText = `${numVal}`;
+        } else {
+          lhsVal = numVal; lhsText = `${numVal}`;
+          rhsVal = fVal; rhsText = text;
+        }
+      } else {
+        const generateFormula = () => {
+          const opType = ['add', 'subtract', 'multiply'][Math.floor(Math.random() * 3)];
+          if (opType === 'add') {
+            const a = Math.floor(Math.random() * 20) + 1;
+            const b = Math.floor(Math.random() * 20) + 1;
+            return { val: a + b, text: `${a} + ${b}` };
+          } else if (opType === 'subtract') {
+            const a = Math.floor(Math.random() * 30) + 10;
+            const b = Math.floor(Math.random() * a) + 1;
+            return { val: a - b, text: `${a} − ${b}` };
+          } else {
+            const a = Math.floor(Math.random() * 8) + 2;
+            const b = Math.floor(Math.random() * 8) + 2;
+            return { val: a * b, text: `${a} × ${b}` };
+          }
+        };
+
+        const f1 = generateFormula();
+        let f2 = generateFormula();
+
+        if (Math.random() < 0.2) {
+          f2.val = f1.val;
+          if (f1.val > 5) {
+            const offset = Math.floor(Math.random() * 4) + 1;
+            f2.text = `${f1.val - offset} + ${offset}`;
+          }
+        }
+
+        lhsVal = f1.val; lhsText = f1.text;
+        rhsVal = f2.val; rhsText = f2.text;
+      }
+
+      const expected = lhsVal < rhsVal ? '<' : lhsVal > rhsVal ? '>' : '=';
+      pool.push({
+        op: 'compare',
+        lhsText: lhsText,
+        rhsText: rhsText,
+        lhsVal: lhsVal,
+        rhsVal: rhsVal,
+        expected: expected
+      });
     }
   } else {
     // Addition & Subtraction Mode
@@ -888,15 +1165,75 @@ function loadQuestion() {
     }
 
     document.getElementById('game-question-index').innerText = `${gameState.currentQuestionIndex + 1} / ${gameState.questionCount}`;
+  } else if (gameState.activeOp === 'sequence') {
+    mathCard.classList.remove('hidden');
+    clockCard.classList.add('hidden');
+    const fractionCard = document.getElementById('fraction-card');
+    if (fractionCard) fractionCard.classList.add('hidden');
+    const compareCard = document.getElementById('compare-card');
+    if (compareCard) compareCard.classList.add('hidden');
+
+    document.getElementById('equation-display').classList.add('hidden');
+    const sequenceDisplay = document.getElementById('sequence-display');
+    sequenceDisplay.classList.remove('hidden');
+
+    let seqHtml = '';
+    q.terms.forEach(term => {
+      seqHtml += `<span class="seq-num">${term}</span><span class="seq-comma">,</span> `;
+    });
+    seqHtml += `<span id="sequence-answer-display" class="answer-empty">?</span>`;
+    sequenceDisplay.innerHTML = seqHtml;
+
+    document.getElementById('game-question-index').innerText = `${gameState.currentQuestionIndex + 1} / ${gameState.questionCount}`;
+    
+    setMascotExpression('game', `Identify the pattern and find the next number in the sequence! ☄️`);
+
+    document.getElementById('custom-numpad').classList.remove('hidden');
+    document.getElementById('comparison-input-pad').classList.add('hidden');
+  } else if (gameState.activeOp === 'compare') {
+    mathCard.classList.add('hidden');
+    clockCard.classList.add('hidden');
+    const fractionCard = document.getElementById('fraction-card');
+    if (fractionCard) fractionCard.classList.add('hidden');
+    
+    const compareCard = document.getElementById('compare-card');
+    if (compareCard) {
+      compareCard.className = 'compare-card glass-panel';
+      compareCard.classList.remove('hidden');
+    }
+
+    document.getElementById('compare-lhs').innerText = q.lhsText;
+    document.getElementById('compare-rhs').innerText = q.rhsText;
+    const relEl = document.getElementById('compare-relation');
+    relEl.innerText = '?';
+    relEl.className = 'compare-relation answer-empty';
+
+    const beam = document.getElementById('scale-beam-group');
+    if (beam) beam.style.transform = 'rotate(0deg)';
+
+    document.getElementById('game-question-index').innerText = `${gameState.currentQuestionIndex + 1} / ${gameState.questionCount}`;
+    
+    setMascotExpression('game', `Compare the expressions! Select <, =, or > to balance the scale! ⚖️`);
+
+    document.getElementById('custom-numpad').classList.add('hidden');
+    document.getElementById('comparison-input-pad').classList.remove('hidden');
   } else {
     mathCard.classList.remove('hidden');
     clockCard.classList.add('hidden');
     const fractionCard = document.getElementById('fraction-card');
     if (fractionCard) fractionCard.classList.add('hidden');
+    const compareCard = document.getElementById('compare-card');
+    if (compareCard) compareCard.classList.add('hidden');
+
+    document.getElementById('equation-display').classList.remove('hidden');
+    document.getElementById('sequence-display').classList.add('hidden');
 
     document.getElementById('num-1').innerText = q.num1;
     document.getElementById('num-2').innerText = q.num2;
     document.getElementById('game-question-index').innerText = `${gameState.currentQuestionIndex + 1} / ${gameState.questionCount}`;
+
+    document.getElementById('custom-numpad').classList.remove('hidden');
+    document.getElementById('comparison-input-pad').classList.add('hidden');
 
     // Mascot speech reset and operator display setup
     const opElement = document.getElementById('game-operator');
@@ -907,6 +1244,9 @@ function loadQuestion() {
     } else if (gameState.activeOp === 'subtract') {
       opSymbol = '−';
       setMascotExpression('game', `Solve ${q.num1} − ${q.num2} to propel the rocket! 🚀`);
+    } else if (gameState.activeOp === 'divide') {
+      opSymbol = '÷';
+      setMascotExpression('game', `Solve ${q.num1} ÷ ${q.num2} to propel the rocket! 🚀`);
     } else {
       setMascotExpression('game', `Solve ${q.num1} × ${q.num2} to propel the rocket! 🚀`);
     }
@@ -945,6 +1285,19 @@ function startTimer() {
 }
 
 function updateAnswerDisplay() {
+  if (gameState.activeOp === 'sequence') {
+    const display = document.getElementById('sequence-answer-display');
+    if (!display) return;
+    if (gameState.currentAnswer === '') {
+      display.innerText = '?';
+      display.className = 'answer-empty';
+    } else {
+      display.innerText = gameState.currentAnswer;
+      display.className = 'answer-typing';
+    }
+    return;
+  }
+
   const display = document.getElementById('answer-display');
   if (gameState.currentAnswer === '') {
     display.innerText = '?';
@@ -983,6 +1336,15 @@ function updateProgressRocket() {
 // Custom On-screen Numpad inputs
 function setupNumpad() {
   document.querySelectorAll('.num-key').forEach(key => {
+    key.addEventListener('click', () => {
+      const val = key.dataset.key;
+      playSound('tap');
+      handleKeyPress(val);
+    });
+  });
+
+  // Custom On-screen Compare inputs
+  document.querySelectorAll('.compare-key').forEach(key => {
     key.addEventListener('click', () => {
       const val = key.dataset.key;
       playSound('tap');
@@ -1029,12 +1391,42 @@ function setupNumpad() {
     if (activeScreen.classList.contains('hidden')) return;
 
     if (e.key >= '0' && e.key <= '9') {
-      handleKeyPress(e.key);
+      if (gameState.activeOp !== 'compare') {
+        handleKeyPress(e.key);
+      }
     } else if (e.key === 'Backspace' || e.key === 'Delete') {
       handleKeyPress('delete');
     } else if (e.key === 'Enter') {
       handleKeyPress('enter');
-    } else if (e.key === '/' || e.key === '.') {
+    } else if (e.key === '<' || e.key === ',') {
+      if (gameState.activeOp === 'compare') {
+        handleKeyPress('<');
+      }
+    } else if (e.key === '>' || e.key === '.') {
+      if (gameState.activeOp === 'compare') {
+        handleKeyPress('>');
+      } else if (gameState.activeOp === 'fraction') {
+        if (gameState.fractionAutoAdvanceTimer) {
+          clearTimeout(gameState.fractionAutoAdvanceTimer);
+          gameState.fractionAutoAdvanceTimer = null;
+        }
+        gameState.activeFractionInput = 'denominator';
+        document.getElementById('fraction-input-num').classList.remove('active', 'waiting');
+        document.getElementById('fraction-input-den').classList.add('active');
+      } else if (gameState.activeOp === 'clock') {
+        if (gameState.clockHourAutoAdvanceTimer) {
+          clearTimeout(gameState.clockHourAutoAdvanceTimer);
+          gameState.clockHourAutoAdvanceTimer = null;
+        }
+        gameState.activeClockInput = 'minute';
+        document.getElementById('clock-input-hour').classList.remove('active', 'waiting');
+        document.getElementById('clock-input-min').classList.add('active');
+      }
+    } else if (e.key === '=') {
+      if (gameState.activeOp === 'compare') {
+        handleKeyPress('=');
+      }
+    } else if (e.key === '/') {
       if (gameState.activeOp === 'fraction') {
         if (gameState.fractionAutoAdvanceTimer) {
           clearTimeout(gameState.fractionAutoAdvanceTimer);
@@ -1043,14 +1435,6 @@ function setupNumpad() {
         gameState.activeFractionInput = 'denominator';
         document.getElementById('fraction-input-num').classList.remove('active', 'waiting');
         document.getElementById('fraction-input-den').classList.add('active');
-      } else if (e.key === ':' && gameState.activeOp === 'clock') {
-        if (gameState.clockHourAutoAdvanceTimer) {
-          clearTimeout(gameState.clockHourAutoAdvanceTimer);
-          gameState.clockHourAutoAdvanceTimer = null;
-        }
-        gameState.activeClockInput = 'minute';
-        document.getElementById('clock-input-hour').classList.remove('active', 'waiting');
-        document.getElementById('clock-input-min').classList.add('active');
       }
     }
   });
@@ -1063,6 +1447,10 @@ function handleKeyPress(key) {
   }
   if (gameState.activeOp === 'clock') {
     handleClockKeyPress(key);
+    return;
+  }
+  if (gameState.activeOp === 'compare') {
+    handleCompareKeyPress(key);
     return;
   }
 
@@ -1093,7 +1481,7 @@ function submitAnswer(isTimeout = false) {
 
   // Log answer
   gameState.answersLog.push({
-    num1: q.num1,
+    num1: q.op === 'sequence' ? q.terms.join(', ') : q.num1,
     num2: q.num2,
     expected: q.expected,
     op: q.op,
@@ -1155,9 +1543,16 @@ function submitAnswer(isTimeout = false) {
     mathCard.classList.add('animate-shake');
     setTimeout(() => mathCard.classList.remove('animate-shake'), 400);
 
-    const display = document.getElementById('answer-display');
-    display.innerText = q.expected;
-    display.style.color = 'var(--success-green)';
+    const displayId = gameState.activeOp === 'sequence' ? 'sequence-answer-display' : 'answer-display';
+    const display = document.getElementById(displayId);
+    if (display) {
+      display.innerText = q.expected;
+      display.style.color = 'var(--success-green)';
+      if (gameState.activeOp === 'sequence') {
+        display.style.borderColor = 'var(--success-green)';
+        display.className = 'answer-typing';
+      }
+    }
 
     setMascotExpression('incorrect');
     updateComboHUD();
@@ -1390,6 +1785,139 @@ function submitClockAnswer() {
     minInputEl.innerText = expectedParts[1];
     hourInputEl.style.color = 'var(--success-green)';
     minInputEl.style.color = 'var(--success-green)';
+
+    setMascotExpression('incorrect');
+    updateComboHUD();
+
+    setTimeout(advanceGame, 2200);
+  }
+}
+// ============================================================
+// COMPARISON QUEST — Input, Submission, and Scale Tilting
+// ============================================================
+
+function handleCompareKeyPress(key) {
+  if (key === '<' || key === '=' || key === '>') {
+    gameState.compareCurrentChoice = key;
+    
+    // Update display relation
+    const relEl = document.getElementById('compare-relation');
+    if (relEl) {
+      relEl.innerText = key;
+      relEl.className = 'compare-relation answer-typing';
+    }
+
+    // Auto-submit after a slight delay to let the kid see the selection highlight
+    setTimeout(() => {
+      // Make sure they didn't switch questions during the timeout
+      if (gameState.compareCurrentChoice === key) {
+        submitCompareAnswer();
+      }
+    }, 250);
+  }
+}
+
+function submitCompareAnswer() {
+  clearInterval(gameState.timerInterval);
+
+  const q = gameState.currentQuestions[gameState.currentQuestionIndex];
+  const typedVal = gameState.compareCurrentChoice;
+  const isCorrect = typedVal === q.expected;
+  const timeTaken = (performance.now() - gameState.questionStartTime) / 1000;
+
+  // Log answer
+  gameState.answersLog.push({
+    num1: q.lhsText,
+    num2: q.rhsText,
+    expected: q.expected,
+    op: 'compare',
+    typed: typedVal || 'None',
+    isCorrect: isCorrect,
+    timeTaken: timeTaken
+  });
+
+  const compareCard = document.getElementById('compare-card');
+  const rocket = document.getElementById('rocket-ship');
+  const beam = document.getElementById('scale-beam-group');
+
+  // Tilt the scale towards the heavier side
+  const tiltScale = (relation) => {
+    if (!beam) return;
+    if (relation === '<') {
+      beam.style.transform = 'rotate(12deg)'; // Right is heavier
+    } else if (relation === '>') {
+      beam.style.transform = 'rotate(-12deg)'; // Left is heavier
+    } else {
+      beam.style.transform = 'rotate(0deg)'; // Balanced
+    }
+  };
+
+  if (isCorrect) {
+    gameState.correctAnswersCount++;
+    gameState.combo++;
+    if (gameState.combo > gameState.maxCombo) {
+      gameState.maxCombo = gameState.combo;
+    }
+
+    playSound('correct');
+    if (compareCard) compareCard.classList.add('correct');
+    if (rocket) {
+      rocket.classList.add('animate-pop');
+      setTimeout(() => rocket.classList.remove('animate-pop'), 500);
+    }
+
+    tiltScale(q.expected);
+
+    // Calculate score
+    let baseScore = 100;
+    let speedBonus = 0;
+    if (timeTaken < 4.0) {
+      speedBonus = Math.round(50 * (1 - (Math.max(timeTaken - 1.0, 0) / 3.0)));
+    }
+    
+    let comboMultiplier = 1.0;
+    if (gameState.combo >= 9) comboMultiplier = 2.5;
+    else if (gameState.combo >= 6) comboMultiplier = 2.0;
+    else if (gameState.combo >= 3) comboMultiplier = 1.5;
+
+    const pointsEarned = Math.round((baseScore + speedBonus) * comboMultiplier);
+    gameState.score += pointsEarned;
+
+    const scoreVal = document.getElementById('game-score');
+    if (scoreVal) {
+      scoreVal.innerText = gameState.score;
+      scoreVal.classList.add('animate-pop');
+      setTimeout(() => scoreVal.classList.remove('animate-pop'), 400);
+    }
+
+    if (gameState.combo > 0 && gameState.combo % 3 === 0) {
+      const idx = Math.min(Math.floor(gameState.combo / 3) - 1, mascotPhrases.combo.length - 1);
+      setMascotExpression('game', mascotPhrases.combo[idx]);
+    } else {
+      setMascotExpression('correct');
+    }
+
+    updateComboHUD();
+    setTimeout(advanceGame, 1000); // 1s to let scale settle
+
+  } else {
+    gameState.combo = 0;
+    playSound('wrong');
+    if (compareCard) {
+      compareCard.classList.add('incorrect', 'animate-shake');
+      setTimeout(() => compareCard.classList.remove('animate-shake'), 400);
+    }
+
+    // Tilt the scale to show the correct balance relationship
+    tiltScale(q.expected);
+
+    // Reveal correct answer in green
+    const relEl = document.getElementById('compare-relation');
+    if (relEl) {
+      relEl.innerText = q.expected;
+      relEl.style.color = 'var(--success-green)';
+      relEl.style.borderColor = 'var(--success-green)';
+    }
 
     setMascotExpression('incorrect');
     updateComboHUD();
@@ -1767,6 +2295,7 @@ function endGame() {
     let opSymbol = '×';
     if (log.op === 'add') opSymbol = '+';
     else if (log.op === 'subtract') opSymbol = '−';
+    else if (log.op === 'divide') opSymbol = '÷';
 
     const formula = document.createElement('span');
     formula.className = 'review-formula';
@@ -1783,6 +2312,10 @@ function endGame() {
       } else if (log.subtype === 'subtract') {
         formula.innerText = `${log.num1}/${log.denom || '?'} − ${log.num2}/${log.denom || '?'}`;
       }
+    } else if (log.op === 'sequence') {
+      formula.innerText = `Sequence: ${log.num1}, ?`;
+    } else if (log.op === 'compare') {
+      formula.innerText = `Compare: ${log.num1} ? ${log.num2}`;
     } else {
       formula.innerText = `${log.num1} ${opSymbol} ${log.num2} = ${log.expected}`;
     }
@@ -1812,6 +2345,18 @@ function endGame() {
   }
 
   showScreen('screen-results');
+
+  // Trigger Cosmo's Space Trivia popup on ending the game!
+  setTimeout(() => {
+    const randomFact = SPACE_TRIVIA[Math.floor(Math.random() * SPACE_TRIVIA.length)];
+    const triviaContent = document.getElementById('trivia-content');
+    const triviaPopup = document.getElementById('trivia-popup');
+    if (triviaContent && triviaPopup) {
+      triviaContent.innerText = randomFact;
+      triviaPopup.classList.remove('hidden');
+      playSound('victory'); // Play a nice discovery tone!
+    }
+  }, 1200); // 1.2s delay to let stars and scores pop first
 }
 
 function checkAndUnlockBadges(accuracy, avgSpeed) {
@@ -1868,6 +2413,31 @@ function checkAndUnlockBadges(accuracy, avgSpeed) {
       addBadge('clock_master');
     } else if (gameState.clockLevel === 'precision' && accuracy === 100) {
       addBadge('time_lord');
+    }
+  }
+
+  if (gameState.activeOp === 'divide' && accuracy === 100) {
+    const onlyEasy = gameState.selectedTables.every(t => [2, 5, 10].includes(t));
+    if (onlyEasy) {
+      addBadge('division_cadet');
+    } else {
+      addBadge('division_master');
+    }
+  }
+
+  if (gameState.activeOp === 'sequence' && accuracy === 100) {
+    if (gameState.sequenceLevel === 'easy') {
+      addBadge('pattern_cadet');
+    } else if (gameState.sequenceLevel === 'hard') {
+      addBadge('pattern_master');
+    }
+  }
+
+  if (gameState.activeOp === 'compare' && accuracy === 100) {
+    if (gameState.compareLevel === 'easy') {
+      addBadge('scale_cadet');
+    } else if (gameState.compareLevel === 'hard') {
+      addBadge('scale_master');
     }
   }
 
