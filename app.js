@@ -866,7 +866,7 @@ function generateQuestions() {
           const start = Math.floor(Math.random() * 4) + 1;
           const terms = [];
           for (let j = 0; j < 5; j++) {
-            terms.push(start * Math.pow(factor, j));
+            terms.push(Math.round(start * Math.pow(factor, j)));
           }
           pool.push({
             op: 'sequence',
@@ -1474,8 +1474,8 @@ function submitAnswer(isTimeout = false) {
   clearInterval(gameState.timerInterval);
 
   const q = gameState.currentQuestions[gameState.currentQuestionIndex];
-  const typedAnswer = isTimeout ? null : parseInt(gameState.currentAnswer);
-  const isCorrect = typedAnswer === q.expected;
+  const typedAnswer = isTimeout ? null : Number(gameState.currentAnswer);
+  const isCorrect = !isTimeout && typedAnswer === q.expected;
   
   const timeTaken = (performance.now() - gameState.questionStartTime) / 1000;
 
