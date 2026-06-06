@@ -1207,6 +1207,228 @@ body {
 }
 
 
+/* ============================================================
+   FRACTION QUEST STYLES
+   ============================================================ */
+
+/* Operation tabs container — allow wrapping on small screens */
+.operation-tabs-container {
+  flex-wrap: wrap;
+}
+
+/* --- Fraction Card --- */
+.fraction-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 28px;
+  min-height: 340px;
+}
+
+/* --- SVG Pie Chart --- */
+#fraction-pie {
+  filter: drop-shadow(0 4px 18px rgba(120, 90, 255, 0.35));
+}
+
+.pie-slice-shaded {
+  fill: var(--neon-cyan);
+  opacity: 0.85;
+  stroke: rgba(255,255,255,0.15);
+  stroke-width: 1.5;
+  transition: opacity 0.3s ease;
+}
+
+.pie-slice-empty {
+  fill: rgba(255, 255, 255, 0.06);
+  stroke: rgba(255,255,255,0.12);
+  stroke-width: 1.5;
+}
+
+.pie-bg-circle {
+  fill: rgba(15, 15, 35, 0.7);
+  stroke: var(--neon-purple);
+  stroke-width: 4;
+}
+
+.pie-label-text {
+  fill: rgba(255,255,255,0.5);
+  font-family: var(--font-main);
+  font-weight: 600;
+  font-size: 11px;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+}
+
+/* --- Written Problem Display (Simplify / Add / Subtract) --- */
+.fraction-problem {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-family: var(--font-main);
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.fraction-eq-lhs {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.fraction-eq-equals {
+  color: rgba(255,255,255,0.5);
+  font-size: 2.2rem;
+}
+
+.fraction-eq-answer {
+  color: var(--neon-cyan);
+  font-size: 2.2rem;
+  opacity: 0.4;
+}
+
+/* Inline fraction rendering (e.g.  3 over 4) */
+.frac-display {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  line-height: 1;
+}
+
+.frac-display .frac-num {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 0 8px var(--neon-cyan);
+}
+
+.frac-display .frac-bar {
+  width: 100%;
+  min-width: 36px;
+  height: 3px;
+  background: rgba(255,255,255,0.7);
+  border-radius: 2px;
+}
+
+.frac-display .frac-den {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 0 8px var(--neon-purple);
+}
+
+.fraction-op-symbol {
+  font-size: 2rem;
+  color: var(--gold-yellow);
+  text-shadow: 0 0 10px rgba(253, 203, 110, 0.5);
+}
+
+/* --- Fraction Input --- */
+.fraction-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.fraction-input-box {
+  width: 80px;
+  height: 54px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 1.9rem;
+  font-weight: 700;
+  font-family: var(--font-main);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+  user-select: none;
+}
+
+.fraction-input-box.active {
+  border-color: var(--neon-cyan);
+  color: var(--neon-cyan);
+  background: rgba(0, 184, 212, 0.08);
+  box-shadow: 0 0 15px rgba(0, 184, 212, 0.3), inset 0 2px 4px rgba(0,0,0,0.2);
+  animation: borderPulse 1.5s infinite alternate;
+}
+
+.fraction-input-box.typing {
+  color: #fff;
+}
+
+.fraction-input-box.waiting {
+  border-color: var(--gold-yellow);
+  color: var(--gold-yellow);
+  background: rgba(253, 203, 110, 0.08);
+  box-shadow: 0 0 15px rgba(253, 203, 110, 0.35), inset 0 2px 4px rgba(0,0,0,0.2);
+  animation: waitingPulse 0.7s infinite alternate;
+}
+
+.fraction-divider-line {
+  width: 72px;
+  height: 4px;
+  background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple));
+  border-radius: 2px;
+  margin: 4px 0;
+  box-shadow: 0 0 8px rgba(0, 184, 212, 0.4);
+}
+
+/* Feedback states */
+.fraction-card.correct {
+  background: rgba(85, 239, 196, 0.12);
+  border-color: var(--success-green);
+  box-shadow: 0 0 25px rgba(85, 239, 196, 0.3);
+}
+
+.fraction-card.incorrect {
+  background: rgba(235, 94, 85, 0.12);
+  border-color: var(--danger-red);
+  box-shadow: 0 0 25px rgba(235, 94, 85, 0.3);
+}
+
+/* Mobile adjustments */
+@media (max-width: 600px) {
+  .fraction-card {
+    padding: 16px;
+    min-height: 280px;
+    gap: 14px;
+  }
+
+  #fraction-pie {
+    width: 170px;
+    height: 170px;
+  }
+
+  .fraction-problem {
+    font-size: 2rem;
+    gap: 10px;
+  }
+
+  .frac-display .frac-num,
+  .frac-display .frac-den {
+    font-size: 1.6rem;
+  }
+
+  .fraction-input-box {
+    width: 66px;
+    height: 46px;
+    font-size: 1.5rem;
+  }
+
+  .fraction-divider-line {
+    width: 58px;
+  }
+}
 /* Respect user preference for reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .screen {

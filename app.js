@@ -19,13 +19,18 @@ const gameState = {
   audioEnabled: true,
   audioCtx: null,
   totalTestsCompleted: 0,
-  activeOp: 'multiply', // 'multiply', 'add', 'subtract', 'clock'
+  activeOp: 'multiply', // 'multiply', 'add', 'subtract', 'clock', 'fraction'
   digitLevel: 'single', // 'single', 'double', 'triple', 'mixed'
   clockLevel: 'hour',    // 'hour', 'quarter', 'five-min', 'precision'
   activeClockInput: 'hour', // 'hour' or 'minute'
   clockInputHour: '',
   clockInputMinute: '',
-  clockHourAutoAdvanceTimer: null
+  clockHourAutoAdvanceTimer: null,
+  fractionLevel: 'identify', // 'identify', 'simplify', 'add', 'subtract'
+  activeFractionInput: 'numerator', // 'numerator' or 'denominator'
+  fractionInputNumerator: '',
+  fractionInputDenominator: '',
+  fractionAutoAdvanceTimer: null
 };
 
 // Mascot Cosmo phrases
@@ -71,8 +76,19 @@ const BADGES = [
   { id: 'clock_cadet', name: 'Clock Cadet', emoji: '⏰', desc: 'Mastered reading Clocks on the hour!' },
   { id: 'clock_master', name: 'Clock Master', emoji: '🕰️', desc: 'Mastered 5-Minute interval Clock reading!' },
   { id: 'time_lord', name: 'Time Lord', emoji: '🛸', desc: 'Aced Precision Clock Reading!' },
+  { id: 'fraction_cadet', name: 'Fraction Cadet', emoji: '🍕', desc: 'Correctly identified fractions from a pie chart!' },
+  { id: 'fraction_pilot', name: 'Fraction Pilot', emoji: '✂️', desc: 'Mastered simplifying fractions to lowest terms!' },
+  { id: 'fraction_lord', name: 'Fraction Lord', emoji: '🌠', desc: 'Conquered adding and subtracting fractions!' },
   { id: 'galaxy_hero', name: 'Galaxy Hero', emoji: '🪐', desc: 'Completed 5 or more space missions!' }
 ];
+
+// --- Math Utilities ---
+function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+function reduceFraction(n, d) {
+  if (d === 0) return [n, d];
+  const g = gcd(Math.abs(n), Math.abs(d));
+  return [n / g, d / g];
+}
 
 // --- Web Audio API Synthesizer ---
 function initAudio() {
@@ -367,32 +383,44 @@ function initSetupUI() {
       const configMulti = document.getElementById('config-multiplication');
       const configDigits = document.getElementById('config-digits');
       const configClock = document.getElementById('config-clock');
+      const configFraction = document.getElementById('config-fraction');
       const subtitle = document.getElementById('setup-subtitle');
 
       if (op === 'multiply') {
         configMulti.classList.remove('hidden');
         configDigits.classList.add('hidden');
         configClock.classList.add('hidden');
+        configFraction.classList.add('hidden');
         subtitle.innerText = "Select your multiplication tables and prepare your rocket!";
         setMascotExpression('setup', "Hi! I'm Cosmo! Select your tables, and let's go explore the math galaxy together! 💫");
       } else if (op === 'add') {
         configMulti.classList.add('hidden');
         configDigits.classList.remove('hidden');
         configClock.classList.add('hidden');
+        configFraction.classList.add('hidden');
         subtitle.innerText = "Select your addition number size and prepare your rocket!";
         setMascotExpression('setup', "Addition Zone! Add numbers together to generate high engine pressure! ➕");
       } else if (op === 'subtract') {
         configMulti.classList.add('hidden');
         configDigits.classList.remove('hidden');
         configClock.classList.add('hidden');
+        configFraction.classList.add('hidden');
         subtitle.innerText = "Select your subtraction number size and prepare your rocket!";
         setMascotExpression('setup', "Subtraction Zone! Decrease numbers to steer our spacecraft! ➖");
       } else if (op === 'clock') {
         configMulti.classList.add('hidden');
         configDigits.classList.add('hidden');
         configClock.classList.remove('hidden');
+        configFraction.classList.add('hidden');
         subtitle.innerText = "Select your time difficulty and prepare your rocket!";
         setMascotExpression('setup', "Clock Zone! Read the clock face to align our satellite dish! ⏰");
+      } else if (op === 'fraction') {
+        configMulti.classList.add('hidden');
+        configDigits.classList.add('hidden');
+        configClock.classList.add('hidden');
+        configFraction.classList.remove('hidden');
+        subtitle.innerText = "Select your fraction level and prepare your rocket!";
+        setMascotExpression('setup', "Fraction Zone! Slice the space pizza and master fractions! 🍕");
       }
     });
   });
@@ -416,6 +444,47 @@ function initSetupUI() {
       gameState.clockLevel = btn.dataset.level;
     });
   });
+
+  // Fraction difficulty level buttons
+  document.querySelectorAll('#config-fraction .digit-level-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      playSound('tap');
+      document.querySelectorAll('#config-fraction .digit-level-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      gameState.fractionLevel = btn.dataset.level;
+    });
+  });
+
+  // Fraction inputs click focus handling
+  const fracNumInput = document.getElementById('fraction-input-num');
+  const fracDenInput = document.getElementById('fraction-input-den');
+  if (fracNumInput && fracDenInput) {
+    fracNumInput.addEventListener('click', () => {
+      if (gameState.activeOp === 'fraction') {
+        playSound('tap');
+        if (gameState.fractionAutoAdvanceTimer) {
+          clearTimeout(gameState.fractionAutoAdvanceTimer);
+          gameState.fractionAutoAdvanceTimer = null;
+        }
+        gameState.activeFractionInput = 'numerator';
+        fracNumInput.classList.add('active');
+        fracNumInput.classList.remove('waiting');
+        fracDenInput.classList.remove('active');
+      }
+    });
+    fracDenInput.addEventListener('click', () => {
+      if (gameState.activeOp === 'fraction') {
+        playSound('tap');
+        if (gameState.fractionAutoAdvanceTimer) {
+          clearTimeout(gameState.fractionAutoAdvanceTimer);
+          gameState.fractionAutoAdvanceTimer = null;
+        }
+        gameState.activeFractionInput = 'denominator';
+        fracDenInput.classList.add('active');
+        fracNumInput.classList.remove('active', 'waiting');
+      }
+    });
+  }
 
   // Clock inputs click focus handling
   const clockHourInput = document.getElementById('clock-input-hour');
@@ -569,6 +638,64 @@ function generateQuestions() {
         op: 'clock'
       });
     }
+  } else if (gameState.activeOp === 'fraction') {
+    const level = gameState.fractionLevel;
+    const targetCount = Math.max(50, gameState.questionCount);
+
+    if (level === 'identify') {
+      // All valid simple fractions: denominators 2-8, numerator 1 to d-1
+      const allFracs = [];
+      for (const d of [2, 3, 4, 5, 6, 8]) {
+        for (let n = 1; n < d; n++) {
+          allFracs.push({ n, d });
+        }
+      }
+      // Shuffle and repeat to fill pool
+      for (let i = allFracs.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [allFracs[i], allFracs[j]] = [allFracs[j], allFracs[i]];
+      }
+      for (let i = 0; i < targetCount; i++) {
+        const { n, d } = allFracs[i % allFracs.length];
+        pool.push({ num1: n, num2: d, expected: `${n}/${d}`, op: 'fraction', subtype: 'identify' });
+      }
+    } else if (level === 'simplify') {
+      // Fractions that can be reduced: multiply a simple fraction by a factor 2-4
+      const baseFracs = [
+        [1,2],[1,3],[2,3],[1,4],[3,4],[1,5],[2,5],[3,5],[4,5],
+        [1,6],[5,6],[1,7],[2,7],[3,7],[1,8],[3,8],[5,8],[7,8]
+      ];
+      for (let i = 0; i < targetCount; i++) {
+        const [bn, bd] = baseFracs[i % baseFracs.length];
+        const factor = Math.floor(Math.random() * 3) + 2; // 2-4
+        const n = bn * factor;
+        const d = bd * factor;
+        // expected is the reduced (base) form
+        pool.push({ num1: n, num2: d, expected: `${bn}/${bd}`, op: 'fraction', subtype: 'simplify' });
+      }
+    } else if (level === 'add') {
+      const denoms = [2, 3, 4, 5, 6, 8];
+      for (let i = 0; i < targetCount; i++) {
+        const d = denoms[Math.floor(Math.random() * denoms.length)];
+        const n1 = Math.floor(Math.random() * (d - 1)) + 1;
+        const n2 = Math.floor(Math.random() * (d - n1)) + 1; // ensure sum <= d-1 (no whole)
+        const sumN = n1 + n2;
+        const g = gcd(sumN, d);
+        const rn = sumN / g, rd = d / g;
+        pool.push({ num1: n1, num2: n2, expected: `${rn}/${rd}`, op: 'fraction', subtype: 'add', denom: d });
+      }
+    } else { // subtract
+      const denoms = [2, 3, 4, 5, 6, 8];
+      for (let i = 0; i < targetCount; i++) {
+        const d = denoms[Math.floor(Math.random() * denoms.length)];
+        const n1 = Math.floor(Math.random() * (d - 1)) + 2; // at least 2
+        const n2 = Math.floor(Math.random() * (n1 - 1)) + 1; // n2 < n1
+        const diffN = n1 - n2;
+        const g = gcd(diffN, d);
+        const rn = diffN / g, rd = d / g;
+        pool.push({ num1: n1, num2: n2, expected: `${rn}/${rd}`, op: 'fraction', subtype: 'subtract', denom: d });
+      }
+    }
   } else {
     // Addition & Subtraction Mode
     let minVal = 1, maxVal = 9;
@@ -709,9 +836,63 @@ function loadQuestion() {
     document.getElementById('game-question-index').innerText = `${gameState.currentQuestionIndex + 1} / ${gameState.questionCount}`;
 
     setMascotExpression('game', `What time is shown on the space clock? Enter hour and minutes! ⏰`);
+  } else if (gameState.activeOp === 'fraction') {
+    mathCard.classList.add('hidden');
+    clockCard.classList.add('hidden');
+    const fractionCard = document.getElementById('fraction-card');
+    fractionCard.className = 'fraction-card glass-panel';
+    fractionCard.classList.remove('hidden');
+
+    // Reset fraction inputs
+    if (gameState.fractionAutoAdvanceTimer) {
+      clearTimeout(gameState.fractionAutoAdvanceTimer);
+      gameState.fractionAutoAdvanceTimer = null;
+    }
+    gameState.activeFractionInput = 'numerator';
+    gameState.fractionInputNumerator = '';
+    gameState.fractionInputDenominator = '';
+
+    const numEl = document.getElementById('fraction-input-num');
+    const denEl = document.getElementById('fraction-input-den');
+    numEl.innerText = '?';
+    denEl.innerText = '?';
+    numEl.style.color = '';
+    denEl.style.color = '';
+    numEl.className = 'fraction-input-box active';
+    denEl.className = 'fraction-input-box';
+
+    // Show/hide pie vs problem display
+    const pieEl = document.getElementById('fraction-pie');
+    const probEl = document.getElementById('fraction-problem');
+
+    if (q.subtype === 'identify') {
+      pieEl.classList.remove('hidden');
+      probEl.classList.add('hidden');
+      drawFractionPie(q.num1, q.num2);
+      setMascotExpression('game', `What fraction of the pie is shaded? 🍕`);
+    } else {
+      pieEl.classList.add('hidden');
+      probEl.classList.remove('hidden');
+      const lhsEl = document.getElementById('fraction-lhs');
+
+      if (q.subtype === 'simplify') {
+        lhsEl.innerHTML = fracHTML(q.num1, q.num2);
+        setMascotExpression('game', `Simplify this fraction to its lowest terms! ✂️`);
+      } else if (q.subtype === 'add') {
+        lhsEl.innerHTML = `${fracHTML(q.num1, q.denom)} <span class="fraction-op-symbol">+</span> ${fracHTML(q.num2, q.denom)}`;
+        setMascotExpression('game', `Add these fractions together! ➕`);
+      } else if (q.subtype === 'subtract') {
+        lhsEl.innerHTML = `${fracHTML(q.num1, q.denom)} <span class="fraction-op-symbol">−</span> ${fracHTML(q.num2, q.denom)}`;
+        setMascotExpression('game', `Subtract these fractions! ➖`);
+      }
+    }
+
+    document.getElementById('game-question-index').innerText = `${gameState.currentQuestionIndex + 1} / ${gameState.questionCount}`;
   } else {
     mathCard.classList.remove('hidden');
     clockCard.classList.add('hidden');
+    const fractionCard = document.getElementById('fraction-card');
+    if (fractionCard) fractionCard.classList.add('hidden');
 
     document.getElementById('num-1').innerText = q.num1;
     document.getElementById('num-2').innerText = q.num2;
@@ -853,9 +1034,16 @@ function setupNumpad() {
       handleKeyPress('delete');
     } else if (e.key === 'Enter') {
       handleKeyPress('enter');
-    } else if (e.key === ':' || e.key === '.') {
-      if (gameState.activeOp === 'clock') {
-        // Cancel any pending timer and advance to minute
+    } else if (e.key === '/' || e.key === '.') {
+      if (gameState.activeOp === 'fraction') {
+        if (gameState.fractionAutoAdvanceTimer) {
+          clearTimeout(gameState.fractionAutoAdvanceTimer);
+          gameState.fractionAutoAdvanceTimer = null;
+        }
+        gameState.activeFractionInput = 'denominator';
+        document.getElementById('fraction-input-num').classList.remove('active', 'waiting');
+        document.getElementById('fraction-input-den').classList.add('active');
+      } else if (e.key === ':' && gameState.activeOp === 'clock') {
         if (gameState.clockHourAutoAdvanceTimer) {
           clearTimeout(gameState.clockHourAutoAdvanceTimer);
           gameState.clockHourAutoAdvanceTimer = null;
@@ -869,6 +1057,10 @@ function setupNumpad() {
 }
 
 function handleKeyPress(key) {
+  if (gameState.activeOp === 'fraction') {
+    handleFractionKeyPress(key);
+    return;
+  }
   if (gameState.activeOp === 'clock') {
     handleClockKeyPress(key);
     return;
@@ -1206,6 +1398,246 @@ function submitClockAnswer() {
   }
 }
 
+// ============================================================
+// FRACTION QUEST — Input, Submission, and Pie Drawing
+// ============================================================
+
+function handleFractionKeyPress(key) {
+  const numEl = document.getElementById('fraction-input-num');
+  const denEl = document.getElementById('fraction-input-den');
+
+  if (gameState.fractionAutoAdvanceTimer) {
+    clearTimeout(gameState.fractionAutoAdvanceTimer);
+    gameState.fractionAutoAdvanceTimer = null;
+    numEl.classList.remove('waiting');
+  }
+
+  if (key === 'delete') {
+    if (gameState.activeFractionInput === 'numerator') {
+      gameState.fractionInputNumerator = gameState.fractionInputNumerator.slice(0, -1);
+      numEl.innerText = gameState.fractionInputNumerator === '' ? '?' : gameState.fractionInputNumerator;
+      numEl.classList.toggle('typing', gameState.fractionInputNumerator !== '');
+    } else {
+      if (gameState.fractionInputDenominator !== '') {
+        gameState.fractionInputDenominator = gameState.fractionInputDenominator.slice(0, -1);
+        denEl.innerText = gameState.fractionInputDenominator === '' ? '?' : gameState.fractionInputDenominator;
+        denEl.classList.toggle('typing', gameState.fractionInputDenominator !== '');
+      } else {
+        // Backspace on empty denominator: move back to numerator
+        gameState.activeFractionInput = 'numerator';
+        denEl.classList.remove('active');
+        numEl.classList.add('active');
+        gameState.fractionInputNumerator = gameState.fractionInputNumerator.slice(0, -1);
+        numEl.innerText = gameState.fractionInputNumerator === '' ? '?' : gameState.fractionInputNumerator;
+        numEl.classList.toggle('typing', gameState.fractionInputNumerator !== '');
+      }
+    }
+  } else if (key === 'enter') {
+    if (gameState.fractionInputNumerator !== '' && gameState.fractionInputDenominator !== '') {
+      submitFractionAnswer();
+    } else {
+      const fractionCard = document.getElementById('fraction-card');
+      fractionCard.classList.add('animate-shake');
+      setTimeout(() => fractionCard.classList.remove('animate-shake'), 400);
+      playSound('warning');
+      const missing = gameState.fractionInputNumerator === '' ? 'top number' : 'bottom number';
+      setMascotExpression('game', `Enter the ${missing} first! 🍕`);
+    }
+  } else {
+    // Digit input
+    if (gameState.activeFractionInput === 'numerator') {
+      if (gameState.fractionInputNumerator.length < 2) {
+        gameState.fractionInputNumerator += key;
+        numEl.innerText = gameState.fractionInputNumerator;
+        numEl.classList.add('typing');
+        // Auto-advance to denominator when 2 digits typed OR digit is 0
+        if (gameState.fractionInputNumerator.length >= 2 || key === '0') {
+          gameState.activeFractionInput = 'denominator';
+          numEl.classList.remove('active');
+          denEl.classList.add('active');
+        } else {
+          // Single digit entered. Wait briefly before advancing.
+          numEl.classList.add('waiting');
+          gameState.fractionAutoAdvanceTimer = setTimeout(() => {
+             gameState.fractionAutoAdvanceTimer = null;
+             if (gameState.activeFractionInput === 'numerator' && gameState.fractionInputNumerator.length === 1) {
+               gameState.activeFractionInput = 'denominator';
+               numEl.classList.remove('waiting', 'active');
+               denEl.classList.add('active');
+             }
+          }, 900);
+        }
+      } else {
+        // Overwrite
+        gameState.fractionInputNumerator = key;
+        numEl.innerText = key;
+        numEl.classList.add('typing');
+        numEl.classList.add('waiting');
+        gameState.fractionAutoAdvanceTimer = setTimeout(() => {
+             gameState.fractionAutoAdvanceTimer = null;
+             if (gameState.activeFractionInput === 'numerator' && gameState.fractionInputNumerator.length === 1) {
+               gameState.activeFractionInput = 'denominator';
+               numEl.classList.remove('waiting', 'active');
+               denEl.classList.add('active');
+             }
+        }, 900);
+      }
+    } else {
+      // Denominator
+      if (key === '0' && gameState.fractionInputDenominator === '') {
+        // 0 is not valid as denominator start — warn
+        playSound('warning');
+        return;
+      }
+      if (gameState.fractionInputDenominator.length < 2) {
+        gameState.fractionInputDenominator += key;
+        denEl.innerText = gameState.fractionInputDenominator;
+        denEl.classList.add('typing');
+      } else {
+        gameState.fractionInputDenominator = key;
+        denEl.innerText = key;
+        denEl.classList.add('typing');
+      }
+    }
+  }
+}
+
+function submitFractionAnswer() {
+  clearInterval(gameState.timerInterval);
+
+  const q = gameState.currentQuestions[gameState.currentQuestionIndex];
+  const typedN = parseInt(gameState.fractionInputNumerator, 10);
+  const typedD = parseInt(gameState.fractionInputDenominator, 10);
+
+  // Reduce both typed and expected to check equivalence
+  const [rTypedN, rTypedD] = reduceFraction(typedN, typedD);
+  const [expN, expD] = q.expected.split('/').map(Number);
+  const [rExpN, rExpD] = reduceFraction(expN, expD);
+
+  // For 'identify' mode we also accept the exact visual fraction (not just reduced)
+  let isCorrect = (rTypedN === rExpN && rTypedD === rExpD);
+  if (q.subtype === 'identify') {
+    isCorrect = (typedN === q.num1 && typedD === q.num2) || isCorrect;
+  }
+
+  const timeTaken = (performance.now() - gameState.questionStartTime) / 1000;
+  gameState.answersLog.push({
+    num1: q.num1, num2: q.num2, expected: q.expected,
+    op: 'fraction', subtype: q.subtype, denom: q.denom,
+    typed: `${typedN}/${typedD}`, isCorrect, timeTaken
+  });
+
+  const fractionCard = document.getElementById('fraction-card');
+  const rocket = document.getElementById('rocket-ship');
+
+  if (isCorrect) {
+    gameState.correctAnswersCount++;
+    gameState.combo++;
+    if (gameState.combo > gameState.maxCombo) gameState.maxCombo = gameState.combo;
+
+    playSound('correct');
+    fractionCard.classList.add('correct');
+    rocket.classList.add('animate-pop');
+    setTimeout(() => rocket.classList.remove('animate-pop'), 500);
+
+    let baseScore = 100;
+    let speedBonus = timeTaken < 6.0 ? Math.round(50 * (1 - Math.max(timeTaken - 1.5, 0) / 4.5)) : 0;
+    let comboMultiplier = gameState.combo >= 9 ? 2.5 : gameState.combo >= 6 ? 2.0 : gameState.combo >= 3 ? 1.5 : 1.0;
+    const pointsEarned = Math.round((baseScore + speedBonus) * comboMultiplier);
+    gameState.score += pointsEarned;
+
+    const scoreVal = document.getElementById('game-score');
+    scoreVal.innerText = gameState.score;
+    scoreVal.classList.add('animate-pop');
+    setTimeout(() => scoreVal.classList.remove('animate-pop'), 400);
+
+    if (gameState.combo > 0 && gameState.combo % 3 === 0) {
+      const idx = Math.min(Math.floor(gameState.combo / 3) - 1, mascotPhrases.combo.length - 1);
+      setMascotExpression('game', mascotPhrases.combo[idx]);
+    } else {
+      setMascotExpression('correct');
+    }
+
+    updateComboHUD();
+    setTimeout(advanceGame, 800);
+
+  } else {
+    gameState.combo = 0;
+    playSound('wrong');
+    fractionCard.classList.add('incorrect');
+    fractionCard.classList.add('animate-shake');
+    setTimeout(() => fractionCard.classList.remove('animate-shake'), 400);
+
+    // Reveal correct answer in input boxes
+    const numEl = document.getElementById('fraction-input-num');
+    const denEl = document.getElementById('fraction-input-den');
+    numEl.innerText = expN;
+    denEl.innerText = expD;
+    numEl.style.color = 'var(--success-green)';
+    denEl.style.color = 'var(--success-green)';
+
+    setMascotExpression('incorrect');
+    updateComboHUD();
+    setTimeout(advanceGame, 2200);
+  }
+}
+
+// Build an inline HTML fraction (num over denom with a bar)
+function fracHTML(n, d) {
+  return `<span class="frac-display">
+    <span class="frac-num">${n}</span>
+    <span class="frac-bar"></span>
+    <span class="frac-den">${d}</span>
+  </span>`;
+}
+
+// Draw an SVG pie chart showing n shaded slices out of d total
+function drawFractionPie(n, d) {
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  const slicesGroup = document.getElementById('fraction-pie-slices');
+  slicesGroup.innerHTML = '';
+
+  const cx = 100, cy = 100, r = 85;
+
+  // Background circle
+  const bg = document.createElementNS(SVG_NS, 'circle');
+  bg.setAttribute('cx', cx); bg.setAttribute('cy', cy); bg.setAttribute('r', r + 4);
+  bg.setAttribute('class', 'pie-bg-circle');
+  slicesGroup.appendChild(bg);
+
+  // Draw d slices, first n are shaded
+  for (let i = 0; i < d; i++) {
+    const startAngle = (i / d) * 2 * Math.PI - Math.PI / 2;
+    const endAngle   = ((i + 1) / d) * 2 * Math.PI - Math.PI / 2;
+
+    const x1 = cx + r * Math.cos(startAngle);
+    const y1 = cy + r * Math.sin(startAngle);
+    const x2 = cx + r * Math.cos(endAngle);
+    const y2 = cy + r * Math.sin(endAngle);
+    const largeArc = (1 / d) > 0.5 ? 1 : 0;
+
+    const path = document.createElementNS(SVG_NS, 'path');
+    const dAttr = `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+    path.setAttribute('d', dAttr);
+    path.setAttribute('class', i < n ? 'pie-slice-shaded' : 'pie-slice-empty');
+    slicesGroup.appendChild(path);
+  }
+
+  // Outer ring
+  const ring = document.createElementNS(SVG_NS, 'circle');
+  ring.setAttribute('cx', cx); ring.setAttribute('cy', cy); ring.setAttribute('r', r);
+  ring.setAttribute('fill', 'none');
+  ring.setAttribute('stroke', 'rgba(255,255,255,0.15)');
+  ring.setAttribute('stroke-width', '1');
+  slicesGroup.appendChild(ring);
+
+  // Center dot
+  const dot = document.createElementNS(SVG_NS, 'circle');
+  dot.setAttribute('cx', cx); dot.setAttribute('cy', cy); dot.setAttribute('r', 4);
+  dot.setAttribute('fill', 'rgba(255,255,255,0.6)');
+  slicesGroup.appendChild(dot);
+}
+
 function drawClockDial() {
   const numsGroup = document.getElementById('clock-numerals-group');
   const ticksGroup = document.getElementById('clock-ticks-group');
@@ -1341,6 +1773,16 @@ function endGame() {
     
     if (log.op === 'clock') {
       formula.innerText = `Clock Reading`;
+    } else if (log.op === 'fraction') {
+      if (log.subtype === 'identify') {
+        formula.innerText = `Fraction: ${log.num1}/${log.num2}`;
+      } else if (log.subtype === 'simplify') {
+        formula.innerText = `Simplify: ${log.num1}/${log.num2}`;
+      } else if (log.subtype === 'add') {
+        formula.innerText = `${log.num1}/${log.denom || '?'} + ${log.num2}/${log.denom || '?'}`;
+      } else if (log.subtype === 'subtract') {
+        formula.innerText = `${log.num1}/${log.denom || '?'} − ${log.num2}/${log.denom || '?'}`;
+      }
     } else {
       formula.innerText = `${log.num1} ${opSymbol} ${log.num2} = ${log.expected}`;
     }
@@ -1426,6 +1868,16 @@ function checkAndUnlockBadges(accuracy, avgSpeed) {
       addBadge('clock_master');
     } else if (gameState.clockLevel === 'precision' && accuracy === 100) {
       addBadge('time_lord');
+    }
+  }
+
+  if (gameState.activeOp === 'fraction' && accuracy === 100) {
+    if (gameState.fractionLevel === 'identify') {
+      addBadge('fraction_cadet');
+    } else if (gameState.fractionLevel === 'simplify') {
+      addBadge('fraction_pilot');
+    } else if (gameState.fractionLevel === 'add' || gameState.fractionLevel === 'subtract') {
+      addBadge('fraction_lord');
     }
   }
 

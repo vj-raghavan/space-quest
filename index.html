@@ -42,6 +42,7 @@
         <button class="op-tab-btn" data-op="add">➕ Addition</button>
         <button class="op-tab-btn" data-op="subtract">➖ Subtraction</button>
         <button class="op-tab-btn" data-op="clock">⏰ Clock Reader</button>
+        <button class="op-tab-btn" data-op="fraction">🍕 Fractions</button>
       </div>
 
       <div class="setup-grid">
@@ -117,6 +118,34 @@
               <span class="level-emoji">☄️</span>
               <span class="level-title">Precision Flight</span>
               <span class="level-range">(Any Minute, e.g. 8:12)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Fraction Level Selector for Fractions Quest -->
+        <div class="setup-card glass-panel hidden" id="config-fraction">
+          <h2>🎯 Choose Fraction Level</h2>
+          <p class="subtitle" style="margin-bottom: 8px; color: var(--neon-cyan);">Pick your fraction challenge!</p>
+          <div class="digits-selector-grid">
+            <button class="digit-level-btn selected" data-level="identify">
+              <span class="level-emoji">👁️</span>
+              <span class="level-title">Read It</span>
+              <span class="level-range">Name the fraction shown</span>
+            </button>
+            <button class="digit-level-btn" data-level="simplify">
+              <span class="level-emoji">✂️</span>
+              <span class="level-title">Simplify It</span>
+              <span class="level-range">Reduce to lowest terms</span>
+            </button>
+            <button class="digit-level-btn" data-level="add">
+              <span class="level-emoji">➕</span>
+              <span class="level-title">Add It</span>
+              <span class="level-range">Add two fractions</span>
+            </button>
+            <button class="digit-level-btn" data-level="subtract">
+              <span class="level-emoji">➖</span>
+              <span class="level-title">Subtract It</span>
+              <span class="level-range">Subtract two fractions</span>
             </button>
           </div>
         </div>
@@ -238,6 +267,30 @@
               <div class="clock-input-box active" id="clock-input-hour">HH</div>
               <div class="clock-input-colon">:</div>
               <div class="clock-input-box" id="clock-input-min">MM</div>
+            </div>
+          </div>
+
+          <!-- Fraction Card (displays in Fraction mode) -->
+          <div class="fraction-card glass-panel hidden" id="fraction-card">
+            <!-- Pie chart for 'Read It' mode -->
+            <svg id="fraction-pie" viewBox="0 0 200 200" width="200" height="200" class="hidden">
+              <g id="fraction-pie-slices"></g>
+            </svg>
+
+            <!-- Written problem for Simplify / Add / Subtract modes -->
+            <div id="fraction-problem" class="fraction-problem hidden">
+              <div class="fraction-eq-lhs" id="fraction-lhs">
+                <!-- e.g. 6/8  or  1/4 + 2/4 -->
+              </div>
+              <div class="fraction-eq-equals">=</div>
+              <div class="fraction-eq-answer">?</div>
+            </div>
+
+            <!-- Fraction input: stacked numerator / denominator -->
+            <div class="fraction-input-wrapper">
+              <div class="fraction-input-box active" id="fraction-input-num">?</div>
+              <div class="fraction-divider-line"></div>
+              <div class="fraction-input-box" id="fraction-input-den">?</div>
             </div>
           </div>
           
