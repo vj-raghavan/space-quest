@@ -34,6 +34,8 @@ const gameState = {
   sequenceLevel: 'easy',     // 'easy', 'medium', 'hard'
   compareLevel: 'easy',      // 'easy', 'medium', 'hard'
   compareCurrentChoice: '',  // '<', '=', '>'
+  musicLevel: 'notes',       // 'notes', 'beats', 'measures'
+  anglesLevel: 'turns',      // 'turns', 'combine', 'convert'
   missionKey: null,          // 'planet:level' when launched from the galaxy map, 'daily', or null
   injectedQuestions: null,   // pre-built question list (daily mission)
   missedQuestions: [],       // wrong answers this round, queued for the rematch
@@ -92,6 +94,8 @@ const BADGES = [
   { id: 'fraction_cadet', name: 'Fraction Cadet', emoji: '🍕', desc: 'Correctly identified fractions from a pie chart!' },
   { id: 'fraction_pilot', name: 'Fraction Pilot', emoji: '✂️', desc: 'Mastered simplifying fractions to lowest terms!' },
   { id: 'fraction_lord', name: 'Fraction Lord', emoji: '🌠', desc: 'Conquered adding and subtracting fractions!' },
+  { id: 'rhythm_star', name: 'Rhythm Star', emoji: '🎵', desc: 'Got 100% on a Rhythm Nebula music mission!' },
+  { id: 'twist_champion', name: 'Twist Champion', emoji: '🤸', desc: 'Got 100% on a Twist & Turn Arena mission!' },
   { id: 'galaxy_hero', name: 'Galaxy Hero', emoji: '🪐', desc: 'Completed 5 or more space missions!' }
 ];
 
@@ -116,6 +120,23 @@ const SPACE_TRIVIA = [
 
 // --- Math Utilities ---
 function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+
+// Small inline SVG music-note glyphs (Unicode note symbols render
+// inconsistently across devices, so we draw our own)
+function noteSVG(type) {
+  const open = '<svg class="note-glyph" viewBox="0 0 28 40" aria-hidden="true">';
+  if (type === 'whole') {
+    return `${open}<ellipse cx="14" cy="30" rx="9" ry="6" fill="none" stroke="currentColor" stroke-width="2.5"/></svg>`;
+  }
+  if (type === 'half') {
+    return `${open}<ellipse cx="11" cy="32" rx="8" ry="5.5" fill="none" stroke="currentColor" stroke-width="2.5"/><line x1="19" y1="32" x2="19" y2="4" stroke="currentColor" stroke-width="2.5"/></svg>`;
+  }
+  if (type === 'quarter') {
+    return `${open}<ellipse cx="11" cy="32" rx="8" ry="5.5" fill="currentColor"/><line x1="19" y1="32" x2="19" y2="4" stroke="currentColor" stroke-width="2.5"/></svg>`;
+  }
+  // eighth
+  return `${open}<ellipse cx="11" cy="32" rx="8" ry="5.5" fill="currentColor"/><line x1="19" y1="32" x2="19" y2="4" stroke="currentColor" stroke-width="2.5"/><path d="M19 4 Q28 8 26 18" fill="none" stroke="currentColor" stroke-width="2.5"/></svg>`;
+}
 function reduceFraction(n, d) {
   if (d === 0) return [n, d];
   const g = gcd(Math.abs(n), Math.abs(d));
@@ -229,7 +250,6 @@ function playSound(type) {
       break;
     }
     case 'victory': {
-      // Classic triumphant arpeggio: C5 -> E5 -> G5 -> C6
       const playNote = (freq, start, duration) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
@@ -242,12 +262,27 @@ function playSound(type) {
         osc.start(start);
         osc.stop(start + duration + 0.05);
       };
-      
-      const tempo = 0.15;
-      playNote(523.25, now, 0.25); // C5
-      playNote(659.25, now + tempo, 0.25); // E5
-      playNote(783.99, now + tempo * 2, 0.25); // G5
-      playNote(1046.50, now + tempo * 3, 0.50); // C6
+
+      // The equipped Victory Tune from the Star Shop decides the melody
+      const jingle = (typeof Progression !== 'undefined' && Progression.getJingle) ? Progression.getJingle() : 'classic';
+      if (jingle === 'arpeggio') {
+        // Rolling piano arpeggio: C4 up to C6
+        const seq = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50];
+        seq.forEach((f, i) => playNote(f, now + i * 0.09, 0.18));
+      } else if (jingle === 'glissando') {
+        // Sparkly run up a whole-tone-ish scale, landing on high C
+        for (let i = 0; i <= 12; i += 2) {
+          playNote(523.25 * Math.pow(2, i / 12), now + (i / 2) * 0.06, 0.10);
+        }
+        playNote(1046.50, now + 0.45, 0.5);
+      } else {
+        // Classic triumphant arpeggio: C5 -> E5 -> G5 -> C6
+        const tempo = 0.15;
+        playNote(523.25, now, 0.25); // C5
+        playNote(659.25, now + tempo, 0.25); // E5
+        playNote(783.99, now + tempo * 2, 0.25); // G5
+        playNote(1046.50, now + tempo * 3, 0.50); // C6
+      }
       break;
     }
   }
@@ -429,6 +464,8 @@ function initSetupUI() {
       const configFraction = document.getElementById('config-fraction');
       const configSequence = document.getElementById('config-sequence');
       const configCompare = document.getElementById('config-compare');
+      const configMusic = document.getElementById('config-music');
+      const configAngles = document.getElementById('config-angles');
       const subtitle = document.getElementById('setup-subtitle');
       const multiHeading = configMulti.querySelector('h2');
 
@@ -439,6 +476,8 @@ function initSetupUI() {
       configFraction.classList.add('hidden');
       if (configSequence) configSequence.classList.add('hidden');
       if (configCompare) configCompare.classList.add('hidden');
+      if (configMusic) configMusic.classList.add('hidden');
+      if (configAngles) configAngles.classList.add('hidden');
 
       if (op === 'multiply') {
         configMulti.classList.remove('hidden');
@@ -474,6 +513,14 @@ function initSetupUI() {
         configFraction.classList.remove('hidden');
         subtitle.innerText = "Select your fraction level and prepare your rocket!";
         setMascotExpression('setup', "Fraction Zone! Slice the space pizza and master fractions! 🍕");
+      } else if (op === 'music') {
+        if (configMusic) configMusic.classList.remove('hidden');
+        subtitle.innerText = "Select your music math level and prepare your rocket!";
+        setMascotExpression('setup', "Rhythm Zone! Count beats and notes like a space pianist! 🎵");
+      } else if (op === 'angles') {
+        if (configAngles) configAngles.classList.remove('hidden');
+        subtitle.innerText = "Select your turns difficulty and prepare your rocket!";
+        setMascotExpression('setup', "Gymnastics Zone! Twist and turn through the degrees! 🤸");
       }
     });
   });
@@ -525,6 +572,26 @@ function initSetupUI() {
       document.querySelectorAll('#config-compare .digit-level-btn').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
       gameState.compareLevel = btn.dataset.level;
+    });
+  });
+
+  // Music level buttons
+  document.querySelectorAll('#config-music .digit-level-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      playSound('tap');
+      document.querySelectorAll('#config-music .digit-level-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      gameState.musicLevel = btn.dataset.level;
+    });
+  });
+
+  // Angles level buttons
+  document.querySelectorAll('#config-angles .digit-level-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      playSound('tap');
+      document.querySelectorAll('#config-angles .digit-level-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      gameState.anglesLevel = btn.dataset.level;
     });
   });
 
@@ -1007,6 +1074,122 @@ function generateQuestions() {
         expected: expected
       });
     }
+  } else if (gameState.activeOp === 'music') {
+    // Music Math: note values ARE fractions — ties directly to piano theory
+    const level = gameState.musicLevel;
+    const targetCount = Math.max(50, gameState.questionCount);
+    const NOTE_INFO = {
+      whole:   { beats: 4, label: 'whole note' },
+      half:    { beats: 2, label: 'half note' },
+      quarter: { beats: 1, label: 'quarter note' },
+      eighth:  { beats: 0.5, label: 'eighth note' }
+    };
+
+    for (let i = 0; i < targetCount; i++) {
+      if (level === 'notes') {
+        if (Math.random() < 0.5) {
+          const types = ['whole', 'half', 'quarter'];
+          const t = types[Math.floor(Math.random() * types.length)];
+          pool.push({
+            op: 'music',
+            html: `<div class="prompt-line">How many <b>beats</b> is a <b>${NOTE_INFO[t].label}</b>?</div><div class="prompt-notes">${noteSVG(t)}</div>`,
+            promptText: `Beats in a ${NOTE_INFO[t].label}`,
+            expected: NOTE_INFO[t].beats,
+            teach: 'Quarter note = 1 beat, half note = 2 beats, whole note = 4 beats 🎵'
+          });
+        } else {
+          const pairs = [
+            ['quarter', 'whole'], ['quarter', 'half'], ['half', 'whole'],
+            ['eighth', 'quarter'], ['eighth', 'half'], ['eighth', 'whole']
+          ];
+          const [small, big] = pairs[Math.floor(Math.random() * pairs.length)];
+          const answer = NOTE_INFO[big].beats / NOTE_INFO[small].beats;
+          pool.push({
+            op: 'music',
+            html: `<div class="prompt-line">How many <b>${NOTE_INFO[small].label}s</b> ${noteSVG(small)} fit in a <b>${NOTE_INFO[big].label}</b> ${noteSVG(big)}?</div>`,
+            promptText: `${NOTE_INFO[small].label}s in a ${NOTE_INFO[big].label}`,
+            expected: answer,
+            teach: `A ${NOTE_INFO[big].label} lasts ${NOTE_INFO[big].beats} beats — that's ${answer} ${NOTE_INFO[small].label}s! 🎵`
+          });
+        }
+      } else if (level === 'beats') {
+        const types = ['whole', 'half', 'quarter'];
+        const n = Math.random() < 0.5 ? 2 : 3;
+        const chosen = [];
+        for (let j = 0; j < n; j++) chosen.push(types[Math.floor(Math.random() * types.length)]);
+        const total = chosen.reduce((sum, t) => sum + NOTE_INFO[t].beats, 0);
+        pool.push({
+          op: 'music',
+          html: `<div class="prompt-line">How many <b>beats</b> in total?</div><div class="prompt-notes">${chosen.map(t => noteSVG(t)).join('<span class="prompt-plus">+</span>')}</div>`,
+          promptText: chosen.map(t => NOTE_INFO[t].label).join(' + '),
+          expected: total,
+          teach: `${chosen.map(t => NOTE_INFO[t].beats).join(' + ')} = ${total} beats 🎶`
+        });
+      } else { // measures
+        const beatsPerMeasure = [2, 3, 4][Math.floor(Math.random() * 3)];
+        const measures = Math.floor(Math.random() * 5) + 2; // 2-6
+        pool.push({
+          op: 'music',
+          html: `<div class="prompt-line">A song has <b>${measures} measures</b> of <b>${beatsPerMeasure}/4</b> time.<br>How many beats in total?</div>`,
+          promptText: `${measures} measures of ${beatsPerMeasure}/4`,
+          expected: measures * beatsPerMeasure,
+          teach: `${beatsPerMeasure} beats per measure × ${measures} measures = ${measures * beatsPerMeasure} 🎵`
+        });
+      }
+    }
+  } else if (gameState.activeOp === 'angles') {
+    // Turns & Angles: gymnastics vocabulary is angle math in disguise
+    const level = gameState.anglesLevel;
+    const targetCount = Math.max(50, gameState.questionCount);
+    const TURNS = [
+      { name: 'quarter turn', deg: 90 },
+      { name: 'half turn', deg: 180 },
+      { name: 'three-quarter turn', deg: 270 },
+      { name: 'full twist', deg: 360 }
+    ];
+    const TEACH_TURNS = 'Quarter = 90°, Half = 180°, Three-quarter = 270°, Full twist = 360° 🤸';
+
+    for (let i = 0; i < targetCount; i++) {
+      if (level === 'turns') {
+        const t = TURNS[Math.floor(Math.random() * TURNS.length)];
+        pool.push({
+          op: 'angles',
+          html: `<div class="prompt-line">A gymnast does a <b>${t.name}</b>.<br>How many <b>degrees</b> is that?</div>`,
+          promptText: `${t.name} in degrees`,
+          expected: t.deg,
+          teach: TEACH_TURNS
+        });
+      } else if (level === 'combine') {
+        const n = Math.random() < 0.7 ? 2 : 3;
+        const moves = [];
+        for (let j = 0; j < n; j++) moves.push(TURNS[Math.floor(Math.random() * TURNS.length)]);
+        const total = moves.reduce((sum, m) => sum + m.deg, 0);
+        pool.push({
+          op: 'angles',
+          html: `<div class="prompt-line">A routine: a <b>${moves.map(m => m.name).join('</b>, then a <b>')}</b>.<br>Total <b>degrees</b>?</div>`,
+          promptText: moves.map(m => m.name).join(' + '),
+          expected: total,
+          teach: `${moves.map(m => m.deg + '°').join(' + ')} = ${total}° 🤸`
+        });
+      } else { // convert
+        const variants = [
+          { html: 'A <b>full twist</b> = how many <b>quarter turns</b>?', text: 'quarter turns in a full twist', expected: 4, teach: '360° ÷ 90° = 4 quarter turns 🤸' },
+          { html: 'A <b>half turn</b> = how many <b>quarter turns</b>?', text: 'quarter turns in a half turn', expected: 2, teach: '180° ÷ 90° = 2 quarter turns 🤸' },
+          { html: 'How many <b>quarter turns</b> make <b>270°</b>?', text: 'quarter turns in 270°', expected: 3, teach: '90° + 90° + 90° = 270° 🤸' },
+          { html: 'How many <b>half turns</b> make a <b>full twist</b>?', text: 'half turns in a full twist', expected: 2, teach: '180° + 180° = 360° 🤸' },
+          { html: '<b>Two full twists</b> = how many <b>degrees</b>?', text: 'two full twists in degrees', expected: 720, teach: '360° × 2 = 720° 🤸' },
+          { html: 'How many <b>quarter turns</b> in <b>two full twists</b>?', text: 'quarter turns in two full twists', expected: 8, teach: '4 quarter turns per twist × 2 = 8 🤸' }
+        ];
+        const v = variants[Math.floor(Math.random() * variants.length)];
+        pool.push({
+          op: 'angles',
+          html: `<div class="prompt-line">${v.html}</div>`,
+          promptText: v.text,
+          expected: v.expected,
+          teach: v.teach
+        });
+      }
+    }
   } else {
     // Addition & Subtraction Mode
     let minVal = 1, maxVal = 9;
@@ -1119,6 +1302,8 @@ function loadQuestion() {
     visualHelper.classList.add('hidden');
     visualHelper.innerHTML = '';
   }
+  const promptDisplayReset = document.getElementById('prompt-display');
+  if (promptDisplayReset) promptDisplayReset.classList.add('hidden');
 
   const mathCard = document.getElementById('math-card');
   const clockCard = document.getElementById('clock-card');
@@ -1242,6 +1427,32 @@ function loadQuestion() {
 
     document.getElementById('custom-numpad').classList.remove('hidden');
     document.getElementById('comparison-input-pad').classList.add('hidden');
+  } else if (gameState.activeOp === 'music' || gameState.activeOp === 'angles') {
+    mathCard.classList.remove('hidden');
+    clockCard.classList.add('hidden');
+    const fractionCard = document.getElementById('fraction-card');
+    if (fractionCard) fractionCard.classList.add('hidden');
+    const compareCard = document.getElementById('compare-card');
+    if (compareCard) compareCard.classList.add('hidden');
+
+    document.getElementById('equation-display').classList.add('hidden');
+    document.getElementById('sequence-display').classList.add('hidden');
+    const promptDisplay = document.getElementById('prompt-display');
+    promptDisplay.classList.remove('hidden');
+    document.getElementById('prompt-question').innerHTML = q.html;
+    const promptAnswer = document.getElementById('prompt-answer-display');
+    promptAnswer.innerText = '?';
+    promptAnswer.className = 'answer-empty';
+    promptAnswer.style.color = '';
+
+    document.getElementById('game-question-index').innerText = `${gameState.currentQuestionIndex + 1} / ${gameState.questionCount}`;
+
+    document.getElementById('custom-numpad').classList.remove('hidden');
+    document.getElementById('comparison-input-pad').classList.add('hidden');
+
+    setMascotExpression('game', gameState.activeOp === 'music'
+      ? 'Music math time! Count the beats like a real pianist! 🎵'
+      : 'Gymnastics math! Spin through the degrees! 🤸');
   } else if (gameState.activeOp === 'compare') {
     mathCard.classList.add('hidden');
     clockCard.classList.add('hidden');
@@ -1334,6 +1545,8 @@ function getTimeLimit() {
   if (op === 'compare') return { easy: 8, medium: 12, hard: 15 }[gameState.compareLevel] || 10;
   if (op === 'clock') return { hour: 10, quarter: 12, 'five-min': 15, precision: 20 }[gameState.clockLevel] || 12;
   if (op === 'fraction') return { identify: 15, simplify: 20, add: 25, subtract: 25 }[gameState.fractionLevel] || 18;
+  if (op === 'music') return { notes: 12, beats: 15, measures: 18 }[gameState.musicLevel] || 15;
+  if (op === 'angles') return { turns: 10, combine: 15, convert: 15 }[gameState.anglesLevel] || 12;
   return 8;
 }
 
@@ -1371,6 +1584,19 @@ function updateAnswerDisplay() {
     return;
   }
 
+  if (gameState.activeOp === 'music' || gameState.activeOp === 'angles') {
+    const display = document.getElementById('prompt-answer-display');
+    if (!display) return;
+    if (gameState.currentAnswer === '') {
+      display.innerText = '?';
+      display.className = 'answer-empty';
+    } else {
+      display.innerText = gameState.currentAnswer;
+      display.className = 'answer-typing';
+    }
+    return;
+  }
+
   const display = document.getElementById('answer-display');
   if (gameState.currentAnswer === '') {
     display.innerText = '?';
@@ -1397,6 +1623,15 @@ function updateComboHUD() {
     label.innerText = `x${multiplier.toFixed(1)}`;
     bubble.classList.add('pulse');
     setTimeout(() => bubble.classList.remove('pulse'), 400);
+
+    // Cosmo celebrates combo milestones with a backflip
+    if (gameState.combo % 3 === 0) {
+      const mascot = document.getElementById('mascot-img');
+      if (mascot) {
+        mascot.classList.add('mascot-flip');
+        setTimeout(() => mascot.classList.remove('mascot-flip'), 900);
+      }
+    }
   }
 }
 
@@ -1554,7 +1789,7 @@ function submitAnswer(isTimeout = false) {
 
   // Log answer
   gameState.answersLog.push({
-    num1: q.op === 'sequence' ? q.terms.join(', ') : q.num1,
+    num1: q.op === 'sequence' ? q.terms.join(', ') : (q.promptText || q.num1),
     num2: q.num2,
     expected: q.expected,
     op: q.op,
@@ -1619,7 +1854,9 @@ function submitAnswer(isTimeout = false) {
     mathCard.classList.add('animate-shake');
     setTimeout(() => mathCard.classList.remove('animate-shake'), 400);
 
-    const displayId = gameState.activeOp === 'sequence' ? 'sequence-answer-display' : 'answer-display';
+    const displayId = gameState.activeOp === 'sequence' ? 'sequence-answer-display'
+      : (gameState.activeOp === 'music' || gameState.activeOp === 'angles') ? 'prompt-answer-display'
+      : 'answer-display';
     const display = document.getElementById(displayId);
     if (display) {
       display.innerText = q.expected;
@@ -1649,6 +1886,8 @@ function currentLevelTag(q) {
   if (op === 'fraction') return `fraction:${gameState.fractionLevel}`;
   if (op === 'sequence') return `sequence:${gameState.sequenceLevel}`;
   if (op === 'compare') return `compare:${gameState.compareLevel}`;
+  if (op === 'music') return `music:${gameState.musicLevel}`;
+  if (op === 'angles') return `angles:${gameState.anglesLevel}`;
   return op;
 }
 
@@ -1659,7 +1898,9 @@ function showTeachingMoment(q) {
   if (!helper) return false;
 
   let html = '';
-  if (q.op === 'multiply') {
+  if (q.teach) {
+    html = `<div class="teach-text">${q.teach}</div>`;
+  } else if (q.op === 'multiply') {
     const a = Math.min(q.num1, q.num2), b = Math.max(q.num1, q.num2);
     if (a <= 10 && b <= 12) {
       let dots = '';
@@ -2487,6 +2728,8 @@ function endGame() {
       } else if (log.subtype === 'subtract') {
         formula.innerText = `${log.num1}/${log.denom || '?'} − ${log.num2}/${log.denom || '?'}`;
       }
+    } else if (log.op === 'music' || log.op === 'angles') {
+      formula.innerText = `${log.num1} = ${log.expected}`;
     } else if (log.op === 'sequence') {
       formula.innerText = `Sequence: ${log.num1}, ?`;
     } else if (log.op === 'compare') {
@@ -2628,6 +2871,14 @@ function checkAndUnlockBadges(accuracy, avgSpeed) {
     } else if (gameState.fractionLevel === 'add' || gameState.fractionLevel === 'subtract') {
       addBadge('fraction_lord');
     }
+  }
+
+  if (gameState.activeOp === 'music' && accuracy === 100) {
+    addBadge('rhythm_star');
+  }
+
+  if (gameState.activeOp === 'angles' && accuracy === 100) {
+    addBadge('twist_champion');
   }
 
   if (gameState.totalTestsCompleted >= 5) {

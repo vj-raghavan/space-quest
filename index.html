@@ -63,7 +63,7 @@
         <div class="galaxy-stats-row">
           <div class="galaxy-stat" id="galaxy-streak">🔥 0 day streak</div>
           <div class="galaxy-stat" id="galaxy-coins">⭐ 0 coins</div>
-          <div class="galaxy-stat" id="galaxy-stars">🌟 0 / 87 stars</div>
+          <div class="galaxy-stat" id="galaxy-stars">🌟 0 / 105 stars</div>
         </div>
       </div>
 
@@ -105,6 +105,8 @@
         <button class="op-tab-btn" data-op="compare">⚖️ Compare</button>
         <button class="op-tab-btn" data-op="clock">⏰ Clock Reader</button>
         <button class="op-tab-btn" data-op="fraction">🍕 Fractions</button>
+        <button class="op-tab-btn" data-op="music">🎵 Music Math</button>
+        <button class="op-tab-btn" data-op="angles">🤸 Turns & Angles</button>
       </div>
 
       <div class="setup-grid">
@@ -258,6 +260,52 @@
           </div>
         </div>
 
+        <!-- Music Math Level Selector -->
+        <div class="setup-card glass-panel hidden" id="config-music">
+          <h2>🎯 Choose Music Level</h2>
+          <p class="subtitle" style="margin-bottom: 8px; color: var(--neon-cyan);">Pick your rhythm challenge!</p>
+          <div class="digits-selector-grid">
+            <button class="digit-level-btn selected" data-level="notes">
+              <span class="level-emoji">🎵</span>
+              <span class="level-title">Note Values</span>
+              <span class="level-range">Beats per note</span>
+            </button>
+            <button class="digit-level-btn" data-level="beats">
+              <span class="level-emoji">🎶</span>
+              <span class="level-title">Beat Counting</span>
+              <span class="level-range">Add up the notes</span>
+            </button>
+            <button class="digit-level-btn" data-level="measures">
+              <span class="level-emoji">🎼</span>
+              <span class="level-title">Measure Math</span>
+              <span class="level-range">Beats × measures</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Turns & Angles Level Selector -->
+        <div class="setup-card glass-panel hidden" id="config-angles">
+          <h2>🎯 Choose Turns Level</h2>
+          <p class="subtitle" style="margin-bottom: 8px; color: var(--neon-cyan);">Pick your gymnastics challenge!</p>
+          <div class="digits-selector-grid">
+            <button class="digit-level-btn selected" data-level="turns">
+              <span class="level-emoji">🤸</span>
+              <span class="level-title">Name the Turn</span>
+              <span class="level-range">Turns to degrees</span>
+            </button>
+            <button class="digit-level-btn" data-level="combine">
+              <span class="level-emoji">🤾</span>
+              <span class="level-title">Routine Builder</span>
+              <span class="level-range">Add up the turns</span>
+            </button>
+            <button class="digit-level-btn" data-level="convert">
+              <span class="level-emoji">🌀</span>
+              <span class="level-title">Twist Converter</span>
+              <span class="level-range">Quarters, halves & twists</span>
+            </button>
+          </div>
+        </div>
+
         <!-- Options Selector -->
         <div class="setup-card glass-panel secondary-setup">
           <h2>⚙️ Mission Settings</h2>
@@ -353,6 +401,13 @@
             </div>
             <div id="sequence-display" class="sequence-display hidden">
               <!-- Generated programmatically in app.js -->
+            </div>
+            <div id="prompt-display" class="prompt-display hidden">
+              <!-- Music Math & Turns/Angles word problems -->
+              <div id="prompt-question" class="prompt-question"></div>
+              <div class="prompt-answer-row">
+                <span id="prompt-answer-display" class="answer-empty">?</span>
+              </div>
             </div>
             <div id="visual-helper" class="visual-helper-container hidden">
               <!-- Dots or arrays representing the multiplication visually when user needs a hint -->
@@ -567,6 +622,9 @@
 
         <h3>✨ Rocket Trails</h3>
         <div class="shop-grid" id="shop-trails"></div>
+
+        <h3>🎶 Victory Tunes</h3>
+        <div class="shop-grid" id="shop-jingles"></div>
 
         <div class="parent-actions">
           <button class="btn btn-primary" id="btn-shop-back">Back to Galaxy 🗺️</button>

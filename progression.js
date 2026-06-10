@@ -51,6 +51,16 @@ const Progression = (() => {
       { id: 'add', name: 'Add It', desc: 'Add fractions' },
       { id: 'subtract', name: 'Subtract It', desc: 'Subtract fractions' },
     ]},
+    { id: 'music', name: 'Rhythm Nebula', emoji: '🎵', tagline: 'Piano math', levels: [
+      { id: 'notes', name: 'Note Values', desc: 'Beats per note' },
+      { id: 'beats', name: 'Beat Counting', desc: 'Add up the notes' },
+      { id: 'measures', name: 'Measure Math', desc: 'Beats × measures' },
+    ]},
+    { id: 'angles', name: 'Twist & Turn Arena', emoji: '🤸', tagline: 'Gymnastics turns', levels: [
+      { id: 'turns', name: 'Name the Turn', desc: 'Turns to degrees' },
+      { id: 'combine', name: 'Routine Builder', desc: 'Add up the turns' },
+      { id: 'convert', name: 'Twist Converter', desc: 'Quarters, halves & twists' },
+    ]},
   ];
 
   const ROCKETS = [
@@ -58,14 +68,23 @@ const Progression = (() => {
     { id: 'ufo', emoji: '🛸', name: 'Cosmic UFO', price: 80 },
     { id: 'star', emoji: '🌟', name: 'Shooting Star', price: 150 },
     { id: 'unicorn', emoji: '🦄', name: 'Space Unicorn', price: 250 },
+    { id: 'piano', emoji: '🎹', name: 'Grand Piano', price: 200 },
+    { id: 'gymnast', emoji: '🤸', name: 'Flying Gymnast', price: 200 },
     { id: 'dragon', emoji: '🐉', name: 'Star Dragon', price: 400 },
   ];
 
   const TRAILS = [
     { id: 'cyan', name: 'Cyan Glow', color: 'oklch(0.78 0.18 190)', price: 0 },
     { id: 'pink', name: 'Pink Blaze', color: 'oklch(0.65 0.25 340)', price: 60 },
+    { id: 'violet', name: 'Melody Glow', color: 'oklch(0.62 0.25 300)', price: 90 },
     { id: 'gold', name: 'Golden Comet', color: 'oklch(0.85 0.22 85)', price: 120 },
     { id: 'green', name: 'Alien Aura', color: 'oklch(0.75 0.20 140)', price: 120 },
+  ];
+
+  const JINGLES = [
+    { id: 'classic', emoji: '🎺', name: 'Classic Fanfare', price: 0 },
+    { id: 'arpeggio', emoji: '🎹', name: 'Piano Arpeggio', price: 100 },
+    { id: 'glissando', emoji: '✨', name: 'Sparkle Glissando', price: 150 },
   ];
 
   const DEFAULT_PROFILE = {
@@ -74,7 +93,8 @@ const Progression = (() => {
     coins: 0,
     rocket: 'rocket',
     trail: 'cyan',
-    owned: ['rocket', 'cyan'],
+    jingle: 'classic',
+    owned: ['rocket', 'cyan', 'classic'],
     stars: {},          // missionKey -> best star count (0-3)
     streak: { count: 0, lastDate: null, shieldWeek: null },
     dailyHistory: [],   // ['2026-06-10', ...] days with completed daily mission
@@ -86,11 +106,14 @@ const Progression = (() => {
   let parentGateAnswer = null;
 
   function loadProfile() {
+    let p = { ...DEFAULT_PROFILE };
     try {
       const raw = localStorage.getItem(STORE_KEY);
-      if (raw) return { ...DEFAULT_PROFILE, ...JSON.parse(raw) };
+      if (raw) p = { ...DEFAULT_PROFILE, ...JSON.parse(raw) };
     } catch (e) { /* fall through to defaults */ }
-    return { ...DEFAULT_PROFILE };
+    // Profiles saved before Victory Tunes existed need the free jingle
+    if (!p.owned.includes('classic')) p.owned.push('classic');
+    return p;
   }
 
   function saveProfile() {
@@ -124,6 +147,8 @@ const Progression = (() => {
     else if (planet.id === 'fraction') s.fractionLevel = level.id;
     else if (planet.id === 'sequence') s.sequenceLevel = level.id;
     else if (planet.id === 'compare') s.compareLevel = level.id;
+    else if (planet.id === 'music') s.musicLevel = level.id;
+    else if (planet.id === 'angles') s.anglesLevel = level.id;
   }
 
   // Derive a missionKey from the current setup-screen state so custom
@@ -140,7 +165,9 @@ const Progression = (() => {
       (s.activeOp === 'add' || s.activeOp === 'subtract') ? s.digitLevel :
       s.activeOp === 'clock' ? s.clockLevel :
       s.activeOp === 'fraction' ? s.fractionLevel :
-      s.activeOp === 'sequence' ? s.sequenceLevel : s.compareLevel;
+      s.activeOp === 'sequence' ? s.sequenceLevel :
+      s.activeOp === 'music' ? s.musicLevel :
+      s.activeOp === 'angles' ? s.anglesLevel : s.compareLevel;
     const lvl = planet.levels.find(l => l.id === levelId);
     return lvl ? `${planet.id}:${levelId}` : null;
   }
@@ -370,6 +397,7 @@ const Progression = (() => {
     updateCoinHud();
     renderShopSection('shop-rockets', ROCKETS, 'rocket');
     renderShopSection('shop-trails', TRAILS, 'trail');
+    renderShopSection('shop-jingles', JINGLES, 'jingle');
   }
 
   function renderShopSection(containerId, items, slot) {
@@ -383,9 +411,9 @@ const Progression = (() => {
       const card = document.createElement('div');
       card.className = `shop-item ${equipped ? 'equipped' : ''}`;
 
-      const visual = slot === 'rocket'
-        ? `<span class="shop-emoji">${item.emoji}</span>`
-        : `<span class="shop-emoji trail-swatch" style="background:${item.color}"></span>`;
+      const visual = item.color
+        ? `<span class="shop-emoji trail-swatch" style="background:${item.color}"></span>`
+        : `<span class="shop-emoji">${item.emoji}</span>`;
 
       let btnLabel, btnClass;
       if (equipped) { btnLabel = '✓ Equipped'; btnClass = 'equipped'; }
@@ -401,10 +429,12 @@ const Progression = (() => {
       card.querySelector('.shop-btn').addEventListener('click', () => {
         if (equipped) return;
         if (owned) {
-          playSound('tap');
           profile[slot] = item.id;
           saveProfile();
           renderShop();
+          // Preview the tune when equipping a jingle
+          if (slot === 'jingle') playSound('victory');
+          else playSound('tap');
         } else if (profile.coins >= item.price) {
           playSound('victory');
           profile.coins -= item.price;
@@ -525,6 +555,8 @@ const Progression = (() => {
     'fraction:identify': '🍕 Fractions (read)', 'fraction:simplify': '🍕 Fractions (simplify)', 'fraction:add': '🍕 Fractions (add)', 'fraction:subtract': '🍕 Fractions (subtract)',
     'sequence:easy': '💫 Sequences (easy)', 'sequence:medium': '💫 Sequences (medium)', 'sequence:hard': '💫 Sequences (hard)',
     'compare:easy': '⚖️ Compare (easy)', 'compare:medium': '⚖️ Compare (medium)', 'compare:hard': '⚖️ Compare (hard)',
+    'music:notes': '🎵 Music (note values)', 'music:beats': '🎵 Music (beat counting)', 'music:measures': '🎵 Music (measures)',
+    'angles:turns': '🤸 Turns (degrees)', 'angles:combine': '🤸 Turns (routines)', 'angles:convert': '🤸 Turns (conversions)',
   };
 
   function renderModeStats() {
@@ -549,6 +581,10 @@ const Progression = (() => {
   // --- Name handling ---
   function getName() {
     return profile.name;
+  }
+
+  function getJingle() {
+    return profile.jingle || 'classic';
   }
 
   function maybeShowNamePopup() {
@@ -624,5 +660,5 @@ const Progression = (() => {
     maybeShowNamePopup();
   }
 
-  return { init, renderGalaxy, completeMission, applyCosmetics, keyFromState, getName, updateCoinHud };
+  return { init, renderGalaxy, completeMission, applyCosmetics, keyFromState, getName, getJingle, updateCoinHud };
 })();

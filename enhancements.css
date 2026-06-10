@@ -489,8 +489,85 @@
 /* Name popup input layout */
 .name-input { width: 230px; margin: 12px 0 16px; }
 
+/* --- Music Math & Turns/Angles word-problem display --- */
+.prompt-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 0;
+}
+
+.prompt-question {
+  text-align: center;
+}
+
+.prompt-line {
+  font-size: 1.35rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.prompt-line b {
+  color: var(--neon-cyan);
+  font-weight: 700;
+}
+
+.prompt-notes {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
+  color: var(--gold-yellow);
+}
+
+.prompt-plus {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--space-light);
+  opacity: 0.8;
+}
+
+.note-glyph {
+  width: 34px;
+  height: 48px;
+  vertical-align: middle;
+}
+
+.prompt-answer-row {
+  display: flex;
+  justify-content: center;
+  font-size: 2.2rem;
+  font-weight: 700;
+}
+
+#prompt-answer-display.answer-empty {
+  opacity: 0.5;
+  border-bottom: 3px dashed var(--neon-cyan);
+  padding: 0 18px;
+}
+
+#prompt-answer-display.answer-typing {
+  color: var(--gold-yellow);
+  border-bottom: 3px solid var(--gold-yellow);
+  padding: 0 18px;
+}
+
+/* Cosmo's combo backflip */
+@keyframes cosmoFlip {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.15); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+.mascot-flip {
+  animation: cosmoFlip 0.8s ease-in-out;
+}
+
 @media (max-width: 600px) {
   .planets-grid { grid-template-columns: repeat(2, 1fr); }
   .daily-mission-card { flex-direction: column; align-items: stretch; text-align: center; }
   .streak-calendar { justify-content: center; }
+  .prompt-line { font-size: 1.1rem; }
 }
