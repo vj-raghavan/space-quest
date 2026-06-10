@@ -33,7 +33,11 @@ const gameState = {
   fractionAutoAdvanceTimer: null,
   sequenceLevel: 'easy',     // 'easy', 'medium', 'hard'
   compareLevel: 'easy',      // 'easy', 'medium', 'hard'
-  compareCurrentChoice: ''   // '<', '=', '>'
+  compareCurrentChoice: '',  // '<', '=', '>'
+  missionKey: null,          // 'planet:level' when launched from the galaxy map, 'daily', or null
+  injectedQuestions: null,   // pre-built question list (daily mission)
+  missedQuestions: [],       // wrong answers this round, queued for the rematch
+  rematchDone: false         // whether the end-of-round rematch already ran
 };
 
 // Mascot Cosmo phrases
@@ -58,9 +62,9 @@ const mascotPhrases = {
     "No worries! Practice makes us super strong! ☄️"
   ],
   combo: [
-    "Wow, a x2 combo! You're on fire! 🔥",
-    "Incredible speed! Combo x3! You are zooming! ⚡",
-    "Super combo! The rocket is in hyperspace! 🌌"
+    "Wow, a x1.5 combo! You're on fire! 🔥",
+    "Incredible! Combo x2.0! You are zooming! ⚡",
+    "Combo x2.5! The rocket is in hyperspace! 🌌"
   ]
 };
 
@@ -347,7 +351,18 @@ function setMascotExpression(type, customText = null) {
   else if (type === 'incorrect') phrases = mascotPhrases.incorrect;
   
   if (phrases.length > 0) {
-    const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
+    let randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
+    // Sometimes cheer the player on by name
+    const playerName = (typeof Progression !== 'undefined') ? Progression.getName() : '';
+    if (type === 'correct' && playerName && Math.random() < 0.35) {
+      const namePhrases = [
+        `Amazing work, ${playerName}! 🌟`,
+        `${playerName}, you're a math superstar! 💫`,
+        `Cosmo is so proud of you, ${playerName}! 🚀`,
+        `Blast off, ${playerName}! That's correct! ⚡`
+      ];
+      randomPhrase = namePhrases[Math.floor(Math.random() * namePhrases.length)];
+    }
     speechElement.innerText = randomPhrase;
   }
 }
@@ -582,8 +597,13 @@ function initSetupUI() {
     });
   });
 
-  // Start game click
-  document.getElementById('btn-start-game').addEventListener('click', launchGame);
+  // Start game click (custom mission from the setup screen)
+  document.getElementById('btn-start-game').addEventListener('click', () => {
+    gameState.injectedQuestions = null;
+    // Custom missions that exactly match a planet level still earn its stars
+    gameState.missionKey = (typeof Progression !== 'undefined') ? Progression.keyFromState(gameState) : null;
+    launchGame();
+  });
 
   // Restart click on Results
   document.getElementById('btn-restart').addEventListener('click', resetToSetup);
@@ -657,10 +677,24 @@ function showScreen(screenId) {
     const triviaPopup = document.getElementById('trivia-popup');
     if (triviaPopup) triviaPopup.classList.add('hidden');
   }
+
+  if (screenId === 'screen-galaxy') {
+    stopConfetti();
+    const triviaPopup = document.getElementById('trivia-popup');
+    if (triviaPopup) triviaPopup.classList.add('hidden');
+    if (typeof Progression !== 'undefined') Progression.renderGalaxy();
+  }
 }
 
 // Generate the randomized arithmetic pool
 function generateQuestions() {
+  // Daily missions arrive as a pre-built list of the player's weakest facts
+  if (gameState.injectedQuestions && gameState.injectedQuestions.length > 0) {
+    gameState.currentQuestions = gameState.injectedQuestions.map(q => ({ ...q }));
+    gameState.questionCount = gameState.currentQuestions.length;
+    return;
+  }
+
   const pool = [];
 
   if (gameState.activeOp === 'multiply') {
@@ -1016,6 +1050,13 @@ function generateQuestions() {
     }
   }
 
+  // Adaptive selection for multiplication/division: facts the player gets
+  // wrong or answers slowly are much more likely to be picked.
+  if (gameState.activeOp === 'multiply' || gameState.activeOp === 'divide') {
+    gameState.currentQuestions = Mastery.weightedSample(pool, gameState.questionCount);
+    return;
+  }
+
   // Shuffle the pool (Fisher-Yates)
   for (let i = pool.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -1051,6 +1092,10 @@ function launchGame() {
   gameState.correctAnswersCount = 0;
   gameState.answersLog = [];
   gameState.currentAnswer = '';
+  gameState.missedQuestions = [];
+  gameState.rematchDone = false;
+
+  if (typeof Progression !== 'undefined') Progression.applyCosmetics();
 
   // Update UI Elements
   document.getElementById('game-score').innerText = '0';
@@ -1067,6 +1112,13 @@ function launchGame() {
 function loadQuestion() {
   gameState.currentAnswer = '';
   updateAnswerDisplay();
+
+  // Hide any teaching visual from the previous question
+  const visualHelper = document.getElementById('visual-helper');
+  if (visualHelper) {
+    visualHelper.classList.add('hidden');
+    visualHelper.innerHTML = '';
+  }
 
   const mathCard = document.getElementById('math-card');
   const clockCard = document.getElementById('clock-card');
@@ -1235,16 +1287,18 @@ function loadQuestion() {
     document.getElementById('custom-numpad').classList.remove('hidden');
     document.getElementById('comparison-input-pad').classList.add('hidden');
 
-    // Mascot speech reset and operator display setup
+    // Mascot speech reset and operator display setup.
+    // Use the question's own op (daily missions can mix multiply & divide).
+    const qOp = q.op || gameState.activeOp;
     const opElement = document.getElementById('game-operator');
     let opSymbol = '×';
-    if (gameState.activeOp === 'add') {
+    if (qOp === 'add') {
       opSymbol = '+';
       setMascotExpression('game', `Solve ${q.num1} + ${q.num2} to propel the rocket! 🚀`);
-    } else if (gameState.activeOp === 'subtract') {
+    } else if (qOp === 'subtract') {
       opSymbol = '−';
       setMascotExpression('game', `Solve ${q.num1} − ${q.num2} to propel the rocket! 🚀`);
-    } else if (gameState.activeOp === 'divide') {
+    } else if (qOp === 'divide') {
       opSymbol = '÷';
       setMascotExpression('game', `Solve ${q.num1} ÷ ${q.num2} to propel the rocket! 🚀`);
     } else {
@@ -1265,15 +1319,34 @@ function loadQuestion() {
   }
 }
 
+// Time limit scaled to the difficulty of the current mode, so the timer
+// challenges without causing panic (8s is fine for 3×4, brutal for 14×12).
+function getTimeLimit() {
+  const op = gameState.activeOp;
+  if (op === 'multiply' || op === 'divide') {
+    const hasBigTables = gameState.selectedTables.some(t => t >= 11);
+    return hasBigTables ? 12 : 8;
+  }
+  if (op === 'add' || op === 'subtract') {
+    return { single: 8, double: 15, triple: 25, mixed: 18 }[gameState.digitLevel] || 10;
+  }
+  if (op === 'sequence') return { easy: 12, medium: 18, hard: 25 }[gameState.sequenceLevel] || 15;
+  if (op === 'compare') return { easy: 8, medium: 12, hard: 15 }[gameState.compareLevel] || 10;
+  if (op === 'clock') return { hour: 10, quarter: 12, 'five-min': 15, precision: 20 }[gameState.clockLevel] || 12;
+  if (op === 'fraction') return { identify: 15, simplify: 20, add: 25, subtract: 25 }[gameState.fractionLevel] || 18;
+  return 8;
+}
+
 function startTimer() {
   clearInterval(gameState.timerInterval);
-  gameState.timeLeft = 8.0;
+  const limit = getTimeLimit();
+  gameState.timeLeft = limit;
   const bar = document.getElementById('timer-bar');
   bar.style.width = '100%';
 
   gameState.timerInterval = setInterval(() => {
     gameState.timeLeft -= 0.1;
-    const percentage = (gameState.timeLeft / 8.0) * 100;
+    const percentage = (gameState.timeLeft / limit) * 100;
     bar.style.width = `${percentage}%`;
 
     if (gameState.timeLeft <= 0) {
@@ -1487,8 +1560,10 @@ function submitAnswer(isTimeout = false) {
     op: q.op,
     typed: typedAnswer,
     isCorrect: isCorrect,
-    timeTaken: timeTaken
+    timeTaken: timeTaken,
+    isRematch: !!q.isRematch
   });
+  Mastery.record(q, isCorrect, timeTaken, currentLevelTag(q));
 
   const mathCard = document.getElementById('math-card');
   const rocket = document.getElementById('rocket-ship');
@@ -1538,6 +1613,7 @@ function submitAnswer(isTimeout = false) {
 
   } else {
     gameState.combo = 0;
+    gameState.missedQuestions.push(q);
     playSound('wrong');
     mathCard.classList.add('incorrect');
     mathCard.classList.add('animate-shake');
@@ -1554,11 +1630,63 @@ function submitAnswer(isTimeout = false) {
       }
     }
 
+    // Turn the mistake into a mini-lesson before moving on
+    const taught = showTeachingMoment(q);
+
     setMascotExpression('incorrect');
     updateComboHUD();
 
-    setTimeout(advanceGame, 1800);
+    setTimeout(advanceGame, taught ? 3600 : 1800);
   }
+}
+
+// Tag used for per-mode statistics in the parent dashboard
+function currentLevelTag(q) {
+  const op = (q && q.op) || gameState.activeOp;
+  if (op === 'multiply' || op === 'divide') return op;
+  if (op === 'add' || op === 'subtract') return `${op}:${gameState.digitLevel}`;
+  if (op === 'clock') return `clock:${gameState.clockLevel}`;
+  if (op === 'fraction') return `fraction:${gameState.fractionLevel}`;
+  if (op === 'sequence') return `sequence:${gameState.sequenceLevel}`;
+  if (op === 'compare') return `compare:${gameState.compareLevel}`;
+  return op;
+}
+
+// Show a short visual explanation after a wrong answer.
+// Returns true if something was shown (caller extends the pause).
+function showTeachingMoment(q) {
+  const helper = document.getElementById('visual-helper');
+  if (!helper) return false;
+
+  let html = '';
+  if (q.op === 'multiply') {
+    const a = Math.min(q.num1, q.num2), b = Math.max(q.num1, q.num2);
+    if (a <= 10 && b <= 12) {
+      let dots = '';
+      for (let r = 0; r < a; r++) {
+        dots += `<div class="teach-row">${'<span class="teach-dot"></span>'.repeat(b)}</div>`;
+      }
+      html = `<div class="teach-text">${a} groups of ${b} = ${q.expected}</div><div class="teach-dots">${dots}</div>`;
+    } else {
+      const big = Math.max(q.num1, q.num2), small = Math.min(q.num1, q.num2);
+      const tens = Math.floor(big / 10) * 10, ones = big % 10;
+      html = `<div class="teach-text">${big} × ${small} = (${tens} × ${small}) + (${ones} × ${small}) = ${tens * small} + ${ones * small} = ${q.expected}</div>`;
+    }
+  } else if (q.op === 'divide') {
+    html = `<div class="teach-text">${q.num1} ÷ ${q.num2} = ${q.expected}, because ${q.num2} × ${q.expected} = ${q.num1} ✨</div>`;
+  } else if (q.op === 'add' && q.num2 >= 10) {
+    const tens = Math.floor(q.num2 / 10) * 10, ones = q.num2 % 10;
+    html = `<div class="teach-text">${q.num1} + ${tens} = ${q.num1 + tens}, then + ${ones} = ${q.expected} ✨</div>`;
+  } else if (q.op === 'subtract' && q.num2 >= 10) {
+    const tens = Math.floor(q.num2 / 10) * 10, ones = q.num2 % 10;
+    html = `<div class="teach-text">${q.num1} − ${tens} = ${q.num1 - tens}, then − ${ones} = ${q.expected} ✨</div>`;
+  } else {
+    return false;
+  }
+
+  helper.innerHTML = html;
+  helper.classList.remove('hidden');
+  return true;
 }
 
 function handleClockKeyPress(key) {
@@ -1722,8 +1850,10 @@ function submitClockAnswer() {
     op: 'clock',
     typed: typedTimeStr,
     isCorrect: isCorrect,
-    timeTaken: timeTaken
+    timeTaken: timeTaken,
+    isRematch: !!q.isRematch
   });
+  Mastery.record(q, isCorrect, timeTaken, currentLevelTag(q));
 
   const clockCard = document.getElementById('clock-card');
   const rocket = document.getElementById('rocket-ship');
@@ -1772,6 +1902,7 @@ function submitClockAnswer() {
 
   } else {
     gameState.combo = 0;
+    gameState.missedQuestions.push(q);
     playSound('wrong');
     clockCard.classList.add('incorrect');
     clockCard.classList.add('animate-shake');
@@ -1833,8 +1964,10 @@ function submitCompareAnswer() {
     op: 'compare',
     typed: typedVal || 'None',
     isCorrect: isCorrect,
-    timeTaken: timeTaken
+    timeTaken: timeTaken,
+    isRematch: !!q.isRematch
   });
+  Mastery.record(q, isCorrect, timeTaken, currentLevelTag(q));
 
   const compareCard = document.getElementById('compare-card');
   const rocket = document.getElementById('rocket-ship');
@@ -1902,6 +2035,7 @@ function submitCompareAnswer() {
 
   } else {
     gameState.combo = 0;
+    gameState.missedQuestions.push(q);
     playSound('wrong');
     if (compareCard) {
       compareCard.classList.add('incorrect', 'animate-shake');
@@ -2052,8 +2186,10 @@ function submitFractionAnswer() {
   gameState.answersLog.push({
     num1: q.num1, num2: q.num2, expected: q.expected,
     op: 'fraction', subtype: q.subtype, denom: q.denom,
-    typed: `${typedN}/${typedD}`, isCorrect, timeTaken
+    typed: `${typedN}/${typedD}`, isCorrect, timeTaken,
+    isRematch: !!q.isRematch
   });
+  Mastery.record(q, isCorrect, timeTaken, currentLevelTag(q));
 
   const fractionCard = document.getElementById('fraction-card');
   const rocket = document.getElementById('rocket-ship');
@@ -2091,6 +2227,7 @@ function submitFractionAnswer() {
 
   } else {
     gameState.combo = 0;
+    gameState.missedQuestions.push(q);
     playSound('wrong');
     fractionCard.classList.add('incorrect');
     fractionCard.classList.add('animate-shake');
@@ -2219,9 +2356,36 @@ function advanceGame() {
 
   if (gameState.currentQuestionIndex < gameState.questionCount) {
     loadQuestion();
+  } else if (!gameState.rematchDone && gameState.missedQuestions.length > 0) {
+    startRematch();
   } else {
     endGame();
   }
+}
+
+// Re-ask this round's missed questions so the round ends on a win —
+// that immediate retry is where the actual learning sticks.
+function startRematch() {
+  gameState.rematchDone = true;
+
+  const seen = new Set();
+  const rematch = [];
+  gameState.missedQuestions.forEach(q => {
+    const k = JSON.stringify([q.op, q.num1, q.num2, q.terms, q.lhsText, q.rhsText, q.expected]);
+    if (!seen.has(k) && rematch.length < 5) {
+      seen.add(k);
+      rematch.push({ ...q, isRematch: true });
+    }
+  });
+
+  gameState.currentQuestions.push(...rematch);
+  gameState.questionCount += rematch.length;
+
+  document.getElementById('game-question-index').innerText =
+    `${gameState.currentQuestionIndex + 1} / ${gameState.questionCount}`;
+
+  loadQuestion();
+  setMascotExpression('game', `🛡️ Cosmo's Rematch! Let's beat the ${rematch.length === 1 ? 'one' : rematch.length} that got away! 💪`);
 }
 
 function endGame() {
@@ -2285,6 +2449,17 @@ function endGame() {
 
   checkAndUnlockBadges(accuracy, parseFloat(avgSpeed));
 
+  // Progression rewards: star-coins, planet stars, daily streak
+  let reward = { coins: 0, dailyBonus: false };
+  if (typeof Progression !== 'undefined') {
+    reward = Progression.completeMission(starsCount, accuracy);
+  }
+  const coinsEarnedEl = document.getElementById('coins-earned');
+  if (coinsEarnedEl) {
+    coinsEarnedEl.innerText = `+${reward.coins} ⭐ Star Coins${reward.dailyBonus ? '  ·  Daily Mission Streak! 🔥' : ''}`;
+    coinsEarnedEl.classList.remove('hidden');
+  }
+
   const reviewList = document.getElementById('review-list');
   reviewList.innerHTML = '';
   
@@ -2299,7 +2474,7 @@ function endGame() {
 
     const formula = document.createElement('span');
     formula.className = 'review-formula';
-    
+
     if (log.op === 'clock') {
       formula.innerText = `Clock Reading`;
     } else if (log.op === 'fraction') {
@@ -2328,6 +2503,10 @@ function endGame() {
         <span class="review-wrong-val">${log.typed === null ? 'Timeout' : log.typed}</span>
         <span class="review-correct-val">✓ ${log.expected}</span>
       `;
+    }
+
+    if (log.isRematch) {
+      formula.innerText = `🛡️ ${formula.innerText}`;
     }
 
     item.appendChild(formula);
@@ -2482,7 +2661,7 @@ function checkAndUnlockBadges(accuracy, avgSpeed) {
 
 function resetToSetup() {
   playSound('tap');
-  showScreen('screen-setup');
+  showScreen('screen-galaxy');
 }
 
 // --- App Bootstrap ---
@@ -2491,6 +2670,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   initSetupUI();
   setupNumpad();
-  
+
   drawClockDial();
+
+  if (typeof Progression !== 'undefined') Progression.init();
 });

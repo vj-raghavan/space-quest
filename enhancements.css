@@ -1,0 +1,496 @@
+/* --- Space Quest Enhancements: Galaxy Map, Shop, Daily Missions, Parent Zone, Teaching --- */
+
+/* .screen is display:flex (row); the new screens stack vertically */
+#screen-galaxy, #screen-shop, #screen-parent {
+  flex-direction: column;
+}
+
+#screen-shop .shop-panel, #screen-parent .parent-panel {
+  width: 100%;
+}
+
+/* Header coin chip */
+.coin-chip {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--panel-border);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-weight: 600;
+  color: var(--gold-yellow);
+  margin-left: auto;
+  margin-right: 12px;
+  font-size: 1rem;
+}
+
+/* --- Galaxy screen --- */
+.galaxy-header {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.galaxy-header h1 {
+  font-size: 1.8rem;
+}
+
+.galaxy-stats-row {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.galaxy-stat {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.btn-edit-name {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  opacity: 0.6;
+}
+.btn-edit-name:hover { opacity: 1; }
+
+/* Daily mission card */
+.daily-mission-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(255, 200, 80, 0.35);
+  box-shadow: 0 0 20px rgba(255, 200, 80, 0.15);
+  flex-wrap: wrap;
+}
+
+.daily-info h2 {
+  margin-bottom: 4px;
+  color: var(--gold-yellow);
+}
+
+.daily-info p {
+  font-size: 0.95rem;
+  opacity: 0.85;
+  margin-bottom: 10px;
+}
+
+.streak-calendar {
+  display: flex;
+  gap: 6px;
+}
+
+.streak-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 32px;
+  padding: 4px 0;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 0.7rem;
+}
+
+.streak-day.today {
+  border: 1px solid var(--neon-cyan);
+}
+
+.streak-day.done {
+  background: rgba(255, 170, 50, 0.18);
+}
+
+.streak-letter { opacity: 0.6; }
+.streak-dot { font-size: 0.85rem; }
+
+/* Planet grid */
+.planets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.planet-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-family: var(--font-main);
+  color: var(--space-light);
+  padding: 18px 10px;
+  transition: transform 0.2s, box-shadow 0.3s;
+}
+
+.planet-card:hover { transform: translateY(-3px); }
+.planet-card:active { transform: scale(0.97); }
+
+.planet-ring {
+  --ring-pct: 0;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    conic-gradient(var(--gold-yellow) calc(var(--ring-pct) * 1%), rgba(255,255,255,0.12) 0);
+  padding: 4px;
+}
+
+.planet-ring .planet-emoji {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--space-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.2rem;
+}
+
+.planet-name {
+  font-weight: 600;
+  font-size: 1rem;
+  text-align: center;
+}
+
+.planet-tagline {
+  font-size: 0.8rem;
+  opacity: 0.6;
+}
+
+.planet-stars {
+  font-size: 0.85rem;
+  color: var(--gold-yellow);
+}
+
+.galaxy-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--panel-border);
+  color: var(--space-light);
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* Level popup */
+.level-box {
+  max-width: 440px;
+  width: 92%;
+}
+
+.level-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.level-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--panel-border);
+  background: rgba(255, 255, 255, 0.07);
+  cursor: pointer;
+  font-family: var(--font-main);
+  color: var(--space-light);
+  transition: background 0.2s, transform 0.15s;
+  text-align: left;
+}
+
+.level-row:hover:not(.locked) { background: rgba(255, 255, 255, 0.14); }
+.level-row:active:not(.locked) { transform: scale(0.98); }
+
+.level-row.locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.level-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.level-row-name { font-weight: 600; font-size: 1rem; }
+.level-row-desc { font-size: 0.8rem; opacity: 0.65; }
+.level-row-stars { font-size: 0.9rem; white-space: nowrap; }
+.star-empty { opacity: 0.35; }
+
+/* --- Shop --- */
+.shop-panel {
+  max-width: 720px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.shop-panel h3 {
+  margin: 18px 0 10px;
+  text-align: left;
+}
+
+.shop-coins {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--gold-yellow);
+  margin: 8px 0 4px;
+}
+
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
+  gap: 12px;
+}
+
+.shop-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 8px;
+  border-radius: 16px;
+  border: 1px solid var(--panel-border);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.shop-item.equipped {
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 12px rgba(80, 220, 230, 0.25);
+}
+
+.shop-emoji { font-size: 2.2rem; }
+
+.trail-swatch {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 14px currentColor;
+}
+
+.shop-name { font-size: 0.85rem; font-weight: 600; }
+
+.shop-btn {
+  font-family: var(--font-main);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+  color: white;
+}
+
+.shop-btn.equipped { background: var(--success-green); cursor: default; }
+.shop-btn.cant-afford { opacity: 0.45; cursor: not-allowed; background: rgba(255,255,255,0.2); }
+.shop-btn.use { background: rgba(255, 255, 255, 0.22); }
+
+/* --- Parent Zone --- */
+.parent-panel {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.parent-panel h3 {
+  margin: 20px 0 8px;
+}
+
+.parent-gate-q {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 12px 0;
+  color: var(--neon-cyan);
+}
+
+#parent-gate {
+  text-align: center;
+  padding: 16px 0;
+}
+
+#parent-gate-input, .name-input {
+  font-family: var(--font-main);
+  font-size: 1.3rem;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--panel-border);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--space-light);
+  text-align: center;
+  width: 180px;
+  margin: 0 8px 12px 0;
+  user-select: text;
+  outline: none;
+}
+
+#parent-gate-input:focus, .name-input:focus {
+  border-color: var(--neon-cyan);
+}
+
+#parent-gate-error { color: var(--danger-red); margin-top: 8px; }
+
+.parent-hint {
+  font-size: 0.85rem;
+  opacity: 0.7;
+  margin-bottom: 10px;
+}
+
+.parent-heatmap {
+  display: grid;
+  grid-template-columns: repeat(13, minmax(20px, 1fr));
+  gap: 3px;
+  max-width: 560px;
+}
+
+.heat-cell {
+  aspect-ratio: 1;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.heat-header { background: none; opacity: 0.7; font-weight: 600; }
+.heat-none { background: rgba(255, 255, 255, 0.07); }
+.heat-few { background: oklch(0.55 0.10 250 / 0.55); }
+.heat-weak { background: oklch(0.55 0.20 25 / 0.75); }
+.heat-mid { background: oklch(0.70 0.15 85 / 0.7); }
+.heat-good { background: oklch(0.65 0.18 145 / 0.75); }
+
+.weak-chip {
+  display: inline-block;
+  background: oklch(0.55 0.20 25 / 0.35);
+  border: 1px solid oklch(0.55 0.20 25 / 0.6);
+  border-radius: 10px;
+  padding: 5px 12px;
+  margin: 0 6px 6px 0;
+  font-weight: 600;
+}
+
+.mode-stat-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.9rem;
+  flex-wrap: wrap;
+}
+
+.mode-stat-val { opacity: 0.75; }
+
+.parent-empty { opacity: 0.55; font-size: 0.9rem; }
+
+#btn-reset-progress {
+  background: oklch(0.45 0.18 25);
+  color: white;
+  font-size: 0.9rem;
+  padding: 10px 18px;
+  margin-top: 16px;
+}
+
+.parent-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 18px;
+}
+
+/* --- Teaching moment (wrong-answer visual) --- */
+.visual-helper-container {
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  animation: teachFadeIn 0.4s ease;
+}
+
+@keyframes teachFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.teach-text {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--neon-cyan);
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.teach-dots {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+}
+
+.teach-row {
+  display: flex;
+  gap: 4px;
+}
+
+.teach-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--gold-yellow);
+  box-shadow: 0 0 5px rgba(255, 210, 90, 0.6);
+}
+
+.teach-row:nth-child(even) .teach-dot {
+  background: var(--neon-cyan);
+  box-shadow: 0 0 5px rgba(90, 220, 230, 0.6);
+}
+
+/* --- Results additions --- */
+.coins-earned {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--gold-yellow);
+  margin: 10px 0;
+  animation: teachFadeIn 0.5s ease;
+}
+
+/* Abort mission button in game header */
+.abort-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  color: var(--space-light);
+  font-size: 1rem;
+  padding: 6px 12px;
+  cursor: pointer;
+  opacity: 0.7;
+}
+.abort-btn:hover { opacity: 1; }
+
+/* Name popup input layout */
+.name-input { width: 230px; margin: 12px 0 16px; }
+
+@media (max-width: 600px) {
+  .planets-grid { grid-template-columns: repeat(2, 1fr); }
+  .daily-mission-card { flex-direction: column; align-items: stretch; text-align: center; }
+  .streak-calendar { justify-content: center; }
+}

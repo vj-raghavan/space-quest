@@ -31,6 +31,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="enhancements.css">
 </head>
 <body>
   <!-- Starry Background Space Effect -->
@@ -44,18 +45,54 @@
        We still have a global sound toggle button in the header -->
   <header class="app-header">
     <div class="logo">🚀 Space Quest!</div>
+    <div id="coin-counter" class="coin-chip" title="Star Coins — earn them by completing missions!">⭐ 0</div>
     <button id="sound-toggle" class="icon-btn" aria-label="Toggle Sound" title="Toggle Sound">
       <span class="icon">🔊</span>
     </button>
   </header>
 
   <main class="game-container">
-    
-    <!-- 1. SETUP / PREPARATION SCREEN -->
-    <section id="screen-setup" class="screen">
+
+    <!-- 0. GALAXY MAP (HOME) SCREEN -->
+    <section id="screen-galaxy" class="screen">
+      <div class="galaxy-header glass-panel">
+        <h1 class="glow-text" id="galaxy-greeting">Welcome, Space Explorer! 🚀
+        </h1>
+        <button id="btn-edit-name" class="btn-edit-name" title="Change name">✏️</button>
+        <p class="subtitle">Pick a planet and start your mission!</p>
+        <div class="galaxy-stats-row">
+          <div class="galaxy-stat" id="galaxy-streak">🔥 0 day streak</div>
+          <div class="galaxy-stat" id="galaxy-coins">⭐ 0 coins</div>
+          <div class="galaxy-stat" id="galaxy-stars">🌟 0 / 87 stars</div>
+        </div>
+      </div>
+
+      <div class="daily-mission-card glass-panel" id="daily-card">
+        <div class="daily-info">
+          <h2>🛸 Daily Mission</h2>
+          <p id="daily-desc">5 quick questions Cosmo picked just for you. Keep the streak alive!</p>
+          <div class="streak-calendar" id="streak-calendar"></div>
+        </div>
+        <button class="btn btn-primary btn-glow" id="btn-daily">Start! 🚀</button>
+      </div>
+
+      <div class="planets-grid" id="planets-grid">
+        <!-- Planet cards rendered by progression.js -->
+      </div>
+
+      <div class="galaxy-actions">
+        <button class="btn btn-secondary" id="btn-custom-mission">🛠️ Custom Mission</button>
+        <button class="btn btn-secondary" id="btn-shop">🛒 Star Shop</button>
+        <button class="btn btn-secondary" id="btn-parent-zone">👨‍🚀 Grown-Up Zone</button>
+      </div>
+    </section>
+
+    <!-- 1. SETUP / PREPARATION SCREEN (Custom Mission) -->
+    <section id="screen-setup" class="screen hidden">
       <div class="welcome-box glass-panel">
         <h1 class="glow-text">Ready for Blast Off?</h1>
         <p id="setup-subtitle" class="subtitle">Select your cosmic mission and prepare your rocket!</p>
+        <button id="btn-setup-back" class="btn btn-secondary" style="margin-top:10px;">← Back to Galaxy Map</button>
       </div>
 
       <!-- Operation Selection Tabs -->
@@ -238,7 +275,7 @@
             <span class="settings-label">Game Mode:</span>
             <div class="toggle-group" id="game-mode-group">
               <button class="toggle-option active" data-value="adventure">🪐 Quest Mode (No timer)</button>
-              <button class="toggle-option" data-value="timed">⚡ Time Trial (8s per question)</button>
+              <button class="toggle-option" data-value="timed">⚡ Time Trial (smart timer)</button>
             </div>
           </div>
 
@@ -275,6 +312,8 @@
           <span class="hud-label">MISSION STATUS</span>
           <span id="game-question-index" class="hud-value">1 / 10</span>
         </div>
+
+        <button id="btn-abort-mission" class="abort-btn" title="Back to Galaxy Map">🗺️ ✕</button>
       </div>
 
       <!-- Rocket Progress Track -->
@@ -489,6 +528,9 @@
           👑 NEW HIGH SCORE! 👑
         </div>
 
+        <!-- Star Coins earned this mission -->
+        <div id="coins-earned" class="coins-earned hidden">+0 ⭐</div>
+
         <!-- Detail Review of Answers -->
         <div class="review-container">
           <h3>📋 Mission Log (Question Details)</h3>
@@ -506,9 +548,62 @@
         </div>
 
         <div class="results-actions">
-          <button id="btn-restart" class="btn btn-primary">Start New Quest 🚀</button>
+          <button id="btn-retry" class="btn btn-secondary">🔁 Retry Mission</button>
+          <button id="btn-restart" class="btn btn-primary">🗺️ Galaxy Map</button>
         </div>
 
+      </div>
+    </section>
+
+    <!-- 4. STAR SHOP SCREEN -->
+    <section id="screen-shop" class="screen hidden">
+      <div class="glass-panel shop-panel">
+        <h1 class="glow-text">🛒 Star Shop</h1>
+        <p class="subtitle">Earn ⭐ Star Coins by completing missions, then spend them here!</p>
+        <div id="shop-coins" class="shop-coins">⭐ 0</div>
+
+        <h3>🚀 Rockets</h3>
+        <div class="shop-grid" id="shop-rockets"></div>
+
+        <h3>✨ Rocket Trails</h3>
+        <div class="shop-grid" id="shop-trails"></div>
+
+        <div class="parent-actions">
+          <button class="btn btn-primary" id="btn-shop-back">Back to Galaxy 🗺️</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. GROWN-UP (PARENT) ZONE SCREEN -->
+    <section id="screen-parent" class="screen hidden">
+      <div class="glass-panel parent-panel">
+        <h1 class="glow-text">👨‍🚀 Grown-Up Zone</h1>
+
+        <div id="parent-gate">
+          <p>Grown-ups only! Solve this to enter:</p>
+          <p id="parent-gate-q" class="parent-gate-q">17 × 6 = ?</p>
+          <input id="parent-gate-input" type="number" inputmode="numeric" placeholder="?">
+          <button class="btn btn-primary" id="btn-parent-gate">Enter</button>
+          <p id="parent-gate-error" class="hidden">Not quite — try again!</p>
+        </div>
+
+        <div id="parent-dashboard" class="hidden">
+          <h3>✖️ Multiplication Mastery Map</h3>
+          <p class="parent-hint">🟩 Mastered · 🟨 Getting there · 🟥 Needs practice · 🟦 Too few attempts · ⬜ Not seen yet</p>
+          <div id="parent-heatmap" class="parent-heatmap"></div>
+
+          <h3>🎯 Facts to Practice Next</h3>
+          <div id="parent-weak-list"></div>
+
+          <h3>📊 Mission Stats by Mode</h3>
+          <div id="parent-mode-stats"></div>
+
+          <button class="btn" id="btn-reset-progress">⚠️ Reset All Progress</button>
+        </div>
+
+        <div class="parent-actions">
+          <button class="btn btn-primary" id="btn-parent-back">Back to Galaxy 🗺️</button>
+        </div>
       </div>
     </section>
 
@@ -529,6 +624,30 @@
     </div>
   </div>
 
+  <!-- Level Picker Popup (opens when a planet is tapped) -->
+  <div id="level-popup" class="trivia-overlay hidden">
+    <div class="trivia-box glass-panel level-box">
+      <h2 class="trivia-title" id="level-popup-title">🪐 Planet Multiplia</h2>
+      <div id="level-list" class="level-list"></div>
+      <button id="btn-close-levels" class="btn btn-secondary">Close</button>
+    </div>
+  </div>
+
+  <!-- Name Popup (first visit) -->
+  <div id="name-popup" class="trivia-overlay hidden">
+    <div class="trivia-box glass-panel">
+      <div class="trivia-header">
+        <span class="trivia-title-emoji">👋</span>
+        <h2 class="trivia-title">Hi! I'm Cosmo!</h2>
+      </div>
+      <p class="trivia-text">What's your name, space explorer?</p>
+      <input id="name-input" class="name-input" type="text" maxlength="14" placeholder="Your name">
+      <button id="btn-save-name" class="btn btn-primary">Let's Fly! 🚀</button>
+    </div>
+  </div>
+
+  <script src="mastery.js"></script>
+  <script src="progression.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
