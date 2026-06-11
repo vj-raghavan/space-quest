@@ -66,6 +66,11 @@ const Progression = (() => {
       { id: 'emoji', name: 'Emoji Equations', desc: 'Crack the fruit code' },
       { id: 'magic', name: 'Magic Squares', desc: 'Make rows & columns match' },
     ]},
+    { id: 'pokemon', name: 'Poké Galaxy', emoji: '⚡', tagline: 'Gotta know \'em all', levels: [
+      { id: 'identity', name: "Who's That Pokémon?", desc: 'Name the silhouette' },
+      { id: 'type', name: 'Type Match', desc: 'Fire, water, grass…' },
+      { id: 'evolution', name: 'Evolution Lab', desc: 'Who evolves into whom?' },
+    ]},
   ];
 
   const ROCKETS = [
@@ -155,6 +160,7 @@ const Progression = (() => {
     else if (planet.id === 'music') s.musicLevel = level.id;
     else if (planet.id === 'angles') s.anglesLevel = level.id;
     else if (planet.id === 'puzzle') s.puzzleLevel = level.id;
+    else if (planet.id === 'pokemon') s.pokemonLevel = level.id;
   }
 
   // Derive a missionKey from the current setup-screen state so custom
@@ -174,7 +180,8 @@ const Progression = (() => {
       s.activeOp === 'sequence' ? s.sequenceLevel :
       s.activeOp === 'music' ? s.musicLevel :
       s.activeOp === 'angles' ? s.anglesLevel :
-      s.activeOp === 'puzzle' ? s.puzzleLevel : s.compareLevel;
+      s.activeOp === 'puzzle' ? s.puzzleLevel :
+      s.activeOp === 'pokemon' ? s.pokemonLevel : s.compareLevel;
     const lvl = planet.levels.find(l => l.id === levelId);
     return lvl ? `${planet.id}:${levelId}` : null;
   }
@@ -612,6 +619,7 @@ const Progression = (() => {
     'music:notes': '🎵 Music (note values)', 'music:beats': '🎵 Music (beat counting)', 'music:measures': '🎵 Music (measures)',
     'angles:turns': '🤸 Turns (degrees)', 'angles:combine': '🤸 Turns (routines)', 'angles:convert': '🤸 Turns (conversions)',
     'puzzle:mystery': '🧩 Puzzles (mystery number)', 'puzzle:emoji': '🧩 Puzzles (emoji equations)', 'puzzle:magic': '🧩 Puzzles (magic squares)',
+    'pokemon:identity': "⚡ Pokémon (who's that)", 'pokemon:type': '⚡ Pokémon (types)', 'pokemon:evolution': '⚡ Pokémon (evolutions)',
   };
 
   function renderModeStats() {

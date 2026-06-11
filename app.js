@@ -37,6 +37,7 @@ const gameState = {
   musicLevel: 'notes',       // 'notes', 'beats', 'measures'
   anglesLevel: 'turns',      // 'turns', 'combine', 'convert'
   puzzleLevel: 'mystery',    // 'mystery', 'emoji', 'magic'
+  pokemonLevel: 'identity',  // 'identity', 'type', 'evolution'
   missionKey: null,          // 'planet:level' when launched from the galaxy map, 'daily', or null
   injectedQuestions: null,   // pre-built question list (daily mission)
   missedQuestions: [],       // wrong answers this round, queued for the rematch
@@ -98,6 +99,7 @@ const BADGES = [
   { id: 'rhythm_star', name: 'Rhythm Star', emoji: '🎵', desc: 'Got 100% on a Rhythm Nebula music mission!' },
   { id: 'twist_champion', name: 'Twist Champion', emoji: '🤸', desc: 'Got 100% on a Twist & Turn Arena mission!' },
   { id: 'puzzle_genius', name: 'Puzzle Genius', emoji: '🧩', desc: 'Got 100% on a Puzzle Asteroid mission!' },
+  { id: 'pokemon_professor', name: 'Pokémon Professor', emoji: '⚡', desc: 'Got 100% on a Poké Galaxy mission!' },
   { id: 'galaxy_hero', name: 'Galaxy Hero', emoji: '🪐', desc: 'Completed 5 or more space missions!' }
 ];
 
@@ -576,6 +578,7 @@ function initSetupUI() {
       const configMusic = document.getElementById('config-music');
       const configAngles = document.getElementById('config-angles');
       const configPuzzle = document.getElementById('config-puzzle');
+      const configPokemon = document.getElementById('config-pokemon');
       const subtitle = document.getElementById('setup-subtitle');
       const multiHeading = configMulti.querySelector('h2');
 
@@ -589,6 +592,7 @@ function initSetupUI() {
       if (configMusic) configMusic.classList.add('hidden');
       if (configAngles) configAngles.classList.add('hidden');
       if (configPuzzle) configPuzzle.classList.add('hidden');
+      if (configPokemon) configPokemon.classList.add('hidden');
 
       if (op === 'multiply') {
         configMulti.classList.remove('hidden');
@@ -636,6 +640,10 @@ function initSetupUI() {
         if (configPuzzle) configPuzzle.classList.remove('hidden');
         subtitle.innerText = "Select your puzzle type and prepare your rocket!";
         setMascotExpression('setup', "Puzzle Zone! Crack the cosmic riddles with your brain power! 🧩");
+      } else if (op === 'pokemon') {
+        if (configPokemon) configPokemon.classList.remove('hidden');
+        subtitle.innerText = "Select your Pokémon quiz and prepare your rocket!";
+        setMascotExpression('setup', "Poké Galaxy! Tap the right answer — gotta know 'em all! ⚡");
       }
     });
   });
@@ -717,6 +725,16 @@ function initSetupUI() {
       document.querySelectorAll('#config-puzzle .digit-level-btn').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
       gameState.puzzleLevel = btn.dataset.level;
+    });
+  });
+
+  // Pokémon level buttons
+  document.querySelectorAll('#config-pokemon .digit-level-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      playSound('tap');
+      document.querySelectorAll('#config-pokemon .digit-level-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      gameState.pokemonLevel = btn.dataset.level;
     });
   });
 
@@ -1320,6 +1338,11 @@ function generateQuestions() {
     for (let i = 0; i < targetCount; i++) {
       pool.push(buildPuzzleQuestion(gameState.puzzleLevel));
     }
+  } else if (gameState.activeOp === 'pokemon') {
+    const targetCount = Math.max(50, gameState.questionCount);
+    for (let i = 0; i < targetCount; i++) {
+      pool.push(buildPokemonQuestion(gameState.pokemonLevel));
+    }
   } else {
     // Addition & Subtraction Mode
     let minVal = 1, maxVal = 9;
@@ -1434,6 +1457,10 @@ function loadQuestion() {
   }
   const promptDisplayReset = document.getElementById('prompt-display');
   if (promptDisplayReset) promptDisplayReset.classList.add('hidden');
+  const choicePadReset = document.getElementById('choice-pad');
+  if (choicePadReset) choicePadReset.classList.add('hidden');
+  const promptAnswerRowReset = document.querySelector('.prompt-answer-row');
+  if (promptAnswerRowReset) promptAnswerRowReset.classList.remove('hidden');
 
   const mathCard = document.getElementById('math-card');
   const clockCard = document.getElementById('clock-card');
@@ -1589,6 +1616,50 @@ function loadQuestion() {
       puzzle: 'Puzzle time! Use your detective brain to crack the code! 🧩'
     };
     setMascotExpression('game', promptSpeech[qOpKind]);
+  } else if (qOpKind === 'pokemon') {
+    mathCard.classList.remove('hidden');
+    clockCard.classList.add('hidden');
+    const fractionCard = document.getElementById('fraction-card');
+    if (fractionCard) fractionCard.classList.add('hidden');
+    const compareCard = document.getElementById('compare-card');
+    if (compareCard) compareCard.classList.add('hidden');
+
+    document.getElementById('equation-display').classList.add('hidden');
+    document.getElementById('sequence-display').classList.add('hidden');
+    const promptDisplay = document.getElementById('prompt-display');
+    promptDisplay.classList.remove('hidden');
+    document.getElementById('prompt-question').innerHTML = q.html;
+    // No typed answer for multiple choice — hide the answer slot
+    const answerRow = document.querySelector('.prompt-answer-row');
+    if (answerRow) answerRow.classList.add('hidden');
+
+    // Big tap-to-answer buttons
+    const choicePad = document.getElementById('choice-pad');
+    choicePad.innerHTML = '';
+    choicePad.style.pointerEvents = '';
+    q.choices.forEach(choice => {
+      const btn = document.createElement('button');
+      btn.className = 'choice-key';
+      btn.dataset.value = choice.value;
+      btn.innerHTML = choice.html;
+      btn.addEventListener('click', () => {
+        playSound('tap');
+        submitChoiceAnswer(choice.value);
+      });
+      choicePad.appendChild(btn);
+    });
+    choicePad.classList.remove('hidden');
+    document.getElementById('custom-numpad').classList.add('hidden');
+    document.getElementById('comparison-input-pad').classList.add('hidden');
+
+    document.getElementById('game-question-index').innerText = `${gameState.currentQuestionIndex + 1} / ${gameState.questionCount}`;
+
+    const pokeSpeech = {
+      identity: "Who's that Pokémon?! Tap the right name! 🔍",
+      type: 'Is it fire, water, or something else? Tap the type! 🔥',
+      evolution: 'Evolution time! Who does it grow into? Tap the picture! ✨'
+    };
+    setMascotExpression('game', pokeSpeech[gameState.pokemonLevel] || "Who's that Pokémon?! ⚡");
   } else if (gameState.activeOp === 'compare') {
     mathCard.classList.add('hidden');
     clockCard.classList.add('hidden');
@@ -1684,6 +1755,7 @@ function getTimeLimit() {
   if (op === 'music') return { notes: 12, beats: 15, measures: 18 }[gameState.musicLevel] || 15;
   if (op === 'angles') return { turns: 10, combine: 15, convert: 15 }[gameState.anglesLevel] || 12;
   if (op === 'puzzle') return { mystery: 15, emoji: 25, magic: 30 }[gameState.puzzleLevel] || 20;
+  if (op === 'pokemon') return { identity: 12, type: 12, evolution: 15 }[gameState.pokemonLevel] || 12;
   return 8;
 }
 
@@ -1710,6 +1782,8 @@ function startTimer() {
 function updateAnswerDisplay() {
   const currentQ = gameState.currentQuestions[gameState.currentQuestionIndex];
   const qOpKind = (currentQ && currentQ.op) || gameState.activeOp;
+
+  if (qOpKind === 'pokemon') return; // multiple choice — nothing typed
 
   if (gameState.activeOp === 'sequence') {
     const display = document.getElementById('sequence-answer-display');
@@ -1889,6 +1963,15 @@ function setupNumpad() {
 }
 
 function handleKeyPress(key) {
+  if (gameState.activeOp === 'pokemon') {
+    // Keys 1-3 tap the corresponding choice button
+    if (key >= '1' && key <= '3') {
+      const buttons = document.querySelectorAll('#choice-pad .choice-key');
+      const btn = buttons[parseInt(key, 10) - 1];
+      if (btn) btn.click();
+    }
+    return;
+  }
   if (gameState.activeOp === 'fraction') {
     handleFractionKeyPress(key);
     return;
@@ -2030,6 +2113,7 @@ function currentLevelTag(q) {
   if (op === 'music') return `music:${gameState.musicLevel}`;
   if (op === 'angles') return `angles:${gameState.anglesLevel}`;
   if (op === 'puzzle') return `puzzle:${gameState.puzzleLevel}`;
+  if (op === 'pokemon') return `pokemon:${gameState.pokemonLevel}`;
   return op;
 }
 
@@ -2306,6 +2390,94 @@ function submitClockAnswer() {
     setTimeout(advanceGame, 2200);
   }
 }
+// ============================================================
+// POKÉ GALAXY — Multiple-choice submission
+// ============================================================
+
+function submitChoiceAnswer(choiceValue) {
+  clearInterval(gameState.timerInterval);
+
+  const q = gameState.currentQuestions[gameState.currentQuestionIndex];
+  const isCorrect = choiceValue === q.expected;
+  const timeTaken = (performance.now() - gameState.questionStartTime) / 1000;
+
+  // Lock the pad and color the buttons: green = right answer, red = the miss
+  const pad = document.getElementById('choice-pad');
+  if (pad) {
+    pad.style.pointerEvents = 'none';
+    pad.querySelectorAll('.choice-key').forEach(btn => {
+      if (btn.dataset.value === q.expected) btn.classList.add('choice-correct');
+      else if (btn.dataset.value === choiceValue) btn.classList.add('choice-wrong');
+    });
+  }
+
+  // The "Who's that Pokémon?" reveal
+  const pokeImg = document.querySelector('#prompt-question .poke-img');
+  if (pokeImg) pokeImg.classList.remove('silhouette');
+
+  gameState.answersLog.push({
+    num1: q.promptText,
+    num2: '',
+    expected: q.expected,
+    op: 'pokemon',
+    typed: choiceValue,
+    isCorrect: isCorrect,
+    timeTaken: timeTaken,
+    isRematch: !!q.isRematch
+  });
+  Mastery.record(q, isCorrect, timeTaken, currentLevelTag(q));
+
+  const mathCard = document.getElementById('math-card');
+  const rocket = document.getElementById('rocket-ship');
+
+  if (isCorrect) {
+    gameState.correctAnswersCount++;
+    gameState.combo++;
+    if (gameState.combo > gameState.maxCombo) gameState.maxCombo = gameState.combo;
+
+    playSound('correct');
+    mathCard.classList.add('correct');
+    rocket.classList.add('animate-pop');
+    setTimeout(() => rocket.classList.remove('animate-pop'), 500);
+
+    let baseScore = 100;
+    let speedBonus = timeTaken < 5.0 ? Math.round(50 * (1 - Math.max(timeTaken - 1.5, 0) / 3.5)) : 0;
+    let comboMultiplier = gameState.combo >= 9 ? 2.5 : gameState.combo >= 6 ? 2.0 : gameState.combo >= 3 ? 1.5 : 1.0;
+    const pointsEarned = Math.round((baseScore + speedBonus) * comboMultiplier);
+    gameState.score += pointsEarned;
+
+    const scoreVal = document.getElementById('game-score');
+    scoreVal.innerText = gameState.score;
+    scoreVal.classList.add('animate-pop');
+    setTimeout(() => scoreVal.classList.remove('animate-pop'), 400);
+
+    if (gameState.combo > 0 && gameState.combo % 3 === 0) {
+      const idx = Math.min(Math.floor(gameState.combo / 3) - 1, mascotPhrases.combo.length - 1);
+      setMascotExpression('game', mascotPhrases.combo[idx]);
+    } else {
+      setMascotExpression('correct');
+    }
+
+    updateComboHUD();
+    // A touch longer than numeric modes so the reveal can land
+    setTimeout(advanceGame, 1400);
+
+  } else {
+    gameState.combo = 0;
+    gameState.missedQuestions.push(q);
+    playSound('wrong');
+    mathCard.classList.add('incorrect');
+    mathCard.classList.add('animate-shake');
+    setTimeout(() => mathCard.classList.remove('animate-shake'), 400);
+
+    const taught = showTeachingMoment(q);
+
+    setMascotExpression('incorrect');
+    updateComboHUD();
+    setTimeout(advanceGame, taught ? 3400 : 2400);
+  }
+}
+
 // ============================================================
 // COMPARISON QUEST — Input, Submission, and Scale Tilting
 // ============================================================
@@ -2873,8 +3045,8 @@ function endGame() {
       } else if (log.subtype === 'subtract') {
         formula.innerText = `${log.num1}/${log.denom || '?'} − ${log.num2}/${log.denom || '?'}`;
       }
-    } else if (log.op === 'music' || log.op === 'angles' || log.op === 'puzzle') {
-      formula.innerText = `${log.num1} = ${log.expected}`;
+    } else if (log.op === 'music' || log.op === 'angles' || log.op === 'puzzle' || log.op === 'pokemon') {
+      formula.innerText = `${log.num1} ${log.op === 'pokemon' ? '→' : '='} ${log.expected}`;
     } else if (log.op === 'sequence') {
       formula.innerText = `Sequence: ${log.num1}, ?`;
     } else if (log.op === 'compare') {
@@ -3028,6 +3200,10 @@ function checkAndUnlockBadges(accuracy, avgSpeed) {
 
   if (gameState.activeOp === 'puzzle' && accuracy === 100) {
     addBadge('puzzle_genius');
+  }
+
+  if (gameState.activeOp === 'pokemon' && accuracy === 100) {
+    addBadge('pokemon_professor');
   }
 
   if (gameState.totalTestsCompleted >= 5) {

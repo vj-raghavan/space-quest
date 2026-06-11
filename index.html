@@ -63,7 +63,7 @@
         <div class="galaxy-stats-row">
           <div class="galaxy-stat" id="galaxy-streak">🔥 0 day streak</div>
           <div class="galaxy-stat" id="galaxy-coins">⭐ 0 coins</div>
-          <div class="galaxy-stat" id="galaxy-stars">🌟 0 / 114 stars</div>
+          <div class="galaxy-stat" id="galaxy-stars">🌟 0 / 123 stars</div>
         </div>
       </div>
 
@@ -108,6 +108,7 @@
         <button class="op-tab-btn" data-op="music">🎵 Music Math</button>
         <button class="op-tab-btn" data-op="angles">🤸 Turns & Angles</button>
         <button class="op-tab-btn" data-op="puzzle">🧩 Puzzles</button>
+        <button class="op-tab-btn" data-op="pokemon">⚡ Pokémon</button>
       </div>
 
       <div class="setup-grid">
@@ -326,6 +327,29 @@
               <span class="level-emoji">🔮</span>
               <span class="level-title">Magic Squares</span>
               <span class="level-range">Make rows & columns match</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Pokémon Level Selector -->
+        <div class="setup-card glass-panel hidden" id="config-pokemon">
+          <h2>🎯 Choose Pokémon Quiz</h2>
+          <p class="subtitle" style="margin-bottom: 8px; color: var(--neon-cyan);">Pick your Pokémon challenge!</p>
+          <div class="digits-selector-grid">
+            <button class="digit-level-btn selected" data-level="identity">
+              <span class="level-emoji">🔍</span>
+              <span class="level-title">Who's That Pokémon?</span>
+              <span class="level-range">Name the silhouette</span>
+            </button>
+            <button class="digit-level-btn" data-level="type">
+              <span class="level-emoji">🔥</span>
+              <span class="level-title">Type Match</span>
+              <span class="level-range">Fire, water, grass…</span>
+            </button>
+            <button class="digit-level-btn" data-level="evolution">
+              <span class="level-emoji">✨</span>
+              <span class="level-title">Evolution Lab</span>
+              <span class="level-range">Who evolves into whom?</span>
             </button>
           </div>
         </div>
@@ -556,6 +580,11 @@
               <button class="compare-key" data-key=">">&gt;</button>
             </div>
           </div>
+
+          <!-- Multiple Choice Pad (Poké Galaxy) — big tap targets, no typing -->
+          <div class="choice-pad-container glass-panel hidden" id="choice-pad">
+            <!-- Buttons populated per question by app.js -->
+          </div>
         </div>
 
       </div>
@@ -729,6 +758,7 @@
   </div>
 
   <script src="mastery.js"></script>
+  <script src="pokemon.js"></script>
   <script src="progression.js"></script>
   <script src="app.js"></script>
 </body>
