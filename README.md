@@ -9,6 +9,10 @@ A kid-friendly math game: multiplication, division, addition, subtraction, seque
 - **Teaching moments** — a wrong answer shows a short visual explanation (dot arrays for multiplication, decomposition hints for big numbers) before moving on.
 - **Daily Mission + streak** — 5 questions picked from the player's weakest facts, with a streak counter and one forgiveness "shield" per week.
 
+## Player profiles
+
+Multiple kids can share one device: a "Who's playing?" picker at launch keeps each player's coins, stars, streaks, mastery data, badges, and high scores completely separate (`players.js`).
+
 ## Progression & motivation
 
 - **Galaxy Map** — each skill is a planet with levels; earn up to 3 stars per level, 2 stars unlocks the next level.

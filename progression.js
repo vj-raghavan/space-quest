@@ -118,16 +118,21 @@ const Progression = (() => {
   function loadProfile() {
     let p = { ...DEFAULT_PROFILE };
     try {
-      const raw = localStorage.getItem(STORE_KEY);
+      const raw = localStorage.getItem(Players.key(STORE_KEY));
       if (raw) p = { ...DEFAULT_PROFILE, ...JSON.parse(raw) };
     } catch (e) { /* fall through to defaults */ }
     // Profiles saved before Victory Tunes existed need the free jingle
     if (!p.owned.includes('classic')) p.owned.push('classic');
+    // A freshly created player already told us their name in the picker
+    if (!p.name && Players.active().name) {
+      p.name = Players.active().name;
+      p.namePromptShown = true;
+    }
     return p;
   }
 
   function saveProfile() {
-    localStorage.setItem(STORE_KEY, JSON.stringify(profile));
+    localStorage.setItem(Players.key(STORE_KEY), JSON.stringify(profile));
   }
 
   // --- Date helpers (local time, not UTC) ---
@@ -209,6 +214,11 @@ const Progression = (() => {
       greeting.innerText = profile.name
         ? `Welcome back, ${profile.name}! 🚀`
         : 'Welcome, Space Explorer! 🚀';
+    }
+
+    const playerChip = document.getElementById('btn-switch-player');
+    if (playerChip) {
+      playerChip.innerText = `${Players.active().avatar} ${profile.name || 'Explorer'} ▾`;
     }
 
     let totalEarned = 0, totalMax = 0;
@@ -641,6 +651,90 @@ const Progression = (() => {
     }).join('');
   }
 
+  // --- Player picker ---
+  function openPlayerPicker() {
+    const popup = document.getElementById('player-popup');
+    const list = document.getElementById('player-list');
+    const form = document.getElementById('new-player-form');
+    if (!popup || !list) return;
+
+    form.classList.add('hidden');
+    list.classList.remove('hidden');
+    document.getElementById('player-popup-title').innerText = "Who's playing? 👨‍🚀";
+    list.innerHTML = '';
+
+    Players.list().forEach(p => {
+      const card = document.createElement('div');
+      card.className = `player-card ${p.id === Players.active().id ? 'active-player' : ''}`;
+      card.innerHTML = `<span class="player-avatar">${p.avatar}</span><span class="player-name">${p.name || 'Explorer'}</span>`;
+      card.addEventListener('click', () => {
+        playSound('tap');
+        if (p.id === Players.active().id) {
+          popup.classList.add('hidden');
+        } else {
+          Players.switchTo(p.id); // reloads with that player's world
+        }
+      });
+      if (Players.list().length > 1) {
+        const del = document.createElement('button');
+        del.className = 'player-delete';
+        del.innerText = '✕';
+        del.title = 'Delete player';
+        del.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (confirm(`Delete ${p.name || 'this player'} and ALL their progress? This cannot be undone.`)) {
+            Players.removePlayer(p.id);
+            openPlayerPicker();
+          }
+        });
+        card.appendChild(del);
+      }
+      list.appendChild(card);
+    });
+
+    const addCard = document.createElement('div');
+    addCard.className = 'player-card add-player';
+    addCard.innerHTML = '<span class="player-avatar">➕</span><span class="player-name">New Player</span>';
+    addCard.addEventListener('click', () => {
+      playSound('tap');
+      showNewPlayerForm();
+    });
+    list.appendChild(addCard);
+
+    popup.classList.remove('hidden');
+  }
+
+  function showNewPlayerForm() {
+    document.getElementById('player-list').classList.add('hidden');
+    document.getElementById('player-popup-title').innerText = 'New Space Explorer! ✨';
+    const form = document.getElementById('new-player-form');
+    form.classList.remove('hidden');
+
+    const choices = document.getElementById('avatar-choices');
+    choices.innerHTML = '';
+    Players.AVATARS.forEach((a, i) => {
+      const btn = document.createElement('button');
+      btn.className = `avatar-choice ${i === 0 ? 'selected' : ''}`;
+      btn.innerText = a;
+      btn.addEventListener('click', () => {
+        playSound('tap');
+        choices.querySelectorAll('.avatar-choice').forEach(x => x.classList.remove('selected'));
+        btn.classList.add('selected');
+      });
+      choices.appendChild(btn);
+    });
+    document.getElementById('new-player-name').value = '';
+    document.getElementById('new-player-name').focus();
+  }
+
+  function createPlayer() {
+    const name = (document.getElementById('new-player-name').value || '').trim();
+    const selected = document.querySelector('#avatar-choices .avatar-choice.selected');
+    const avatar = selected ? selected.innerText : Players.AVATARS[0];
+    playSound('victory');
+    Players.addPlayer(name || 'Explorer', avatar); // reloads as the new player
+  }
+
   // --- Name handling ---
   function getName() {
     return profile.name;
@@ -658,7 +752,10 @@ const Progression = (() => {
   function saveName() {
     const input = document.getElementById('name-input');
     const name = (input.value || '').trim().slice(0, 14);
-    if (name) profile.name = name;
+    if (name) {
+      profile.name = name;
+      Players.renameActive(name); // keep the player picker label in sync
+    }
     profile.namePromptShown = true;
     saveProfile();
     document.getElementById('name-popup').classList.add('hidden');
@@ -685,6 +782,12 @@ const Progression = (() => {
       document.getElementById('level-popup').classList.add('hidden');
     });
     on('btn-save-name', () => { playSound('tap'); saveName(); });
+    on('btn-switch-player', () => { playSound('tap'); openPlayerPicker(); });
+    on('btn-close-players', () => {
+      playSound('tap');
+      document.getElementById('player-popup').classList.add('hidden');
+    });
+    on('btn-create-player', createPlayer);
     on('btn-edit-name', () => {
       playSound('tap');
       document.getElementById('name-input').value = profile.name;
@@ -714,13 +817,22 @@ const Progression = (() => {
     if (nameInput) {
       nameInput.addEventListener('keydown', e => { if (e.key === 'Enter') saveName(); });
     }
+    const newPlayerInput = document.getElementById('new-player-name');
+    if (newPlayerInput) {
+      newPlayerInput.addEventListener('keydown', e => { if (e.key === 'Enter') createPlayer(); });
+    }
   }
 
   function init() {
     bindEvents();
     renderGalaxy();
     updateCoinHud();
-    maybeShowNamePopup();
+    // With several players on this device, ask who's playing up front
+    if (Players.list().length >= 2) {
+      openPlayerPicker();
+    } else {
+      maybeShowNamePopup();
+    }
   }
 
   return { init, renderGalaxy, completeMission, applyCosmetics, keyFromState, getName, getJingle, updateCoinHud };

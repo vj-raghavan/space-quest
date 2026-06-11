@@ -7,7 +7,7 @@ const Mastery = (() => {
 
   let data = { facts: {}, modes: {} };
   try {
-    const raw = localStorage.getItem(STORE_KEY);
+    const raw = localStorage.getItem(Players.key(STORE_KEY));
     if (raw) data = JSON.parse(raw);
     if (!data.facts) data.facts = {};
     if (!data.modes) data.modes = {};
@@ -16,7 +16,7 @@ const Mastery = (() => {
   }
 
   function save() {
-    localStorage.setItem(STORE_KEY, JSON.stringify(data));
+    localStorage.setItem(Players.key(STORE_KEY), JSON.stringify(data));
   }
 
   // Canonical key for a fact. Multiplication is commutative, so 7x8 and 8x7

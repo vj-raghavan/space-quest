@@ -2945,17 +2945,17 @@ function startRematch() {
 
 function endGame() {
   gameState.totalTestsCompleted++;
-  localStorage.setItem('space_quest_tests_completed', gameState.totalTestsCompleted);
+  localStorage.setItem(Players.key('space_quest_tests_completed'), gameState.totalTestsCompleted);
 
   const accuracy = Math.round((gameState.correctAnswersCount / gameState.questionCount) * 100);
   let totalTime = 0;
   gameState.answersLog.forEach(log => totalTime += log.timeTaken);
   const avgSpeed = (totalTime / gameState.questionCount).toFixed(1);
 
-  let highscore = parseInt(localStorage.getItem('space_quest_high_score')) || 0;
+  let highscore = parseInt(localStorage.getItem(Players.key('space_quest_high_score'))) || 0;
   let isNewHighScore = false;
   if (gameState.score > highscore) {
-    localStorage.setItem('space_quest_high_score', gameState.score);
+    localStorage.setItem(Players.key('space_quest_high_score'), gameState.score);
     isNewHighScore = true;
   }
 
@@ -3099,7 +3099,7 @@ function endGame() {
 }
 
 function checkAndUnlockBadges(accuracy, avgSpeed) {
-  let unlockedBadges = JSON.parse(localStorage.getItem('space_quest_unlocked_badges')) || [];
+  let unlockedBadges = JSON.parse(localStorage.getItem(Players.key('space_quest_unlocked_badges'))) || [];
   const newUnlocks = [];
 
   const addBadge = (id) => {
@@ -3210,7 +3210,7 @@ function checkAndUnlockBadges(accuracy, avgSpeed) {
     addBadge('galaxy_hero');
   }
 
-  localStorage.setItem('space_quest_unlocked_badges', JSON.stringify(unlockedBadges));
+  localStorage.setItem(Players.key('space_quest_unlocked_badges'), JSON.stringify(unlockedBadges));
 
   const badgeContainer = document.getElementById('badges-unlocked-list');
   badgeContainer.innerHTML = '';
@@ -3242,7 +3242,7 @@ function resetToSetup() {
 
 // --- App Bootstrap ---
 document.addEventListener('DOMContentLoaded', () => {
-  gameState.totalTestsCompleted = parseInt(localStorage.getItem('space_quest_tests_completed')) || 0;
+  gameState.totalTestsCompleted = parseInt(localStorage.getItem(Players.key('space_quest_tests_completed'))) || 0;
 
   initSetupUI();
   setupNumpad();

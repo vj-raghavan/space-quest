@@ -59,6 +59,7 @@
         <h1 class="glow-text" id="galaxy-greeting">Welcome, Space Explorer! 🚀
         </h1>
         <button id="btn-edit-name" class="btn-edit-name" title="Change name">✏️</button>
+        <button id="btn-switch-player" class="player-chip" title="Switch player">🚀 Switch Player ▾</button>
         <p class="subtitle">Pick a planet and start your mission!</p>
         <div class="galaxy-stats-row">
           <div class="galaxy-stat" id="galaxy-streak">🔥 0 day streak</div>
@@ -744,6 +745,23 @@
     </div>
   </div>
 
+  <!-- Player Picker Popup -->
+  <div id="player-popup" class="trivia-overlay hidden">
+    <div class="trivia-box glass-panel player-box">
+      <h2 class="trivia-title" id="player-popup-title">Who's playing? 👨‍🚀</h2>
+      <div id="player-list" class="player-list"></div>
+      <div id="new-player-form" class="hidden">
+        <p class="trivia-text">Pick your avatar:</p>
+        <div id="avatar-choices" class="avatar-choices"></div>
+        <input id="new-player-name" class="name-input" type="text" maxlength="14" placeholder="Your name">
+        <br>
+        <button id="btn-create-player" class="btn btn-primary">Let's Go! 🚀</button>
+      </div>
+      <br>
+      <button id="btn-close-players" class="btn btn-secondary">Close</button>
+    </div>
+  </div>
+
   <!-- Name Popup (first visit) -->
   <div id="name-popup" class="trivia-overlay hidden">
     <div class="trivia-box glass-panel">
@@ -757,6 +775,7 @@
     </div>
   </div>
 
+  <script src="players.js"></script>
   <script src="mastery.js"></script>
   <script src="pokemon.js"></script>
   <script src="progression.js"></script>
