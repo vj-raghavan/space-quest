@@ -61,6 +61,11 @@ const Progression = (() => {
       { id: 'combine', name: 'Routine Builder', desc: 'Add up the turns' },
       { id: 'convert', name: 'Twist Converter', desc: 'Quarters, halves & twists' },
     ]},
+    { id: 'puzzle', name: 'Puzzle Asteroid', emoji: '🧩', tagline: 'Brain teasers', levels: [
+      { id: 'mystery', name: 'Mystery Number', desc: 'Find the hidden number' },
+      { id: 'emoji', name: 'Emoji Equations', desc: 'Crack the fruit code' },
+      { id: 'magic', name: 'Magic Squares', desc: 'Make rows & columns match' },
+    ]},
   ];
 
   const ROCKETS = [
@@ -149,6 +154,7 @@ const Progression = (() => {
     else if (planet.id === 'compare') s.compareLevel = level.id;
     else if (planet.id === 'music') s.musicLevel = level.id;
     else if (planet.id === 'angles') s.anglesLevel = level.id;
+    else if (planet.id === 'puzzle') s.puzzleLevel = level.id;
   }
 
   // Derive a missionKey from the current setup-screen state so custom
@@ -167,7 +173,8 @@ const Progression = (() => {
       s.activeOp === 'fraction' ? s.fractionLevel :
       s.activeOp === 'sequence' ? s.sequenceLevel :
       s.activeOp === 'music' ? s.musicLevel :
-      s.activeOp === 'angles' ? s.anglesLevel : s.compareLevel;
+      s.activeOp === 'angles' ? s.anglesLevel :
+      s.activeOp === 'puzzle' ? s.puzzleLevel : s.compareLevel;
     const lvl = planet.levels.find(l => l.id === levelId);
     return lvl ? `${planet.id}:${levelId}` : null;
   }
@@ -358,13 +365,31 @@ const Progression = (() => {
   }
 
   // --- Mission completion: coins + stars + streak ---
+  // Replaying the same level keeps practice free but pays less each time,
+  // so farming an easy level stops being worth it: full coins for the
+  // first two plays per day, then 50%, then 20%.
+  function replayMultiplier(playKey) {
+    const today = dateStr();
+    if (!profile.dailyPlays || profile.dailyPlays.date !== today) {
+      profile.dailyPlays = { date: today, counts: {} };
+    }
+    const playsToday = profile.dailyPlays.counts[playKey] || 0;
+    if (playsToday >= 3) return 0.2;
+    if (playsToday === 2) return 0.5;
+    return 1.0;
+  }
+
   function completeMission(starsCount, accuracy) {
+    const key = gameState.missionKey;
+    // Custom missions are tracked per op+level too, so they can't be farmed either
+    const playKey = key || ('custom:' + (typeof currentLevelTag === 'function' ? currentLevelTag() : gameState.activeOp));
+    const multiplier = replayMultiplier(playKey);
+
     let coins = 5 + starsCount * 10;
     if (accuracy === 100) coins += 10;
+    coins = Math.max(2, Math.round(coins * multiplier));
 
     let dailyBonus = false;
-    const key = gameState.missionKey;
-
     if (key === 'daily') {
       if (markDailyDone()) {
         coins += 20;
@@ -376,11 +401,12 @@ const Progression = (() => {
       }
     }
 
+    profile.dailyPlays.counts[playKey] = (profile.dailyPlays.counts[playKey] || 0) + 1;
     profile.coins += coins;
     profile.totalMissions += 1;
     saveProfile();
     updateCoinHud();
-    return { coins, dailyBonus };
+    return { coins, dailyBonus, diminished: multiplier < 1 };
   }
 
   // --- Cosmetics & shop ---
@@ -557,6 +583,7 @@ const Progression = (() => {
     'compare:easy': '⚖️ Compare (easy)', 'compare:medium': '⚖️ Compare (medium)', 'compare:hard': '⚖️ Compare (hard)',
     'music:notes': '🎵 Music (note values)', 'music:beats': '🎵 Music (beat counting)', 'music:measures': '🎵 Music (measures)',
     'angles:turns': '🤸 Turns (degrees)', 'angles:combine': '🤸 Turns (routines)', 'angles:convert': '🤸 Turns (conversions)',
+    'puzzle:mystery': '🧩 Puzzles (mystery number)', 'puzzle:emoji': '🧩 Puzzles (emoji equations)', 'puzzle:magic': '🧩 Puzzles (magic squares)',
   };
 
   function renderModeStats() {

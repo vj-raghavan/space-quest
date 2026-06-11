@@ -554,6 +554,58 @@
   padding: 0 18px;
 }
 
+/* --- Puzzle Asteroid --- */
+.puzzle-eq {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-top: 8px;
+}
+
+.mystery-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  height: 48px;
+  border: 3px dashed var(--gold-yellow);
+  border-radius: 10px;
+  color: var(--gold-yellow);
+  margin: 0 4px;
+  vertical-align: middle;
+}
+
+.emoji-eq {
+  font-size: 1.7rem;
+  letter-spacing: 2px;
+  margin: 4px 0;
+}
+
+.magic-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 58px);
+  gap: 6px;
+  justify-content: center;
+  margin: 14px auto;
+}
+
+.magic-cell {
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  font-weight: 700;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--panel-border);
+}
+
+.magic-cell.missing {
+  border: 3px dashed var(--gold-yellow);
+  color: var(--gold-yellow);
+  background: rgba(255, 200, 80, 0.08);
+}
+
 /* Cosmo's combo backflip */
 @keyframes cosmoFlip {
   0% { transform: rotate(0deg) scale(1); }

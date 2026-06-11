@@ -36,6 +36,7 @@ const gameState = {
   compareCurrentChoice: '',  // '<', '=', '>'
   musicLevel: 'notes',       // 'notes', 'beats', 'measures'
   anglesLevel: 'turns',      // 'turns', 'combine', 'convert'
+  puzzleLevel: 'mystery',    // 'mystery', 'emoji', 'magic'
   missionKey: null,          // 'planet:level' when launched from the galaxy map, 'daily', or null
   injectedQuestions: null,   // pre-built question list (daily mission)
   missedQuestions: [],       // wrong answers this round, queued for the rematch
@@ -96,6 +97,7 @@ const BADGES = [
   { id: 'fraction_lord', name: 'Fraction Lord', emoji: '🌠', desc: 'Conquered adding and subtracting fractions!' },
   { id: 'rhythm_star', name: 'Rhythm Star', emoji: '🎵', desc: 'Got 100% on a Rhythm Nebula music mission!' },
   { id: 'twist_champion', name: 'Twist Champion', emoji: '🤸', desc: 'Got 100% on a Twist & Turn Arena mission!' },
+  { id: 'puzzle_genius', name: 'Puzzle Genius', emoji: '🧩', desc: 'Got 100% on a Puzzle Asteroid mission!' },
   { id: 'galaxy_hero', name: 'Galaxy Hero', emoji: '🪐', desc: 'Completed 5 or more space missions!' }
 ];
 
@@ -466,6 +468,7 @@ function initSetupUI() {
       const configCompare = document.getElementById('config-compare');
       const configMusic = document.getElementById('config-music');
       const configAngles = document.getElementById('config-angles');
+      const configPuzzle = document.getElementById('config-puzzle');
       const subtitle = document.getElementById('setup-subtitle');
       const multiHeading = configMulti.querySelector('h2');
 
@@ -478,6 +481,7 @@ function initSetupUI() {
       if (configCompare) configCompare.classList.add('hidden');
       if (configMusic) configMusic.classList.add('hidden');
       if (configAngles) configAngles.classList.add('hidden');
+      if (configPuzzle) configPuzzle.classList.add('hidden');
 
       if (op === 'multiply') {
         configMulti.classList.remove('hidden');
@@ -521,6 +525,10 @@ function initSetupUI() {
         if (configAngles) configAngles.classList.remove('hidden');
         subtitle.innerText = "Select your turns difficulty and prepare your rocket!";
         setMascotExpression('setup', "Gymnastics Zone! Twist and turn through the degrees! 🤸");
+      } else if (op === 'puzzle') {
+        if (configPuzzle) configPuzzle.classList.remove('hidden');
+        subtitle.innerText = "Select your puzzle type and prepare your rocket!";
+        setMascotExpression('setup', "Puzzle Zone! Crack the cosmic riddles with your brain power! 🧩");
       }
     });
   });
@@ -592,6 +600,16 @@ function initSetupUI() {
       document.querySelectorAll('#config-angles .digit-level-btn').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
       gameState.anglesLevel = btn.dataset.level;
+    });
+  });
+
+  // Puzzle level buttons
+  document.querySelectorAll('#config-puzzle .digit-level-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      playSound('tap');
+      document.querySelectorAll('#config-puzzle .digit-level-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      gameState.puzzleLevel = btn.dataset.level;
     });
   });
 
@@ -1190,6 +1208,111 @@ function generateQuestions() {
         });
       }
     }
+  } else if (gameState.activeOp === 'puzzle') {
+    const level = gameState.puzzleLevel;
+    const targetCount = Math.max(50, gameState.questionCount);
+    const FRUITS = ['🍎', '🍌', '🍇', '🍓', '🚀', '⭐', '🪐', '🛸'];
+    // The classic Lo Shu magic square in its four rotations (all sum to 15)
+    const SQUARES = [
+      [[2, 7, 6], [9, 5, 1], [4, 3, 8]],
+      [[4, 9, 2], [3, 5, 7], [8, 1, 6]],
+      [[6, 1, 8], [7, 5, 3], [2, 9, 4]],
+      [[8, 3, 4], [1, 5, 9], [6, 7, 2]]
+    ];
+
+    for (let i = 0; i < targetCount; i++) {
+      if (level === 'mystery') {
+        const kind = ['mul', 'div', 'add', 'sub'][Math.floor(Math.random() * 4)];
+        let eqHtml, text, expected, teach;
+        if (kind === 'mul') {
+          const a = Math.floor(Math.random() * 8) + 2;
+          const b = Math.floor(Math.random() * 8) + 2;
+          eqHtml = `<span class="mystery-box">?</span> × ${b} = ${a * b}`;
+          text = `? × ${b} = ${a * b}`;
+          expected = a;
+          teach = `${a * b} ÷ ${b} = ${a} — division undoes multiplication! 🧩`;
+        } else if (kind === 'div') {
+          const a = Math.floor(Math.random() * 8) + 2;
+          const b = Math.floor(Math.random() * 8) + 2;
+          eqHtml = `${a * b} ÷ <span class="mystery-box">?</span> = ${a}`;
+          text = `${a * b} ÷ ? = ${a}`;
+          expected = b;
+          teach = `${a} × ${b} = ${a * b}, so the mystery number is ${b}! 🧩`;
+        } else if (kind === 'add') {
+          const a = Math.floor(Math.random() * 40) + 5;
+          const b = Math.floor(Math.random() * 40) + 5;
+          eqHtml = `<span class="mystery-box">?</span> + ${b} = ${a + b}`;
+          text = `? + ${b} = ${a + b}`;
+          expected = a;
+          teach = `${a + b} − ${b} = ${a} — subtraction undoes addition! 🧩`;
+        } else {
+          const a = Math.floor(Math.random() * 50) + 20;
+          const b = Math.floor(Math.random() * (a - 5)) + 1;
+          eqHtml = `${a} − <span class="mystery-box">?</span> = ${a - b}`;
+          text = `${a} − ? = ${a - b}`;
+          expected = b;
+          teach = `${a} − ${a - b} = ${b}, so the mystery number is ${b}! 🧩`;
+        }
+        pool.push({
+          op: 'puzzle',
+          html: `<div class="prompt-line">Find the mystery number!</div><div class="prompt-line puzzle-eq">${eqHtml}</div>`,
+          promptText: text,
+          expected: expected,
+          teach: teach
+        });
+      } else if (level === 'emoji') {
+        const shuffledFruits = [...FRUITS].sort(() => Math.random() - 0.5);
+        const [fa, fb] = shuffledFruits;
+        const a = Math.floor(Math.random() * 8) + 2; // 2-9
+        const b = Math.floor(Math.random() * 9) + 1; // 1-9
+        const askCombo = Math.random() < 0.35;
+        const lines = [
+          `<div class="prompt-line emoji-eq">${fa} + ${fa} = ${2 * a}</div>`,
+          `<div class="prompt-line emoji-eq">${fa} + ${fb} = ${a + b}</div>`
+        ];
+        if (askCombo) {
+          pool.push({
+            op: 'puzzle',
+            html: lines.join('') + `<div class="prompt-line emoji-eq">${fb} + ${fb} + ${fa} = <b>?</b></div>`,
+            promptText: `emoji code: ${fb}+${fb}+${fa}`,
+            expected: 2 * b + a,
+            teach: `${fa} = ${a} and ${fb} = ${b}, so ${b} + ${b} + ${a} = ${2 * b + a} 🧩`
+          });
+        } else {
+          pool.push({
+            op: 'puzzle',
+            html: lines.join('') + `<div class="prompt-line emoji-eq">${fb} = <b>?</b></div>`,
+            promptText: `emoji code: ${fb}`,
+            expected: b,
+            teach: `${fa} + ${fa} = ${2 * a}, so ${fa} = ${a}. Then ${a + b} − ${a} = ${b} 🧩`
+          });
+        }
+      } else { // magic squares
+        const k = Math.floor(Math.random() * 6); // shift all cells by 0-5
+        const sq = SQUARES[Math.floor(Math.random() * SQUARES.length)].map(row => row.map(v => v + k));
+        const magicSum = 15 + 3 * k;
+        const hr = Math.floor(Math.random() * 3);
+        const hc = Math.floor(Math.random() * 3);
+        const hidden = sq[hr][hc];
+        const others = sq[hr].filter((v, ci) => ci !== hc);
+
+        let cells = '';
+        for (let r = 0; r < 3; r++) {
+          for (let c = 0; c < 3; c++) {
+            cells += (r === hr && c === hc)
+              ? '<div class="magic-cell missing">?</div>'
+              : `<div class="magic-cell">${sq[r][c]}</div>`;
+          }
+        }
+        pool.push({
+          op: 'puzzle',
+          html: `<div class="prompt-line">Every row and column adds up to <b>${magicSum}</b>.</div><div class="magic-grid">${cells}</div><div class="prompt-line">What goes in the <b>?</b> box?</div>`,
+          promptText: `magic square (sum ${magicSum})`,
+          expected: hidden,
+          teach: `That row: ${magicSum} − ${others[0]} − ${others[1]} = ${hidden} 🧩`
+        });
+      }
+    }
   } else {
     // Addition & Subtraction Mode
     let minVal = 1, maxVal = 9;
@@ -1427,7 +1550,7 @@ function loadQuestion() {
 
     document.getElementById('custom-numpad').classList.remove('hidden');
     document.getElementById('comparison-input-pad').classList.add('hidden');
-  } else if (gameState.activeOp === 'music' || gameState.activeOp === 'angles') {
+  } else if (gameState.activeOp === 'music' || gameState.activeOp === 'angles' || gameState.activeOp === 'puzzle') {
     mathCard.classList.remove('hidden');
     clockCard.classList.add('hidden');
     const fractionCard = document.getElementById('fraction-card');
@@ -1450,9 +1573,12 @@ function loadQuestion() {
     document.getElementById('custom-numpad').classList.remove('hidden');
     document.getElementById('comparison-input-pad').classList.add('hidden');
 
-    setMascotExpression('game', gameState.activeOp === 'music'
-      ? 'Music math time! Count the beats like a real pianist! 🎵'
-      : 'Gymnastics math! Spin through the degrees! 🤸');
+    const promptSpeech = {
+      music: 'Music math time! Count the beats like a real pianist! 🎵',
+      angles: 'Gymnastics math! Spin through the degrees! 🤸',
+      puzzle: 'Puzzle time! Use your detective brain to crack the code! 🧩'
+    };
+    setMascotExpression('game', promptSpeech[gameState.activeOp]);
   } else if (gameState.activeOp === 'compare') {
     mathCard.classList.add('hidden');
     clockCard.classList.add('hidden');
@@ -1547,6 +1673,7 @@ function getTimeLimit() {
   if (op === 'fraction') return { identify: 15, simplify: 20, add: 25, subtract: 25 }[gameState.fractionLevel] || 18;
   if (op === 'music') return { notes: 12, beats: 15, measures: 18 }[gameState.musicLevel] || 15;
   if (op === 'angles') return { turns: 10, combine: 15, convert: 15 }[gameState.anglesLevel] || 12;
+  if (op === 'puzzle') return { mystery: 15, emoji: 25, magic: 30 }[gameState.puzzleLevel] || 20;
   return 8;
 }
 
@@ -1584,7 +1711,7 @@ function updateAnswerDisplay() {
     return;
   }
 
-  if (gameState.activeOp === 'music' || gameState.activeOp === 'angles') {
+  if (gameState.activeOp === 'music' || gameState.activeOp === 'angles' || gameState.activeOp === 'puzzle') {
     const display = document.getElementById('prompt-answer-display');
     if (!display) return;
     if (gameState.currentAnswer === '') {
@@ -1855,7 +1982,7 @@ function submitAnswer(isTimeout = false) {
     setTimeout(() => mathCard.classList.remove('animate-shake'), 400);
 
     const displayId = gameState.activeOp === 'sequence' ? 'sequence-answer-display'
-      : (gameState.activeOp === 'music' || gameState.activeOp === 'angles') ? 'prompt-answer-display'
+      : (gameState.activeOp === 'music' || gameState.activeOp === 'angles' || gameState.activeOp === 'puzzle') ? 'prompt-answer-display'
       : 'answer-display';
     const display = document.getElementById(displayId);
     if (display) {
@@ -1888,6 +2015,7 @@ function currentLevelTag(q) {
   if (op === 'compare') return `compare:${gameState.compareLevel}`;
   if (op === 'music') return `music:${gameState.musicLevel}`;
   if (op === 'angles') return `angles:${gameState.anglesLevel}`;
+  if (op === 'puzzle') return `puzzle:${gameState.puzzleLevel}`;
   return op;
 }
 
@@ -2697,7 +2825,10 @@ function endGame() {
   }
   const coinsEarnedEl = document.getElementById('coins-earned');
   if (coinsEarnedEl) {
-    coinsEarnedEl.innerText = `+${reward.coins} ⭐ Star Coins${reward.dailyBonus ? '  ·  Daily Mission Streak! 🔥' : ''}`;
+    let coinsText = `+${reward.coins} ⭐ Star Coins`;
+    if (reward.dailyBonus) coinsText += '  ·  Daily Mission Streak! 🔥';
+    if (reward.diminished) coinsText += '  ·  Replay reward — explore a new level for full coins! 🗺️';
+    coinsEarnedEl.innerText = coinsText;
     coinsEarnedEl.classList.remove('hidden');
   }
 
@@ -2728,7 +2859,7 @@ function endGame() {
       } else if (log.subtype === 'subtract') {
         formula.innerText = `${log.num1}/${log.denom || '?'} − ${log.num2}/${log.denom || '?'}`;
       }
-    } else if (log.op === 'music' || log.op === 'angles') {
+    } else if (log.op === 'music' || log.op === 'angles' || log.op === 'puzzle') {
       formula.innerText = `${log.num1} = ${log.expected}`;
     } else if (log.op === 'sequence') {
       formula.innerText = `Sequence: ${log.num1}, ?`;
@@ -2879,6 +3010,10 @@ function checkAndUnlockBadges(accuracy, avgSpeed) {
 
   if (gameState.activeOp === 'angles' && accuracy === 100) {
     addBadge('twist_champion');
+  }
+
+  if (gameState.activeOp === 'puzzle' && accuracy === 100) {
+    addBadge('puzzle_genius');
   }
 
   if (gameState.totalTestsCompleted >= 5) {
