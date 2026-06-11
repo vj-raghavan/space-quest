@@ -139,6 +139,113 @@ function noteSVG(type) {
   // eighth
   return `${open}<ellipse cx="11" cy="32" rx="8" ry="5.5" fill="currentColor"/><line x1="19" y1="32" x2="19" y2="4" stroke="currentColor" stroke-width="2.5"/><path d="M19 4 Q28 8 26 18" fill="none" stroke="currentColor" stroke-width="2.5"/></svg>`;
 }
+
+// Build one puzzle question. `rand` is injectable so the Daily Mission's
+// Puzzle of the Day can be seeded by the date (same puzzle all day long).
+function buildPuzzleQuestion(level, rand = Math.random) {
+  const FRUITS = ['🍎', '🍌', '🍇', '🍓', '🚀', '⭐', '🪐', '🛸'];
+  // The classic Lo Shu magic square in its four rotations (all sum to 15)
+  const SQUARES = [
+    [[2, 7, 6], [9, 5, 1], [4, 3, 8]],
+    [[4, 9, 2], [3, 5, 7], [8, 1, 6]],
+    [[6, 1, 8], [7, 5, 3], [2, 9, 4]],
+    [[8, 3, 4], [1, 5, 9], [6, 7, 2]]
+  ];
+
+  if (level === 'mystery') {
+    const kind = ['mul', 'div', 'add', 'sub'][Math.floor(rand() * 4)];
+    let eqHtml, text, expected, teach;
+    if (kind === 'mul') {
+      const a = Math.floor(rand() * 8) + 2;
+      const b = Math.floor(rand() * 8) + 2;
+      eqHtml = `<span class="mystery-box">?</span> × ${b} = ${a * b}`;
+      text = `? × ${b} = ${a * b}`;
+      expected = a;
+      teach = `${a * b} ÷ ${b} = ${a} — division undoes multiplication! 🧩`;
+    } else if (kind === 'div') {
+      const a = Math.floor(rand() * 8) + 2;
+      const b = Math.floor(rand() * 8) + 2;
+      eqHtml = `${a * b} ÷ <span class="mystery-box">?</span> = ${a}`;
+      text = `${a * b} ÷ ? = ${a}`;
+      expected = b;
+      teach = `${a} × ${b} = ${a * b}, so the mystery number is ${b}! 🧩`;
+    } else if (kind === 'add') {
+      const a = Math.floor(rand() * 40) + 5;
+      const b = Math.floor(rand() * 40) + 5;
+      eqHtml = `<span class="mystery-box">?</span> + ${b} = ${a + b}`;
+      text = `? + ${b} = ${a + b}`;
+      expected = a;
+      teach = `${a + b} − ${b} = ${a} — subtraction undoes addition! 🧩`;
+    } else {
+      const a = Math.floor(rand() * 50) + 20;
+      const b = Math.floor(rand() * (a - 5)) + 1;
+      eqHtml = `${a} − <span class="mystery-box">?</span> = ${a - b}`;
+      text = `${a} − ? = ${a - b}`;
+      expected = b;
+      teach = `${a} − ${a - b} = ${b}, so the mystery number is ${b}! 🧩`;
+    }
+    return {
+      op: 'puzzle',
+      html: `<div class="prompt-line">Find the mystery number!</div><div class="prompt-line puzzle-eq">${eqHtml}</div>`,
+      promptText: text,
+      expected: expected,
+      teach: teach
+    };
+  }
+
+  if (level === 'emoji') {
+    const shuffledFruits = [...FRUITS].sort(() => rand() - 0.5);
+    const [fa, fb] = shuffledFruits;
+    const a = Math.floor(rand() * 8) + 2; // 2-9
+    const b = Math.floor(rand() * 9) + 1; // 1-9
+    const askCombo = rand() < 0.35;
+    const lines = [
+      `<div class="prompt-line emoji-eq">${fa} + ${fa} = ${2 * a}</div>`,
+      `<div class="prompt-line emoji-eq">${fa} + ${fb} = ${a + b}</div>`
+    ];
+    if (askCombo) {
+      return {
+        op: 'puzzle',
+        html: lines.join('') + `<div class="prompt-line emoji-eq">${fb} + ${fb} + ${fa} = <b>?</b></div>`,
+        promptText: `emoji code: ${fb}+${fb}+${fa}`,
+        expected: 2 * b + a,
+        teach: `${fa} = ${a} and ${fb} = ${b}, so ${b} + ${b} + ${a} = ${2 * b + a} 🧩`
+      };
+    }
+    return {
+      op: 'puzzle',
+      html: lines.join('') + `<div class="prompt-line emoji-eq">${fb} = <b>?</b></div>`,
+      promptText: `emoji code: ${fb}`,
+      expected: b,
+      teach: `${fa} + ${fa} = ${2 * a}, so ${fa} = ${a}. Then ${a + b} − ${a} = ${b} 🧩`
+    };
+  }
+
+  // magic squares
+  const k = Math.floor(rand() * 6); // shift all cells by 0-5
+  const sq = SQUARES[Math.floor(rand() * SQUARES.length)].map(row => row.map(v => v + k));
+  const magicSum = 15 + 3 * k;
+  const hr = Math.floor(rand() * 3);
+  const hc = Math.floor(rand() * 3);
+  const hidden = sq[hr][hc];
+  const others = sq[hr].filter((v, ci) => ci !== hc);
+
+  let cells = '';
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 3; c++) {
+      cells += (r === hr && c === hc)
+        ? '<div class="magic-cell missing">?</div>'
+        : `<div class="magic-cell">${sq[r][c]}</div>`;
+    }
+  }
+  return {
+    op: 'puzzle',
+    html: `<div class="prompt-line">Every row and column adds up to <b>${magicSum}</b>.</div><div class="magic-grid">${cells}</div><div class="prompt-line">What goes in the <b>?</b> box?</div>`,
+    promptText: `magic square (sum ${magicSum})`,
+    expected: hidden,
+    teach: `That row: ${magicSum} − ${others[0]} − ${others[1]} = ${hidden} 🧩`
+  };
+}
 function reduceFraction(n, d) {
   if (d === 0) return [n, d];
   const g = gcd(Math.abs(n), Math.abs(d));
@@ -1209,109 +1316,9 @@ function generateQuestions() {
       }
     }
   } else if (gameState.activeOp === 'puzzle') {
-    const level = gameState.puzzleLevel;
     const targetCount = Math.max(50, gameState.questionCount);
-    const FRUITS = ['🍎', '🍌', '🍇', '🍓', '🚀', '⭐', '🪐', '🛸'];
-    // The classic Lo Shu magic square in its four rotations (all sum to 15)
-    const SQUARES = [
-      [[2, 7, 6], [9, 5, 1], [4, 3, 8]],
-      [[4, 9, 2], [3, 5, 7], [8, 1, 6]],
-      [[6, 1, 8], [7, 5, 3], [2, 9, 4]],
-      [[8, 3, 4], [1, 5, 9], [6, 7, 2]]
-    ];
-
     for (let i = 0; i < targetCount; i++) {
-      if (level === 'mystery') {
-        const kind = ['mul', 'div', 'add', 'sub'][Math.floor(Math.random() * 4)];
-        let eqHtml, text, expected, teach;
-        if (kind === 'mul') {
-          const a = Math.floor(Math.random() * 8) + 2;
-          const b = Math.floor(Math.random() * 8) + 2;
-          eqHtml = `<span class="mystery-box">?</span> × ${b} = ${a * b}`;
-          text = `? × ${b} = ${a * b}`;
-          expected = a;
-          teach = `${a * b} ÷ ${b} = ${a} — division undoes multiplication! 🧩`;
-        } else if (kind === 'div') {
-          const a = Math.floor(Math.random() * 8) + 2;
-          const b = Math.floor(Math.random() * 8) + 2;
-          eqHtml = `${a * b} ÷ <span class="mystery-box">?</span> = ${a}`;
-          text = `${a * b} ÷ ? = ${a}`;
-          expected = b;
-          teach = `${a} × ${b} = ${a * b}, so the mystery number is ${b}! 🧩`;
-        } else if (kind === 'add') {
-          const a = Math.floor(Math.random() * 40) + 5;
-          const b = Math.floor(Math.random() * 40) + 5;
-          eqHtml = `<span class="mystery-box">?</span> + ${b} = ${a + b}`;
-          text = `? + ${b} = ${a + b}`;
-          expected = a;
-          teach = `${a + b} − ${b} = ${a} — subtraction undoes addition! 🧩`;
-        } else {
-          const a = Math.floor(Math.random() * 50) + 20;
-          const b = Math.floor(Math.random() * (a - 5)) + 1;
-          eqHtml = `${a} − <span class="mystery-box">?</span> = ${a - b}`;
-          text = `${a} − ? = ${a - b}`;
-          expected = b;
-          teach = `${a} − ${a - b} = ${b}, so the mystery number is ${b}! 🧩`;
-        }
-        pool.push({
-          op: 'puzzle',
-          html: `<div class="prompt-line">Find the mystery number!</div><div class="prompt-line puzzle-eq">${eqHtml}</div>`,
-          promptText: text,
-          expected: expected,
-          teach: teach
-        });
-      } else if (level === 'emoji') {
-        const shuffledFruits = [...FRUITS].sort(() => Math.random() - 0.5);
-        const [fa, fb] = shuffledFruits;
-        const a = Math.floor(Math.random() * 8) + 2; // 2-9
-        const b = Math.floor(Math.random() * 9) + 1; // 1-9
-        const askCombo = Math.random() < 0.35;
-        const lines = [
-          `<div class="prompt-line emoji-eq">${fa} + ${fa} = ${2 * a}</div>`,
-          `<div class="prompt-line emoji-eq">${fa} + ${fb} = ${a + b}</div>`
-        ];
-        if (askCombo) {
-          pool.push({
-            op: 'puzzle',
-            html: lines.join('') + `<div class="prompt-line emoji-eq">${fb} + ${fb} + ${fa} = <b>?</b></div>`,
-            promptText: `emoji code: ${fb}+${fb}+${fa}`,
-            expected: 2 * b + a,
-            teach: `${fa} = ${a} and ${fb} = ${b}, so ${b} + ${b} + ${a} = ${2 * b + a} 🧩`
-          });
-        } else {
-          pool.push({
-            op: 'puzzle',
-            html: lines.join('') + `<div class="prompt-line emoji-eq">${fb} = <b>?</b></div>`,
-            promptText: `emoji code: ${fb}`,
-            expected: b,
-            teach: `${fa} + ${fa} = ${2 * a}, so ${fa} = ${a}. Then ${a + b} − ${a} = ${b} 🧩`
-          });
-        }
-      } else { // magic squares
-        const k = Math.floor(Math.random() * 6); // shift all cells by 0-5
-        const sq = SQUARES[Math.floor(Math.random() * SQUARES.length)].map(row => row.map(v => v + k));
-        const magicSum = 15 + 3 * k;
-        const hr = Math.floor(Math.random() * 3);
-        const hc = Math.floor(Math.random() * 3);
-        const hidden = sq[hr][hc];
-        const others = sq[hr].filter((v, ci) => ci !== hc);
-
-        let cells = '';
-        for (let r = 0; r < 3; r++) {
-          for (let c = 0; c < 3; c++) {
-            cells += (r === hr && c === hc)
-              ? '<div class="magic-cell missing">?</div>'
-              : `<div class="magic-cell">${sq[r][c]}</div>`;
-          }
-        }
-        pool.push({
-          op: 'puzzle',
-          html: `<div class="prompt-line">Every row and column adds up to <b>${magicSum}</b>.</div><div class="magic-grid">${cells}</div><div class="prompt-line">What goes in the <b>?</b> box?</div>`,
-          promptText: `magic square (sum ${magicSum})`,
-          expected: hidden,
-          teach: `That row: ${magicSum} − ${others[0]} − ${others[1]} = ${hidden} 🧩`
-        });
-      }
+      pool.push(buildPuzzleQuestion(gameState.puzzleLevel));
     }
   } else {
     // Addition & Subtraction Mode
@@ -1434,7 +1441,10 @@ function loadQuestion() {
   clockCard.className = 'clock-card glass-panel';
 
   const q = gameState.currentQuestions[gameState.currentQuestionIndex];
-  
+  // Branch on the question's own op where it can differ from the mission op
+  // (the Daily Mission mixes multiply/divide facts with a puzzle)
+  const qOpKind = q.op || gameState.activeOp;
+
   if (gameState.activeOp === 'clock') {
     mathCard.classList.add('hidden');
     clockCard.classList.remove('hidden');
@@ -1550,7 +1560,7 @@ function loadQuestion() {
 
     document.getElementById('custom-numpad').classList.remove('hidden');
     document.getElementById('comparison-input-pad').classList.add('hidden');
-  } else if (gameState.activeOp === 'music' || gameState.activeOp === 'angles' || gameState.activeOp === 'puzzle') {
+  } else if (qOpKind === 'music' || qOpKind === 'angles' || qOpKind === 'puzzle') {
     mathCard.classList.remove('hidden');
     clockCard.classList.add('hidden');
     const fractionCard = document.getElementById('fraction-card');
@@ -1578,7 +1588,7 @@ function loadQuestion() {
       angles: 'Gymnastics math! Spin through the degrees! 🤸',
       puzzle: 'Puzzle time! Use your detective brain to crack the code! 🧩'
     };
-    setMascotExpression('game', promptSpeech[gameState.activeOp]);
+    setMascotExpression('game', promptSpeech[qOpKind]);
   } else if (gameState.activeOp === 'compare') {
     mathCard.classList.add('hidden');
     clockCard.classList.add('hidden');
@@ -1698,6 +1708,9 @@ function startTimer() {
 }
 
 function updateAnswerDisplay() {
+  const currentQ = gameState.currentQuestions[gameState.currentQuestionIndex];
+  const qOpKind = (currentQ && currentQ.op) || gameState.activeOp;
+
   if (gameState.activeOp === 'sequence') {
     const display = document.getElementById('sequence-answer-display');
     if (!display) return;
@@ -1711,7 +1724,7 @@ function updateAnswerDisplay() {
     return;
   }
 
-  if (gameState.activeOp === 'music' || gameState.activeOp === 'angles' || gameState.activeOp === 'puzzle') {
+  if (qOpKind === 'music' || qOpKind === 'angles' || qOpKind === 'puzzle') {
     const display = document.getElementById('prompt-answer-display');
     if (!display) return;
     if (gameState.currentAnswer === '') {
@@ -1981,8 +1994,9 @@ function submitAnswer(isTimeout = false) {
     mathCard.classList.add('animate-shake');
     setTimeout(() => mathCard.classList.remove('animate-shake'), 400);
 
-    const displayId = gameState.activeOp === 'sequence' ? 'sequence-answer-display'
-      : (gameState.activeOp === 'music' || gameState.activeOp === 'angles' || gameState.activeOp === 'puzzle') ? 'prompt-answer-display'
+    const qSubmitOp = q.op || gameState.activeOp;
+    const displayId = qSubmitOp === 'sequence' ? 'sequence-answer-display'
+      : (qSubmitOp === 'music' || qSubmitOp === 'angles' || qSubmitOp === 'puzzle') ? 'prompt-answer-display'
       : 'answer-display';
     const display = document.getElementById(displayId);
     if (display) {

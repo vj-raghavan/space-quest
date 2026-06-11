@@ -227,7 +227,7 @@ const Progression = (() => {
         dailyDesc.innerText = "Today's mission complete! Extra practice earns extra coins! ✅";
       } else {
         dailyBtn.innerText = 'Start! 🚀';
-        dailyDesc.innerText = '5 quick questions Cosmo picked just for you. Keep the streak alive!';
+        dailyDesc.innerText = '4 questions picked just for you + the Puzzle of the Day! 🧩';
       }
     }
     renderStreakCalendar();
@@ -317,16 +317,44 @@ const Progression = (() => {
   }
 
   // --- Daily mission ---
+  // Deterministic RNG seeded by the date, so the Puzzle of the Day is the
+  // same puzzle all day long (even on replays).
+  function dateSeed() {
+    const s = dateStr();
+    let h = 0;
+    for (let i = 0; i < s.length; i++) {
+      h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
+    }
+    return Math.abs(h);
+  }
+
+  function mulberry32(seed) {
+    let a = seed;
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
   function startDailyMission() {
-    const weak = Mastery.getWeakFactQuestions(5);
+    const weak = Mastery.getWeakFactQuestions(4);
     const questions = [...weak];
     // Top up with random easy-to-medium multiplication facts
-    while (questions.length < 5) {
+    while (questions.length < 4) {
       const t = [2, 3, 4, 5, 6, 7, 8, 9][Math.floor(Math.random() * 8)];
       const m = Math.floor(Math.random() * 12) + 1;
       const swap = Math.random() > 0.5;
       questions.push({ num1: swap ? m : t, num2: swap ? t : m, expected: t * m, op: 'multiply' });
     }
+
+    // Puzzle of the Day as the grand finale
+    const seed = dateSeed();
+    const puzzleType = ['mystery', 'emoji', 'magic'][seed % 3];
+    gameState.puzzleLevel = puzzleType; // so stats land in the right bucket
+    questions.push(buildPuzzleQuestion(puzzleType, mulberry32(seed)));
+
     gameState.injectedQuestions = questions;
     gameState.activeOp = 'multiply';
     gameState.gameMode = 'adventure';
