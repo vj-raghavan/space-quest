@@ -66,6 +66,16 @@ const Progression = (() => {
       { id: 'emoji', name: 'Emoji Equations', desc: 'Crack the fruit code' },
       { id: 'magic', name: 'Magic Squares', desc: 'Make rows & columns match' },
     ]},
+    { id: 'story', name: 'Mission Control', emoji: '📖', tagline: 'Story problems', levels: [
+      { id: 'onestep', name: 'Space Stories', desc: 'One-step problems' },
+      { id: 'twostep', name: 'Double Trouble', desc: 'Two-step problems' },
+      { id: 'money', name: 'Space Market', desc: 'Money & change' },
+    ]},
+    { id: 'estimate', name: 'Estimation Station', emoji: '🎯', tagline: 'Rounding & guessing', levels: [
+      { id: 'round10', name: 'Nearest Ten', desc: 'Round to nearest 10' },
+      { id: 'round100', name: 'Nearest Hundred', desc: 'Round to nearest 100' },
+      { id: 'approx', name: 'About How Much?', desc: 'Estimate sums fast' },
+    ]},
     { id: 'pokemon', name: 'Poké Galaxy', emoji: '⚡', tagline: 'Gotta catch \'em all', levels: [
       { id: 'count', name: 'Pika Count', desc: 'Count the Pokémon!' },
       { id: 'identity', name: "Who's That Pokémon?", desc: 'Name the silhouette' },
@@ -99,6 +109,31 @@ const Progression = (() => {
     { id: 'glissando', emoji: '✨', name: 'Sparkle Glissando', price: 150 },
   ];
 
+  // Big-ticket dream items: whole-app background themes
+  const THEMES = [
+    { id: 'default', name: 'Deep Space', color: 'radial-gradient(circle, #1b2735, #090a0f)', price: 0 },
+    { id: 'sunset', name: 'Sunset Nebula', color: 'radial-gradient(circle, #b3502e, #2a0f1f)', price: 400 },
+    { id: 'aurora', name: 'Aurora Sky', color: 'radial-gradient(circle, #1e7a5a, #07131f)', price: 500 },
+    { id: 'candy', name: 'Candy Galaxy', color: 'radial-gradient(circle, #a04a9e, #1f0a2e)', price: 600 },
+  ];
+
+  const ACCESSORIES = [
+    { id: 'none', emoji: '🚫', name: 'No Accessory', price: 0 },
+    { id: 'tophat', emoji: '🎩', name: 'Top Hat', price: 80 },
+    { id: 'bow', emoji: '🎀', name: 'Fancy Bow', price: 80 },
+    { id: 'shades', emoji: '🕶️', name: 'Cool Shades', price: 100 },
+    { id: 'crown', emoji: '👑', name: 'Royal Crown', price: 150 },
+  ];
+
+  // Space pet: evolves with total stars, fed by the Daily Mission
+  const PET_STAGES = [
+    { min: 100, emoji: '🐉', name: 'Stardragon', hint: 'Fully grown — legendary!' },
+    { min: 60, emoji: '🦕', name: 'Cosmosaur', hint: 'Reach 100 ⭐ to evolve!' },
+    { min: 30, emoji: '🐙', name: 'Wobbles', hint: 'Reach 60 ⭐ to evolve!' },
+    { min: 10, emoji: '👾', name: 'Blip', hint: 'Reach 30 ⭐ to evolve!' },
+    { min: 0, emoji: '🥚', name: 'Space Egg', hint: 'Earn 10 ⭐ to hatch it!' },
+  ];
+
   const DEFAULT_PROFILE = {
     name: '',
     namePromptShown: false,
@@ -107,7 +142,11 @@ const Progression = (() => {
     trail: 'cyan',
     jingle: 'classic',
     eqStyle: 'horizontal',
-    owned: ['rocket', 'cyan', 'classic'],
+    theme: 'default',
+    petName: '',
+    petAccessory: 'none',
+    sprintBest: null,
+    owned: ['rocket', 'cyan', 'classic', 'default', 'none'],
     stars: {},          // missionKey -> best star count (0-3)
     streak: { count: 0, lastDate: null, shieldWeek: null },
     dailyHistory: [],   // ['2026-06-10', ...] days with completed daily mission
@@ -124,8 +163,10 @@ const Progression = (() => {
       const raw = localStorage.getItem(Players.key(STORE_KEY));
       if (raw) p = { ...DEFAULT_PROFILE, ...JSON.parse(raw) };
     } catch (e) { /* fall through to defaults */ }
-    // Profiles saved before Victory Tunes existed need the free jingle
-    if (!p.owned.includes('classic')) p.owned.push('classic');
+    // Profiles saved before newer shop slots existed need the free items
+    ['classic', 'default', 'none'].forEach(freeItem => {
+      if (!p.owned.includes(freeItem)) p.owned.push(freeItem);
+    });
     // A freshly created player already told us their name in the picker
     if (!p.name && Players.active().name) {
       p.name = Players.active().name;
@@ -169,6 +210,8 @@ const Progression = (() => {
     else if (planet.id === 'angles') s.anglesLevel = level.id;
     else if (planet.id === 'puzzle') s.puzzleLevel = level.id;
     else if (planet.id === 'pokemon') s.pokemonLevel = level.id;
+    else if (planet.id === 'story') s.storyLevel = level.id;
+    else if (planet.id === 'estimate') s.estimateLevel = level.id;
   }
 
   // Derive a missionKey from the current setup-screen state so custom
@@ -189,7 +232,9 @@ const Progression = (() => {
       s.activeOp === 'music' ? s.musicLevel :
       s.activeOp === 'angles' ? s.anglesLevel :
       s.activeOp === 'puzzle' ? s.puzzleLevel :
-      s.activeOp === 'pokemon' ? s.pokemonLevel : s.compareLevel;
+      s.activeOp === 'pokemon' ? s.pokemonLevel :
+      s.activeOp === 'story' ? s.storyLevel :
+      s.activeOp === 'estimate' ? s.estimateLevel : s.compareLevel;
     const lvl = planet.levels.find(l => l.id === levelId);
     return lvl ? `${planet.id}:${levelId}` : null;
   }
@@ -235,7 +280,17 @@ const Progression = (() => {
     if (streakEl) streakEl.innerText = `🔥 ${profile.streak.count} day streak`;
     const starsEl = document.getElementById('galaxy-stars');
     if (starsEl) starsEl.innerText = `🌟 ${totalEarned} / ${totalMax} stars`;
+    const sprintEl = document.getElementById('galaxy-sprint');
+    if (sprintEl) {
+      if (profile.sprintBest) {
+        sprintEl.innerText = `⚡ best ${profile.sprintBest}s`;
+        sprintEl.classList.remove('hidden');
+      } else {
+        sprintEl.classList.add('hidden');
+      }
+    }
     updateCoinHud();
+    renderPet(totalEarned);
 
     // Daily mission card state
     const dailyBtn = document.getElementById('btn-daily');
@@ -275,6 +330,65 @@ const Progression = (() => {
       });
       grid.appendChild(card);
     });
+  }
+
+  // --- Space pet ---
+  function renderPet(totalStars) {
+    const card = document.getElementById('pet-card');
+    if (!card) return;
+    const stage = PET_STAGES.find(s => totalStars >= s.min) || PET_STAGES[PET_STAGES.length - 1];
+    const acc = ACCESSORIES.find(a => a.id === profile.petAccessory && a.id !== 'none');
+    const displayName = profile.petName || stage.name;
+    const fedToday = profile.dailyHistory.includes(dateStr());
+    const isEgg = stage.min === 0 && totalStars < 10;
+    const mood = isEgg ? '✨' : fedToday ? '😊' : '🥺';
+    const moodText = isEgg
+      ? 'Something is wiggling inside… keep playing to hatch it!'
+      : fedToday
+        ? `${displayName} is fed and full of star power!`
+        : `${displayName} is hungry — finish the Daily Mission to feed it!`;
+
+    card.innerHTML = `
+      <div class="pet-visual">
+        ${acc ? `<span class="pet-acc">${acc.emoji}</span>` : ''}
+        <span class="pet-emoji">${stage.emoji}</span>
+        <span class="pet-mood">${mood}</span>
+      </div>
+      <div class="pet-info">
+        <h2>${displayName} <button id="btn-pet-rename" class="btn-edit-name" title="Rename pet">✏️</button></h2>
+        <p>${moodText}</p>
+        <p class="pet-hint">⭐ ${totalStars} stars · ${stage.hint}</p>
+      </div>`;
+
+    document.getElementById('btn-pet-rename').addEventListener('click', () => {
+      const n = prompt('Name your space pet!', profile.petName || stage.name);
+      if (n !== null) {
+        profile.petName = n.trim().slice(0, 14);
+        saveProfile();
+        renderGalaxy();
+      }
+    });
+  }
+
+  // --- Lightning Round (sprint): race your own best time ---
+  function startSprint() {
+    gameState.injectedQuestions = null;
+    gameState.activeOp = 'multiply';
+    gameState.selectedTables = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    gameState.questionCount = 20;
+    gameState.gameMode = 'adventure';
+    gameState.missionKey = 'sprint';
+    launchGame();
+  }
+
+  function recordSprint(time) {
+    const prevBest = profile.sprintBest;
+    if (!prevBest || time < prevBest) {
+      profile.sprintBest = time;
+      saveProfile();
+      return { isRecord: true, prevBest, best: time };
+    }
+    return { isRecord: false, best: prevBest };
   }
 
   function renderStreakCalendar() {
@@ -472,7 +586,16 @@ const Progression = (() => {
     renderShopSection('shop-rockets', ROCKETS, 'rocket');
     renderShopSection('shop-trails', TRAILS, 'trail');
     renderShopSection('shop-jingles', JINGLES, 'jingle');
+    renderShopSection('shop-themes', THEMES, 'theme');
+    renderShopSection('shop-accessories', ACCESSORIES, 'petAccessory');
     renderPackSection();
+  }
+
+  function applyTheme() {
+    document.body.classList.remove('theme-sunset', 'theme-aurora', 'theme-candy');
+    if (profile.theme && profile.theme !== 'default') {
+      document.body.classList.add(`theme-${profile.theme}`);
+    }
   }
 
   // --- Poké Packs: spend coins, catch 3 surprise Pokémon ---
@@ -567,6 +690,7 @@ const Progression = (() => {
           profile[slot] = item.id;
           saveProfile();
           renderShop();
+          if (slot === 'theme') applyTheme();
           // Preview the tune when equipping a jingle
           if (slot === 'jingle') playSound('victory');
           else playSound('tap');
@@ -577,6 +701,7 @@ const Progression = (() => {
           profile[slot] = item.id;
           saveProfile();
           renderShop();
+          if (slot === 'theme') applyTheme();
         } else {
           playSound('warning');
         }
@@ -695,6 +820,8 @@ const Progression = (() => {
     'puzzle:mystery': '🧩 Puzzles (mystery number)', 'puzzle:emoji': '🧩 Puzzles (emoji equations)', 'puzzle:magic': '🧩 Puzzles (magic squares)',
     'pokemon:count': '⚡ Pokémon (counting)', 'pokemon:identity': "⚡ Pokémon (who's that)", 'pokemon:type': '⚡ Pokémon (types)',
     'pokemon:evolution': '⚡ Pokémon (evolutions)', 'pokemon:battle': '⚡ Pokémon (battles)',
+    'story:onestep': '📖 Stories (one-step)', 'story:twostep': '📖 Stories (two-step)', 'story:money': '📖 Stories (money)',
+    'estimate:round10': '🎯 Estimation (nearest 10)', 'estimate:round100': '🎯 Estimation (nearest 100)', 'estimate:approx': '🎯 Estimation (about how much)',
   };
 
   function renderModeStats() {
@@ -844,6 +971,7 @@ const Progression = (() => {
     on('btn-setup-back', () => { playSound('tap'); showScreen('screen-galaxy'); });
     on('btn-shop', () => { playSound('tap'); renderShop(); showScreen('screen-shop'); });
     on('btn-shop-back', () => { playSound('tap'); showScreen('screen-galaxy'); });
+    on('btn-sprint', () => { playSound('tap'); startSprint(); });
     on('btn-pokedex', () => { playSound('tap'); renderPokedex(); showScreen('screen-pokedex'); });
     on('btn-pokedex-back', () => { playSound('tap'); showScreen('screen-galaxy'); });
     on('btn-close-pack', () => {
@@ -903,9 +1031,10 @@ const Progression = (() => {
     bindEvents();
     renderGalaxy();
     updateCoinHud();
-    // Restore this player's preferred number style
+    // Restore this player's preferred number style and galaxy theme
     gameState.eqStyle = profile.eqStyle || 'horizontal';
     if (typeof syncEqStyleToggle === 'function') syncEqStyleToggle();
+    applyTheme();
     // With several players on this device, ask who's playing up front
     if (Players.list().length >= 2) {
       openPlayerPicker();
@@ -914,5 +1043,5 @@ const Progression = (() => {
     }
   }
 
-  return { init, renderGalaxy, completeMission, applyCosmetics, keyFromState, getName, getJingle, setEqStyle, updateCoinHud };
+  return { init, renderGalaxy, completeMission, applyCosmetics, keyFromState, getName, getJingle, setEqStyle, recordSprint, updateCoinHud };
 })();

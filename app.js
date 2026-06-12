@@ -38,6 +38,8 @@ const gameState = {
   anglesLevel: 'turns',      // 'turns', 'combine', 'convert'
   puzzleLevel: 'mystery',    // 'mystery', 'emoji', 'magic'
   pokemonLevel: 'count',     // 'count', 'identity', 'type', 'evolution', 'battle'
+  storyLevel: 'onestep',     // 'onestep', 'twostep', 'money'
+  estimateLevel: 'round10',  // 'round10', 'round100', 'approx'
   eqStyle: 'horizontal',     // 'horizontal' (6 + 3 = ?) or 'vertical' (stacked, like on paper)
   missionKey: null,          // 'planet:level' when launched from the galaxy map, 'daily', or null
   injectedQuestions: null,   // pre-built question list (daily mission)
@@ -101,6 +103,9 @@ const BADGES = [
   { id: 'twist_champion', name: 'Twist Champion', emoji: '🤸', desc: 'Got 100% on a Twist & Turn Arena mission!' },
   { id: 'puzzle_genius', name: 'Puzzle Genius', emoji: '🧩', desc: 'Got 100% on a Puzzle Asteroid mission!' },
   { id: 'pokemon_professor', name: 'Pokémon Professor', emoji: '⚡', desc: 'Got 100% on a Poké Galaxy mission!' },
+  { id: 'story_hero', name: 'Story Hero', emoji: '📖', desc: 'Got 100% on a Mission Control story mission!' },
+  { id: 'estimator', name: 'Master Estimator', emoji: '🎯', desc: 'Got 100% on an Estimation Station mission!' },
+  { id: 'lightning_legend', name: 'Lightning Legend', emoji: '⚡', desc: 'Averaged under 3 seconds per question in a Lightning Round!' },
   { id: 'catcher_10', name: 'Pokémon Catcher', emoji: '🐾', desc: 'Caught 10 Pokémon for your Pokédex!' },
   { id: 'catcher_50', name: 'Super Catcher', emoji: '🎒', desc: 'Caught 50 Pokémon for your Pokédex!' },
   { id: 'dex_master', name: 'Dex Master', emoji: '🏆', desc: 'Caught all 151 Pokémon — gotta catch \'em all, DONE!' },
@@ -622,6 +627,8 @@ function initSetupUI() {
       const configAngles = document.getElementById('config-angles');
       const configPuzzle = document.getElementById('config-puzzle');
       const configPokemon = document.getElementById('config-pokemon');
+      const configStory = document.getElementById('config-story');
+      const configEstimate = document.getElementById('config-estimate');
       const subtitle = document.getElementById('setup-subtitle');
       const multiHeading = configMulti.querySelector('h2');
 
@@ -636,6 +643,8 @@ function initSetupUI() {
       if (configAngles) configAngles.classList.add('hidden');
       if (configPuzzle) configPuzzle.classList.add('hidden');
       if (configPokemon) configPokemon.classList.add('hidden');
+      if (configStory) configStory.classList.add('hidden');
+      if (configEstimate) configEstimate.classList.add('hidden');
 
       if (op === 'multiply') {
         configMulti.classList.remove('hidden');
@@ -687,6 +696,14 @@ function initSetupUI() {
         if (configPokemon) configPokemon.classList.remove('hidden');
         subtitle.innerText = "Select your Pokémon quiz and prepare your rocket!";
         setMascotExpression('setup', "Poké Galaxy! Tap the right answer — gotta know 'em all! ⚡");
+      } else if (op === 'story') {
+        if (configStory) configStory.classList.remove('hidden');
+        subtitle.innerText = "Select your story level and prepare your rocket!";
+        setMascotExpression('setup', "Mission Control! Read the space story and crack the problem! 📖");
+      } else if (op === 'estimate') {
+        if (configEstimate) configEstimate.classList.remove('hidden');
+        subtitle.innerText = "Select your estimation level and prepare your rocket!";
+        setMascotExpression('setup', "Estimation Station! Round the numbers and guess smart! 🎯");
       }
     });
   });
@@ -778,6 +795,26 @@ function initSetupUI() {
       document.querySelectorAll('#config-pokemon .digit-level-btn').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
       gameState.pokemonLevel = btn.dataset.level;
+    });
+  });
+
+  // Story level buttons
+  document.querySelectorAll('#config-story .digit-level-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      playSound('tap');
+      document.querySelectorAll('#config-story .digit-level-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      gameState.storyLevel = btn.dataset.level;
+    });
+  });
+
+  // Estimation level buttons
+  document.querySelectorAll('#config-estimate .digit-level-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      playSound('tap');
+      document.querySelectorAll('#config-estimate .digit-level-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      gameState.estimateLevel = btn.dataset.level;
     });
   });
 
@@ -1410,6 +1447,16 @@ function generateQuestions() {
     for (let i = 0; i < targetCount; i++) {
       pool.push(buildPokemonQuestion(gameState.pokemonLevel));
     }
+  } else if (gameState.activeOp === 'story') {
+    const targetCount = Math.max(50, gameState.questionCount);
+    for (let i = 0; i < targetCount; i++) {
+      pool.push(buildStoryQuestion(gameState.storyLevel));
+    }
+  } else if (gameState.activeOp === 'estimate') {
+    const targetCount = Math.max(50, gameState.questionCount);
+    for (let i = 0; i < targetCount; i++) {
+      pool.push(buildEstimateQuestion(gameState.estimateLevel));
+    }
   } else {
     // Addition & Subtraction Mode
     let minVal = 1, maxVal = 9;
@@ -1660,7 +1707,7 @@ function loadQuestion() {
 
     document.getElementById('custom-numpad').classList.remove('hidden');
     document.getElementById('comparison-input-pad').classList.add('hidden');
-  } else if (qOpKind === 'music' || qOpKind === 'angles' || qOpKind === 'puzzle') {
+  } else if ((qOpKind === 'music' || qOpKind === 'angles' || qOpKind === 'puzzle' || qOpKind === 'story' || qOpKind === 'estimate') && !q.choices) {
     mathCard.classList.remove('hidden');
     clockCard.classList.add('hidden');
     const fractionCard = document.getElementById('fraction-card');
@@ -1686,10 +1733,12 @@ function loadQuestion() {
     const promptSpeech = {
       music: 'Music math time! Count the beats like a real pianist! 🎵',
       angles: 'Gymnastics math! Spin through the degrees! 🤸',
-      puzzle: 'Puzzle time! Use your detective brain to crack the code! 🧩'
+      puzzle: 'Puzzle time! Use your detective brain to crack the code! 🧩',
+      story: 'Read the space story carefully, then work it out! 📖',
+      estimate: 'Round the numbers in your head — no exact math needed! 🎯'
     };
     setMascotExpression('game', promptSpeech[qOpKind]);
-  } else if (qOpKind === 'pokemon') {
+  } else if (q.choices) {
     mathCard.classList.remove('hidden');
     clockCard.classList.add('hidden');
     const fractionCard = document.getElementById('fraction-card');
@@ -1727,14 +1776,22 @@ function loadQuestion() {
 
     document.getElementById('game-question-index').innerText = `${gameState.currentQuestionIndex + 1} / ${gameState.questionCount}`;
 
-    const pokeSpeech = {
-      count: 'Count the Pokémon and tap the number! 🔢',
-      identity: "Who's that Pokémon?! Tap the right name! 🔍",
-      type: 'Is it fire, water, or something else? Tap the type! 🔥',
-      evolution: 'Evolution time! Who does it grow into? Tap the picture! ✨',
-      battle: 'Battle time! Which type wins? ⚔️'
-    };
-    setMascotExpression('game', pokeSpeech[gameState.pokemonLevel] || "Who's that Pokémon?! ⚡");
+    if (qOpKind === 'pokemon') {
+      const pokeSpeech = {
+        count: 'Count the Pokémon and tap the number! 🔢',
+        identity: "Who's that Pokémon?! Tap the right name! 🔍",
+        type: 'Is it fire, water, or something else? Tap the type! 🔥',
+        evolution: 'Evolution time! Who does it grow into? Tap the picture! ✨',
+        battle: 'Battle time! Which type wins? ⚔️'
+      };
+      setMascotExpression('game', pokeSpeech[gameState.pokemonLevel] || "Who's that Pokémon?! ⚡");
+    } else if (qOpKind === 'story') {
+      setMascotExpression('game', 'Read the story — which operation will solve it? 📖');
+    } else if (qOpKind === 'estimate') {
+      setMascotExpression('game', 'Round each number first, then tap your best estimate! 🎯');
+    } else {
+      setMascotExpression('game', 'Tap the right answer! ✨');
+    }
   } else if (gameState.activeOp === 'compare') {
     mathCard.classList.add('hidden');
     clockCard.classList.add('hidden');
@@ -1837,6 +1894,8 @@ function getTimeLimit() {
   if (op === 'angles') return { turns: 10, combine: 15, convert: 15 }[gameState.anglesLevel] || 12;
   if (op === 'puzzle') return { mystery: 15, emoji: 25, magic: 30 }[gameState.puzzleLevel] || 20;
   if (op === 'pokemon') return { count: 12, identity: 12, type: 12, evolution: 15, battle: 12 }[gameState.pokemonLevel] || 12;
+  if (op === 'story') return { onestep: 25, twostep: 35, money: 30 }[gameState.storyLevel] || 30;
+  if (op === 'estimate') return { round10: 12, round100: 15, approx: 18 }[gameState.estimateLevel] || 15;
   return 8;
 }
 
@@ -1864,7 +1923,7 @@ function updateAnswerDisplay() {
   const currentQ = gameState.currentQuestions[gameState.currentQuestionIndex];
   const qOpKind = (currentQ && currentQ.op) || gameState.activeOp;
 
-  if (qOpKind === 'pokemon') return; // multiple choice — nothing typed
+  if (currentQ && currentQ.choices) return; // multiple choice — nothing typed
 
   if (gameState.activeOp === 'sequence') {
     const display = document.getElementById('sequence-answer-display');
@@ -1879,7 +1938,7 @@ function updateAnswerDisplay() {
     return;
   }
 
-  if (qOpKind === 'music' || qOpKind === 'angles' || qOpKind === 'puzzle') {
+  if (['music', 'angles', 'puzzle', 'story', 'estimate'].includes(qOpKind)) {
     const display = document.getElementById('prompt-answer-display');
     if (!display) return;
     if (gameState.currentAnswer === '') {
@@ -2046,8 +2105,9 @@ function setupNumpad() {
 }
 
 function handleKeyPress(key) {
-  if (gameState.activeOp === 'pokemon') {
-    // Keys 1-3 tap the corresponding choice button
+  // Multiple-choice questions: keys 1-3 tap the corresponding button
+  const curQ = gameState.currentQuestions && gameState.currentQuestions[gameState.currentQuestionIndex];
+  if (curQ && curQ.choices) {
     if (key >= '1' && key <= '3') {
       const buttons = document.querySelectorAll('#choice-pad .choice-key');
       const btn = buttons[parseInt(key, 10) - 1];
@@ -2162,7 +2222,7 @@ function submitAnswer(isTimeout = false) {
 
     const qSubmitOp = q.op || gameState.activeOp;
     const displayId = qSubmitOp === 'sequence' ? 'sequence-answer-display'
-      : (qSubmitOp === 'music' || qSubmitOp === 'angles' || qSubmitOp === 'puzzle') ? 'prompt-answer-display'
+      : ['music', 'angles', 'puzzle', 'story', 'estimate'].includes(qSubmitOp) ? 'prompt-answer-display'
       : usesVerticalLayout(qSubmitOp) ? 'vertical-answer-display'
       : 'answer-display';
     const display = document.getElementById(displayId);
@@ -2198,6 +2258,8 @@ function currentLevelTag(q) {
   if (op === 'angles') return `angles:${gameState.anglesLevel}`;
   if (op === 'puzzle') return `puzzle:${gameState.puzzleLevel}`;
   if (op === 'pokemon') return `pokemon:${gameState.pokemonLevel}`;
+  if (op === 'story') return `story:${gameState.storyLevel}`;
+  if (op === 'estimate') return `estimate:${gameState.estimateLevel}`;
   return op;
 }
 
@@ -2514,7 +2576,7 @@ function submitChoiceAnswer(choiceValue) {
     num1: q.promptText,
     num2: '',
     expected: q.expected,
-    op: 'pokemon',
+    op: q.op,
     typed: choiceValue,
     isCorrect: isCorrect,
     timeTaken: timeTaken,
@@ -3012,7 +3074,8 @@ function advanceGame() {
 
   if (gameState.currentQuestionIndex < gameState.questionCount) {
     loadQuestion();
-  } else if (!gameState.rematchDone && gameState.missedQuestions.length > 0) {
+  } else if (!gameState.rematchDone && gameState.missedQuestions.length > 0 && gameState.missionKey !== 'sprint') {
+    // No rematch in the Lightning Round — it would inflate the time
     startRematch();
   } else {
     endGame();
@@ -3091,6 +3154,22 @@ function endGame() {
     playSound('correct');
   }
 
+  // Lightning Round: the headline is your TIME, racing your own best
+  if (gameState.missionKey === 'sprint' && typeof Progression !== 'undefined') {
+    const sprintTime = parseFloat(totalTime.toFixed(1));
+    const res = Progression.recordSprint(sprintTime);
+    headline.innerText = `⚡ Lightning Round: ${sprintTime}s`;
+    if (res.isRecord) {
+      subhead.innerText = res.prevBest
+        ? `NEW RECORD! You beat your old best of ${res.prevBest}s! 🏆`
+        : 'Your first Lightning Round — that\'s the time to beat! 🏆';
+      playSound('victory');
+      startConfetti();
+    } else {
+      subhead.innerText = `Your best is ${res.best}s — so close! Try again! ⚡`;
+    }
+  }
+
   document.getElementById('res-score').innerText = gameState.score;
   document.getElementById('res-accuracy').innerText = `${accuracy}%`;
   document.getElementById('res-speed').innerText = `${avgSpeed}s`;
@@ -3146,7 +3225,7 @@ function endGame() {
       } else if (log.subtype === 'subtract') {
         formula.innerText = `${log.num1}/${log.denom || '?'} − ${log.num2}/${log.denom || '?'}`;
       }
-    } else if (log.op === 'music' || log.op === 'angles' || log.op === 'puzzle' || log.op === 'pokemon') {
+    } else if (['music', 'angles', 'puzzle', 'pokemon', 'story', 'estimate'].includes(log.op)) {
       formula.innerText = `${log.num1} ${log.op === 'pokemon' ? '→' : '='} ${log.expected}`;
     } else if (log.op === 'sequence') {
       formula.innerText = `Sequence: ${log.num1}, ?`;
@@ -3305,6 +3384,18 @@ function checkAndUnlockBadges(accuracy, avgSpeed) {
 
   if (gameState.activeOp === 'pokemon' && accuracy === 100) {
     addBadge('pokemon_professor');
+  }
+
+  if (gameState.activeOp === 'story' && accuracy === 100) {
+    addBadge('story_hero');
+  }
+
+  if (gameState.activeOp === 'estimate' && accuracy === 100) {
+    addBadge('estimator');
+  }
+
+  if (gameState.missionKey === 'sprint' && accuracy === 100 && avgSpeed < 3.0) {
+    addBadge('lightning_legend');
   }
 
   if (typeof Pokedex !== 'undefined') {

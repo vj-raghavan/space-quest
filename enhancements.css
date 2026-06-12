@@ -709,6 +709,83 @@
   .v-div { font-size: 2.1rem; }
 }
 
+/* --- Space Pet --- */
+.pet-card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 16px;
+  padding: 16px 22px;
+}
+
+.pet-visual {
+  position: relative;
+  font-size: 3.4rem;
+  line-height: 1;
+  min-width: 78px;
+  text-align: center;
+}
+
+.pet-acc {
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.6rem;
+}
+
+.pet-mood {
+  position: absolute;
+  bottom: -6px;
+  right: -10px;
+  font-size: 1.3rem;
+}
+
+.pet-info h2 {
+  font-size: 1.2rem;
+  margin-bottom: 2px;
+}
+
+.pet-info p {
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
+.pet-hint {
+  color: var(--gold-yellow);
+  font-size: 0.8rem !important;
+  margin-top: 4px;
+}
+
+/* --- Galaxy Themes --- */
+body.theme-sunset .space-background {
+  background: radial-gradient(ellipse at bottom, #4a2030 0%, #160709 100%);
+}
+body.theme-sunset .nebula {
+  background: radial-gradient(circle, rgba(255, 130, 60, 0.16) 0%, rgba(0, 0, 0, 0) 70%);
+}
+
+body.theme-aurora .space-background {
+  background: radial-gradient(ellipse at bottom, #11352b 0%, #04100c 100%);
+}
+body.theme-aurora .nebula {
+  background: radial-gradient(circle, rgba(70, 255, 170, 0.13) 0%, rgba(0, 0, 0, 0) 70%);
+}
+
+body.theme-candy .space-background {
+  background: radial-gradient(ellipse at bottom, #3a1e4d 0%, #120618 100%);
+}
+body.theme-candy .nebula {
+  background: radial-gradient(circle, rgba(255, 100, 210, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+}
+
+/* --- Story problems --- */
+.story-which-op {
+  font-size: 1.05rem !important;
+  color: var(--gold-yellow);
+  margin-top: 10px;
+}
+
 /* --- Player Profiles --- */
 .player-chip {
   font-family: var(--font-main);

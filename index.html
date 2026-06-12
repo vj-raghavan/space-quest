@@ -64,8 +64,14 @@
         <div class="galaxy-stats-row">
           <div class="galaxy-stat" id="galaxy-streak">🔥 0 day streak</div>
           <div class="galaxy-stat" id="galaxy-coins">⭐ 0 coins</div>
-          <div class="galaxy-stat" id="galaxy-stars">🌟 0 / 129 stars</div>
+          <div class="galaxy-stat" id="galaxy-stars">🌟 0 / 147 stars</div>
+          <div class="galaxy-stat hidden" id="galaxy-sprint">⚡ best —</div>
         </div>
+      </div>
+
+      <!-- Space Pet companion -->
+      <div class="pet-card glass-panel" id="pet-card">
+        <!-- Rendered by progression.js -->
       </div>
 
       <div class="daily-mission-card glass-panel" id="daily-card">
@@ -82,6 +88,7 @@
       </div>
 
       <div class="galaxy-actions">
+        <button class="btn btn-secondary" id="btn-sprint">⚡ Lightning Round</button>
         <button class="btn btn-secondary" id="btn-pokedex">📕 Pokédex</button>
         <button class="btn btn-secondary" id="btn-custom-mission">🛠️ Custom Mission</button>
         <button class="btn btn-secondary" id="btn-shop">🛒 Star Shop</button>
@@ -111,6 +118,8 @@
         <button class="op-tab-btn" data-op="angles">🤸 Turns & Angles</button>
         <button class="op-tab-btn" data-op="puzzle">🧩 Puzzles</button>
         <button class="op-tab-btn" data-op="pokemon">⚡ Pokémon</button>
+        <button class="op-tab-btn" data-op="story">📖 Story Problems</button>
+        <button class="op-tab-btn" data-op="estimate">🎯 Estimation</button>
       </div>
 
       <div class="setup-grid">
@@ -362,6 +371,52 @@
               <span class="level-emoji">⚔️</span>
               <span class="level-title">Battle Match</span>
               <span class="level-range">Which type wins?</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Story Problems Level Selector -->
+        <div class="setup-card glass-panel hidden" id="config-story">
+          <h2>🎯 Choose Story Level</h2>
+          <p class="subtitle" style="margin-bottom: 8px; color: var(--neon-cyan);">Pick your mission briefing!</p>
+          <div class="digits-selector-grid">
+            <button class="digit-level-btn selected" data-level="onestep">
+              <span class="level-emoji">📖</span>
+              <span class="level-title">Space Stories</span>
+              <span class="level-range">One-step problems</span>
+            </button>
+            <button class="digit-level-btn" data-level="twostep">
+              <span class="level-emoji">📚</span>
+              <span class="level-title">Double Trouble</span>
+              <span class="level-range">Two-step problems</span>
+            </button>
+            <button class="digit-level-btn" data-level="money">
+              <span class="level-emoji">💰</span>
+              <span class="level-title">Space Market</span>
+              <span class="level-range">Money & change</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Estimation Level Selector -->
+        <div class="setup-card glass-panel hidden" id="config-estimate">
+          <h2>🎯 Choose Estimation Level</h2>
+          <p class="subtitle" style="margin-bottom: 8px; color: var(--neon-cyan);">Pick your rounding challenge!</p>
+          <div class="digits-selector-grid">
+            <button class="digit-level-btn selected" data-level="round10">
+              <span class="level-emoji">🔟</span>
+              <span class="level-title">Nearest Ten</span>
+              <span class="level-range">Round to nearest 10</span>
+            </button>
+            <button class="digit-level-btn" data-level="round100">
+              <span class="level-emoji">💯</span>
+              <span class="level-title">Nearest Hundred</span>
+              <span class="level-range">Round to nearest 100</span>
+            </button>
+            <button class="digit-level-btn" data-level="approx">
+              <span class="level-emoji">🎯</span>
+              <span class="level-title">About How Much?</span>
+              <span class="level-range">Estimate sums fast</span>
             </button>
           </div>
         </div>
@@ -709,6 +764,12 @@
         <h3>🎶 Victory Tunes</h3>
         <div class="shop-grid" id="shop-jingles"></div>
 
+        <h3>🌌 Galaxy Themes</h3>
+        <div class="shop-grid" id="shop-themes"></div>
+
+        <h3>🐾 Pet Accessories</h3>
+        <div class="shop-grid" id="shop-accessories"></div>
+
         <h3>🎁 Poké Packs</h3>
         <div class="shop-grid" id="shop-packs"></div>
 
@@ -835,6 +896,7 @@
   <script src="players.js"></script>
   <script src="mastery.js"></script>
   <script src="pokemon.js"></script>
+  <script src="story.js"></script>
   <script src="progression.js"></script>
   <script src="app.js"></script>
 </body>
