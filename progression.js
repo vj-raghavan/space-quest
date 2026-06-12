@@ -104,6 +104,7 @@ const Progression = (() => {
     rocket: 'rocket',
     trail: 'cyan',
     jingle: 'classic',
+    eqStyle: 'horizontal',
     owned: ['rocket', 'cyan', 'classic'],
     stars: {},          // missionKey -> best star count (0-3)
     streak: { count: 0, lastDate: null, shieldWeek: null },
@@ -744,6 +745,11 @@ const Progression = (() => {
     return profile.jingle || 'classic';
   }
 
+  function setEqStyle(style) {
+    profile.eqStyle = style;
+    saveProfile();
+  }
+
   function maybeShowNamePopup() {
     if (profile.name || profile.namePromptShown) return;
     document.getElementById('name-popup').classList.remove('hidden');
@@ -827,6 +833,9 @@ const Progression = (() => {
     bindEvents();
     renderGalaxy();
     updateCoinHud();
+    // Restore this player's preferred number style
+    gameState.eqStyle = profile.eqStyle || 'horizontal';
+    if (typeof syncEqStyleToggle === 'function') syncEqStyleToggle();
     // With several players on this device, ask who's playing up front
     if (Players.list().length >= 2) {
       openPlayerPicker();
@@ -835,5 +844,5 @@ const Progression = (() => {
     }
   }
 
-  return { init, renderGalaxy, completeMission, applyCosmetics, keyFromState, getName, getJingle, updateCoinHud };
+  return { init, renderGalaxy, completeMission, applyCosmetics, keyFromState, getName, getJingle, setEqStyle, updateCoinHud };
 })();

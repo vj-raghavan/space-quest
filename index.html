@@ -369,6 +369,20 @@
           </div>
 
           <div class="settings-group">
+            <span class="settings-label">Number Style:</span>
+            <div class="toggle-group" id="eq-style-group">
+              <button class="toggle-option eq-style-option active" data-value="horizontal">
+                <span class="eq-style-label">↔️ Across</span>
+                <span class="mini-eq">6 + 3 = ?</span>
+              </button>
+              <button class="toggle-option eq-style-option" data-value="vertical">
+                <span class="eq-style-label">↕️ Stacked</span>
+                <span class="mini-stack"><span>6</span><span>+ 3</span><span class="mini-line"></span><span>?</span></span>
+              </button>
+            </div>
+          </div>
+
+          <div class="settings-group">
             <span class="settings-label">Game Mode:</span>
             <div class="toggle-group" id="game-mode-group">
               <button class="toggle-option active" data-value="adventure">🪐 Quest Mode (No timer)</button>
@@ -410,6 +424,7 @@
           <span id="game-question-index" class="hud-value">1 / 10</span>
         </div>
 
+        <button id="btn-flip-style" class="abort-btn" title="Flip between across and stacked style">↕️</button>
         <button id="btn-abort-mission" class="abort-btn" title="Back to Galaxy Map">🗺️ ✕</button>
       </div>
 
@@ -450,6 +465,9 @@
             </div>
             <div id="sequence-display" class="sequence-display hidden">
               <!-- Generated programmatically in app.js -->
+            </div>
+            <div id="vertical-display" class="vertical-display hidden">
+              <!-- Stacked (on-paper) equation layout, built per question in app.js -->
             </div>
             <div id="prompt-display" class="prompt-display hidden">
               <!-- Music Math & Turns/Angles word problems -->

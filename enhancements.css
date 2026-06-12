@@ -606,6 +606,109 @@
   background: rgba(255, 200, 80, 0.08);
 }
 
+/* --- Stacked (vertical / on-paper) equation layout --- */
+.vertical-display {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0;
+}
+
+.v-eq {
+  display: inline-flex;
+  flex-direction: column;
+  min-width: 150px;
+  font-size: 3rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.v-eq .v-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+  line-height: 1.2;
+}
+
+.v-eq .v-op {
+  margin-right: auto;
+  color: var(--neon-purple);
+}
+
+.v-eq .v-line {
+  border-bottom: 4px solid rgba(255, 255, 255, 0.75);
+  border-radius: 2px;
+  margin: 8px 0;
+}
+
+/* Long-division bracket: quotient on top, divisor ) dividend below */
+.v-div {
+  display: grid;
+  grid-template-columns: auto auto;
+  column-gap: 4px;
+  font-size: 2.8rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.v-div-q {
+  grid-column: 2;
+  text-align: center;
+  padding: 0 18px 4px;
+}
+
+.v-div-divisor {
+  grid-column: 1;
+  grid-row: 2;
+  padding-right: 6px;
+  align-self: end;
+}
+
+.v-div-dividend {
+  grid-column: 2;
+  grid-row: 2;
+  border-top: 4px solid rgba(255, 255, 255, 0.75);
+  border-left: 4px solid rgba(255, 255, 255, 0.75);
+  border-top-left-radius: 18px;
+  padding: 4px 18px 0;
+  text-align: center;
+}
+
+/* Visual previews inside the Number Style selector */
+.eq-style-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.eq-style-label { font-weight: 600; }
+
+.mini-eq {
+  font-size: 0.78rem;
+  opacity: 0.8;
+}
+
+.mini-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 0.7rem;
+  line-height: 1.2;
+  opacity: 0.8;
+  min-width: 26px;
+}
+
+.mini-stack .mini-line {
+  border-top: 2px solid currentColor;
+  width: 100%;
+  margin: 1px 0;
+}
+
+@media (max-width: 600px) {
+  .v-eq { font-size: 2.3rem; }
+  .v-div { font-size: 2.1rem; }
+}
+
 /* --- Player Profiles --- */
 .player-chip {
   font-family: var(--font-main);

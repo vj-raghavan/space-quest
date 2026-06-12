@@ -38,6 +38,7 @@ const gameState = {
   anglesLevel: 'turns',      // 'turns', 'combine', 'convert'
   puzzleLevel: 'mystery',    // 'mystery', 'emoji', 'magic'
   pokemonLevel: 'identity',  // 'identity', 'type', 'evolution'
+  eqStyle: 'horizontal',     // 'horizontal' (6 + 3 = ?) or 'vertical' (stacked, like on paper)
   missionKey: null,          // 'planet:level' when launched from the galaxy map, 'daily', or null
   injectedQuestions: null,   // pre-built question list (daily mission)
   missedQuestions: [],       // wrong answers this round, queued for the rematch
@@ -140,6 +141,45 @@ function noteSVG(type) {
   }
   // eighth
   return `${open}<ellipse cx="11" cy="32" rx="8" ry="5.5" fill="currentColor"/><line x1="19" y1="32" x2="19" y2="4" stroke="currentColor" stroke-width="2.5"/><path d="M19 4 Q28 8 26 18" fill="none" stroke="currentColor" stroke-width="2.5"/></svg>`;
+}
+
+// Ops that support the stacked (on-paper) layout
+const VERTICAL_OPS = ['multiply', 'divide', 'add', 'subtract'];
+
+function usesVerticalLayout(qOp) {
+  return gameState.eqStyle === 'vertical' && VERTICAL_OPS.includes(qOp);
+}
+
+// Render a question in stacked written form: numbers right-aligned in a
+// column for + − ×, and the long-division bracket for ÷.
+function renderVerticalEquation(q, qOp) {
+  const vert = document.getElementById('vertical-display');
+  if (!vert) return;
+
+  if (qOp === 'divide') {
+    vert.innerHTML = `
+      <div class="v-div">
+        <div class="v-div-q"><span id="vertical-answer-display" class="answer-empty">?</span></div>
+        <div class="v-div-divisor">${q.num2}</div>
+        <div class="v-div-dividend">${q.num1}</div>
+      </div>`;
+  } else {
+    const opSymbol = qOp === 'add' ? '+' : qOp === 'subtract' ? '−' : '×';
+    vert.innerHTML = `
+      <div class="v-eq">
+        <div class="v-row">${q.num1}</div>
+        <div class="v-row"><span class="v-op">${opSymbol}</span><span>${q.num2}</span></div>
+        <div class="v-line"></div>
+        <div class="v-row"><span id="vertical-answer-display" class="answer-empty">?</span></div>
+      </div>`;
+  }
+  vert.classList.remove('hidden');
+}
+
+function syncEqStyleToggle() {
+  document.querySelectorAll('#eq-style-group .toggle-option').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.value === gameState.eqStyle);
+  });
 }
 
 // Build one puzzle question. `rand` is injectable so the Daily Mission's
@@ -796,6 +836,30 @@ function initSetupUI() {
       gameState.questionCount = parseInt(btn.dataset.value);
     });
   });
+
+  // Number Style selector (across vs stacked) — persisted per player
+  document.querySelectorAll('#eq-style-group .toggle-option').forEach(btn => {
+    btn.addEventListener('click', () => {
+      playSound('tap');
+      gameState.eqStyle = btn.dataset.value;
+      syncEqStyleToggle();
+      if (typeof Progression !== 'undefined') Progression.setEqStyle(gameState.eqStyle);
+    });
+  });
+
+  // In-game flip button: re-renders the current question in the other style
+  const flipStyleBtn = document.getElementById('btn-flip-style');
+  if (flipStyleBtn) {
+    flipStyleBtn.addEventListener('click', () => {
+      playSound('tap');
+      gameState.eqStyle = gameState.eqStyle === 'vertical' ? 'horizontal' : 'vertical';
+      syncEqStyleToggle();
+      if (typeof Progression !== 'undefined') Progression.setEqStyle(gameState.eqStyle);
+      if (!document.getElementById('screen-game').classList.contains('hidden')) {
+        loadQuestion();
+      }
+    });
+  }
 
   // Game Mode selector
   document.querySelectorAll('#game-mode-group .toggle-option').forEach(btn => {
@@ -1461,6 +1525,8 @@ function loadQuestion() {
   if (choicePadReset) choicePadReset.classList.add('hidden');
   const promptAnswerRowReset = document.querySelector('.prompt-answer-row');
   if (promptAnswerRowReset) promptAnswerRowReset.classList.remove('hidden');
+  const verticalDisplayReset = document.getElementById('vertical-display');
+  if (verticalDisplayReset) verticalDisplayReset.classList.add('hidden');
 
   const mathCard = document.getElementById('math-card');
   const clockCard = document.getElementById('clock-card');
@@ -1471,6 +1537,10 @@ function loadQuestion() {
   // Branch on the question's own op where it can differ from the mission op
   // (the Daily Mission mixes multiply/divide facts with a puzzle)
   const qOpKind = q.op || gameState.activeOp;
+
+  // The across/stacked flip button only applies to basic arithmetic
+  const flipBtn = document.getElementById('btn-flip-style');
+  if (flipBtn) flipBtn.style.display = VERTICAL_OPS.includes(qOpKind) ? '' : 'none';
 
   if (gameState.activeOp === 'clock') {
     mathCard.classList.add('hidden');
@@ -1695,8 +1765,14 @@ function loadQuestion() {
     const compareCard = document.getElementById('compare-card');
     if (compareCard) compareCard.classList.add('hidden');
 
-    document.getElementById('equation-display').classList.remove('hidden');
     document.getElementById('sequence-display').classList.add('hidden');
+
+    if (usesVerticalLayout(qOpKind)) {
+      document.getElementById('equation-display').classList.add('hidden');
+      renderVerticalEquation(q, qOpKind);
+    } else {
+      document.getElementById('equation-display').classList.remove('hidden');
+    }
 
     document.getElementById('num-1').innerText = q.num1;
     document.getElementById('num-2').innerText = q.num2;
@@ -1811,7 +1887,9 @@ function updateAnswerDisplay() {
     return;
   }
 
-  const display = document.getElementById('answer-display');
+  const displayId = usesVerticalLayout(qOpKind) ? 'vertical-answer-display' : 'answer-display';
+  const display = document.getElementById(displayId);
+  if (!display) return;
   if (gameState.currentAnswer === '') {
     display.innerText = '?';
     display.className = 'answer-empty';
@@ -2080,6 +2158,7 @@ function submitAnswer(isTimeout = false) {
     const qSubmitOp = q.op || gameState.activeOp;
     const displayId = qSubmitOp === 'sequence' ? 'sequence-answer-display'
       : (qSubmitOp === 'music' || qSubmitOp === 'angles' || qSubmitOp === 'puzzle') ? 'prompt-answer-display'
+      : usesVerticalLayout(qSubmitOp) ? 'vertical-answer-display'
       : 'answer-display';
     const display = document.getElementById(displayId);
     if (display) {
