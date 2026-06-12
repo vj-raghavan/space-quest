@@ -844,6 +844,21 @@ body.theme-candy .nebula {
 .player-avatar { font-size: 2.6rem; }
 .player-name { font-weight: 600; font-size: 1rem; }
 
+.player-edit {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  opacity: 0.6;
+}
+.player-edit:hover { opacity: 1; background: rgba(255, 255, 255, 0.25); }
+
 .player-delete {
   position: absolute;
   top: 6px;

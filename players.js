@@ -83,6 +83,13 @@ const Players = (() => {
     save();
   }
 
+  function setActiveAvatar(avatar) {
+    if (avatar) {
+      active().avatar = avatar;
+      save();
+    }
+  }
+
   function removePlayer(id) {
     if (registry.players.length <= 1) return;
     PLAYER_KEYS.forEach(base => localStorage.removeItem(`${base}:${id}`));
@@ -96,5 +103,5 @@ const Players = (() => {
     }
   }
 
-  return { key, active, list, switchTo, addPlayer, renameActive, removePlayer, AVATARS };
+  return { key, active, list, switchTo, addPlayer, renameActive, setActiveAvatar, removePlayer, AVATARS };
 })();

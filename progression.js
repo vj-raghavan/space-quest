@@ -156,6 +156,7 @@ const Progression = (() => {
   let profile = loadProfile();
   let parentUnlocked = false;
   let parentGateAnswer = null;
+  let editingProfile = false; // the new-player form doubles as the profile editor
 
   function loadProfile() {
     let p = { ...DEFAULT_PROFILE };
@@ -850,6 +851,7 @@ const Progression = (() => {
     const form = document.getElementById('new-player-form');
     if (!popup || !list) return;
 
+    editingProfile = false;
     form.classList.add('hidden');
     list.classList.remove('hidden');
     document.getElementById('player-popup-title').innerText = "Who's playing? 👨‍🚀";
@@ -881,6 +883,18 @@ const Progression = (() => {
         });
         card.appendChild(del);
       }
+      if (p.id === Players.active().id) {
+        const edit = document.createElement('button');
+        edit.className = 'player-edit';
+        edit.innerText = '✏️';
+        edit.title = 'Edit profile';
+        edit.addEventListener('click', (e) => {
+          e.stopPropagation();
+          playSound('tap');
+          showNewPlayerForm(true);
+        });
+        card.appendChild(edit);
+      }
       list.appendChild(card);
     });
 
@@ -896,17 +910,26 @@ const Progression = (() => {
     popup.classList.remove('hidden');
   }
 
-  function showNewPlayerForm() {
+  // One form, two jobs: create a new player, or edit the active one
+  function showNewPlayerForm(editMode = false) {
+    editingProfile = editMode;
     document.getElementById('player-list').classList.add('hidden');
-    document.getElementById('player-popup-title').innerText = 'New Space Explorer! ✨';
+    document.getElementById('player-popup-title').innerText = editMode
+      ? 'Edit Your Profile ✏️'
+      : 'New Space Explorer! ✨';
+    document.getElementById('btn-create-player').innerText = editMode
+      ? 'Save! ✨'
+      : "Let's Go! 🚀";
     const form = document.getElementById('new-player-form');
     form.classList.remove('hidden');
 
+    const currentAvatar = editMode ? Players.active().avatar : null;
     const choices = document.getElementById('avatar-choices');
     choices.innerHTML = '';
     Players.AVATARS.forEach((a, i) => {
       const btn = document.createElement('button');
-      btn.className = `avatar-choice ${i === 0 ? 'selected' : ''}`;
+      const isSelected = currentAvatar ? a === currentAvatar : i === 0;
+      btn.className = `avatar-choice ${isSelected ? 'selected' : ''}`;
       btn.innerText = a;
       btn.addEventListener('click', () => {
         playSound('tap');
@@ -915,14 +938,36 @@ const Progression = (() => {
       });
       choices.appendChild(btn);
     });
-    document.getElementById('new-player-name').value = '';
+    document.getElementById('new-player-name').value = editMode ? profile.name : '';
     document.getElementById('new-player-name').focus();
+  }
+
+  function openProfileEditor() {
+    document.getElementById('player-popup').classList.remove('hidden');
+    showNewPlayerForm(true);
   }
 
   function createPlayer() {
     const name = (document.getElementById('new-player-name').value || '').trim();
     const selected = document.querySelector('#avatar-choices .avatar-choice.selected');
     const avatar = selected ? selected.innerText : Players.AVATARS[0];
+
+    if (editingProfile) {
+      // Apply changes to the active player in place — no reload needed
+      if (name) {
+        profile.name = name.slice(0, 14);
+        Players.renameActive(name);
+      }
+      Players.setActiveAvatar(avatar);
+      profile.namePromptShown = true;
+      saveProfile();
+      editingProfile = false;
+      document.getElementById('player-popup').classList.add('hidden');
+      playSound('tap');
+      renderGalaxy();
+      return;
+    }
+
     playSound('victory');
     Players.addPlayer(name || 'Explorer', avatar); // reloads as the new player
   }
@@ -989,13 +1034,13 @@ const Progression = (() => {
     on('btn-switch-player', () => { playSound('tap'); openPlayerPicker(); });
     on('btn-close-players', () => {
       playSound('tap');
+      editingProfile = false;
       document.getElementById('player-popup').classList.add('hidden');
     });
     on('btn-create-player', createPlayer);
     on('btn-edit-name', () => {
       playSound('tap');
-      document.getElementById('name-input').value = profile.name;
-      document.getElementById('name-popup').classList.remove('hidden');
+      openProfileEditor();
     });
     on('btn-abort-mission', () => {
       playSound('tap');
