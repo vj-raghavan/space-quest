@@ -64,7 +64,7 @@
         <div class="galaxy-stats-row">
           <div class="galaxy-stat" id="galaxy-streak">🔥 0 day streak</div>
           <div class="galaxy-stat" id="galaxy-coins">⭐ 0 coins</div>
-          <div class="galaxy-stat" id="galaxy-stars">🌟 0 / 123 stars</div>
+          <div class="galaxy-stat" id="galaxy-stars">🌟 0 / 129 stars</div>
         </div>
       </div>
 
@@ -82,6 +82,7 @@
       </div>
 
       <div class="galaxy-actions">
+        <button class="btn btn-secondary" id="btn-pokedex">📕 Pokédex</button>
         <button class="btn btn-secondary" id="btn-custom-mission">🛠️ Custom Mission</button>
         <button class="btn btn-secondary" id="btn-shop">🛒 Star Shop</button>
         <button class="btn btn-secondary" id="btn-parent-zone">👨‍🚀 Grown-Up Zone</button>
@@ -337,7 +338,12 @@
           <h2>🎯 Choose Pokémon Quiz</h2>
           <p class="subtitle" style="margin-bottom: 8px; color: var(--neon-cyan);">Pick your Pokémon challenge!</p>
           <div class="digits-selector-grid">
-            <button class="digit-level-btn selected" data-level="identity">
+            <button class="digit-level-btn selected" data-level="count">
+              <span class="level-emoji">🔢</span>
+              <span class="level-title">Pika Count</span>
+              <span class="level-range">Count the Pokémon!</span>
+            </button>
+            <button class="digit-level-btn" data-level="identity">
               <span class="level-emoji">🔍</span>
               <span class="level-title">Who's That Pokémon?</span>
               <span class="level-range">Name the silhouette</span>
@@ -351,6 +357,11 @@
               <span class="level-emoji">✨</span>
               <span class="level-title">Evolution Lab</span>
               <span class="level-range">Who evolves into whom?</span>
+            </button>
+            <button class="digit-level-btn" data-level="battle">
+              <span class="level-emoji">⚔️</span>
+              <span class="level-title">Battle Match</span>
+              <span class="level-range">Which type wins?</span>
             </button>
           </div>
         </div>
@@ -698,8 +709,24 @@
         <h3>🎶 Victory Tunes</h3>
         <div class="shop-grid" id="shop-jingles"></div>
 
+        <h3>🎁 Poké Packs</h3>
+        <div class="shop-grid" id="shop-packs"></div>
+
         <div class="parent-actions">
           <button class="btn btn-primary" id="btn-shop-back">Back to Galaxy 🗺️</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4b. POKÉDEX SCREEN -->
+    <section id="screen-pokedex" class="screen hidden">
+      <div class="glass-panel pokedex-panel">
+        <h1 class="glow-text">📕 My Pokédex</h1>
+        <p class="subtitle">Answer Poké Galaxy questions correctly to catch Pokémon!</p>
+        <div id="pokedex-count" class="pokedex-count">0 / 151 caught</div>
+        <div id="pokedex-grid" class="pokedex-grid"></div>
+        <div class="parent-actions">
+          <button class="btn btn-primary" id="btn-pokedex-back">Back to Galaxy 🗺️</button>
         </div>
       </div>
     </section>
@@ -760,6 +787,18 @@
       <h2 class="trivia-title" id="level-popup-title">🪐 Planet Multiplia</h2>
       <div id="level-list" class="level-list"></div>
       <button id="btn-close-levels" class="btn btn-secondary">Close</button>
+    </div>
+  </div>
+
+  <!-- Catch toast: "Gotcha! X joined your Pokédex!" -->
+  <div id="catch-toast" class="catch-toast hidden"></div>
+
+  <!-- Poké Pack reveal popup -->
+  <div id="pack-popup" class="trivia-overlay hidden">
+    <div class="trivia-box glass-panel">
+      <h2 class="trivia-title">🎁 Poké Pack opened!</h2>
+      <div id="pack-reveal-list" class="pack-reveal-list"></div>
+      <button id="btn-close-pack" class="btn btn-primary">Awesome! ⚡</button>
     </div>
   </div>
 

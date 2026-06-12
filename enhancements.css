@@ -880,6 +880,145 @@
   .choice-img { width: 68px; height: 68px; }
 }
 
+/* Counting questions: clusters of small sprites */
+.poke-count-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
+  max-width: 340px;
+  margin: 8px auto 0;
+}
+
+.poke-count-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.poke-count-img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
+
+/* "Gotcha!" catch toast */
+.catch-toast {
+  position: fixed;
+  top: 76px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(20, 20, 40, 0.92);
+  border: 2px solid var(--gold-yellow);
+  border-radius: 18px;
+  padding: 10px 20px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  z-index: 300;
+  box-shadow: 0 0 20px rgba(255, 210, 90, 0.4);
+  pointer-events: none;
+}
+
+.catch-toast img { width: 44px; height: 44px; }
+.catch-toast b { color: var(--gold-yellow); }
+
+.catch-toast.show {
+  animation: catchPop 2.2s ease forwards;
+}
+
+@keyframes catchPop {
+  0% { opacity: 0; transform: translateX(-50%) translateY(-14px) scale(0.8); }
+  12% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1.05); }
+  20% { transform: translateX(-50%) translateY(0) scale(1); }
+  85% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+}
+
+/* Pokédex screen */
+.pokedex-panel {
+  max-width: 880px;
+  margin: 0 auto;
+  width: 100%;
+  text-align: center;
+}
+
+.pokedex-count {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--gold-yellow);
+  margin: 10px 0 16px;
+}
+
+.pokedex-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(86px, 1fr));
+  gap: 8px;
+}
+
+.dex-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 2px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dex-cell img {
+  width: 64px;
+  height: 64px;
+  filter: brightness(0) opacity(0.45);
+}
+
+.dex-cell.caught {
+  background: rgba(255, 210, 90, 0.08);
+  border-color: rgba(255, 210, 90, 0.3);
+}
+
+.dex-cell.caught img { filter: none; }
+
+.dex-name {
+  font-size: 0.65rem;
+  opacity: 0.75;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Poké Pack reveal */
+.pack-item { grid-column: 1 / -1; }
+
+.pack-reveal-list {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin: 16px 0;
+  flex-wrap: wrap;
+}
+
+.pack-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  animation: teachFadeIn 0.6s ease;
+}
+
+.pack-card img {
+  width: 110px;
+  height: 110px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 12px rgba(255, 210, 90, 0.5));
+}
+
 /* Cosmo's combo backflip */
 @keyframes cosmoFlip {
   0% { transform: rotate(0deg) scale(1); }

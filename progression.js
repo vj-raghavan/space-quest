@@ -66,10 +66,12 @@ const Progression = (() => {
       { id: 'emoji', name: 'Emoji Equations', desc: 'Crack the fruit code' },
       { id: 'magic', name: 'Magic Squares', desc: 'Make rows & columns match' },
     ]},
-    { id: 'pokemon', name: 'Poké Galaxy', emoji: '⚡', tagline: 'Gotta know \'em all', levels: [
+    { id: 'pokemon', name: 'Poké Galaxy', emoji: '⚡', tagline: 'Gotta catch \'em all', levels: [
+      { id: 'count', name: 'Pika Count', desc: 'Count the Pokémon!' },
       { id: 'identity', name: "Who's That Pokémon?", desc: 'Name the silhouette' },
       { id: 'type', name: 'Type Match', desc: 'Fire, water, grass…' },
       { id: 'evolution', name: 'Evolution Lab', desc: 'Who evolves into whom?' },
+      { id: 'battle', name: 'Battle Match', desc: 'Which type wins?' },
     ]},
   ];
 
@@ -470,6 +472,67 @@ const Progression = (() => {
     renderShopSection('shop-rockets', ROCKETS, 'rocket');
     renderShopSection('shop-trails', TRAILS, 'trail');
     renderShopSection('shop-jingles', JINGLES, 'jingle');
+    renderPackSection();
+  }
+
+  // --- Poké Packs: spend coins, catch 3 surprise Pokémon ---
+  const PACK_PRICE = 60;
+
+  function renderPackSection() {
+    const container = document.getElementById('shop-packs');
+    if (!container) return;
+    const left = Pokedex.uncaughtIds().length;
+    const allCaught = left === 0;
+    const btnClass = allCaught ? 'equipped' : profile.coins >= PACK_PRICE ? 'buy' : 'cant-afford';
+    const btnLabel = allCaught ? 'All 151 caught! 🏆' : `${PACK_PRICE} ⭐`;
+    container.innerHTML = `
+      <div class="shop-item pack-item">
+        <span class="shop-emoji">🎁</span>
+        <span class="shop-name">Poké Pack — 3 surprise Pokémon for your Pokédex! (${left} still out there)</span>
+        <button class="shop-btn ${btnClass}" id="btn-buy-pack">${btnLabel}</button>
+      </div>`;
+    document.getElementById('btn-buy-pack').addEventListener('click', buyPokePack);
+  }
+
+  function buyPokePack() {
+    const uncaught = Pokedex.uncaughtIds();
+    if (uncaught.length === 0 || profile.coins < PACK_PRICE) {
+      playSound('warning');
+      return;
+    }
+    profile.coins -= PACK_PRICE;
+    const newIds = [];
+    for (let i = 0; i < 3 && uncaught.length > 0; i++) {
+      const idx = Math.floor(Math.random() * uncaught.length);
+      newIds.push(uncaught[idx]);
+      uncaught.splice(idx, 1);
+    }
+    newIds.forEach(id => Pokedex.catchPokemon(id));
+    saveProfile();
+    updateCoinHud();
+
+    document.getElementById('pack-reveal-list').innerHTML = newIds.map(id => {
+      const p = pokeById(id);
+      return `<div class="pack-card"><img src="${pokeSpriteURL(id)}" alt="${p.name}"><span>${p.name}</span></div>`;
+    }).join('');
+    document.getElementById('pack-popup').classList.remove('hidden');
+    playSound('victory');
+    renderShop();
+  }
+
+  // --- Pokédex screen ---
+  function renderPokedex() {
+    const countEl = document.getElementById('pokedex-count');
+    if (countEl) countEl.innerText = `${Pokedex.count()} / ${Pokedex.total()} caught`;
+    const grid = document.getElementById('pokedex-grid');
+    if (!grid) return;
+    grid.innerHTML = POKEDEX.map(p => {
+      const caught = Pokedex.isCaught(p.id);
+      return `<div class="dex-cell ${caught ? 'caught' : ''}" title="${caught ? p.name : 'Not caught yet!'}">
+        <img loading="lazy" src="${pokeSmallSpriteURL(p.id)}" alt="${caught ? p.name : '???'}">
+        <span class="dex-name">${caught ? p.name : '???'}</span>
+      </div>`;
+    }).join('');
   }
 
   function renderShopSection(containerId, items, slot) {
@@ -630,7 +693,8 @@ const Progression = (() => {
     'music:notes': '🎵 Music (note values)', 'music:beats': '🎵 Music (beat counting)', 'music:measures': '🎵 Music (measures)',
     'angles:turns': '🤸 Turns (degrees)', 'angles:combine': '🤸 Turns (routines)', 'angles:convert': '🤸 Turns (conversions)',
     'puzzle:mystery': '🧩 Puzzles (mystery number)', 'puzzle:emoji': '🧩 Puzzles (emoji equations)', 'puzzle:magic': '🧩 Puzzles (magic squares)',
-    'pokemon:identity': "⚡ Pokémon (who's that)", 'pokemon:type': '⚡ Pokémon (types)', 'pokemon:evolution': '⚡ Pokémon (evolutions)',
+    'pokemon:count': '⚡ Pokémon (counting)', 'pokemon:identity': "⚡ Pokémon (who's that)", 'pokemon:type': '⚡ Pokémon (types)',
+    'pokemon:evolution': '⚡ Pokémon (evolutions)', 'pokemon:battle': '⚡ Pokémon (battles)',
   };
 
   function renderModeStats() {
@@ -780,6 +844,12 @@ const Progression = (() => {
     on('btn-setup-back', () => { playSound('tap'); showScreen('screen-galaxy'); });
     on('btn-shop', () => { playSound('tap'); renderShop(); showScreen('screen-shop'); });
     on('btn-shop-back', () => { playSound('tap'); showScreen('screen-galaxy'); });
+    on('btn-pokedex', () => { playSound('tap'); renderPokedex(); showScreen('screen-pokedex'); });
+    on('btn-pokedex-back', () => { playSound('tap'); showScreen('screen-galaxy'); });
+    on('btn-close-pack', () => {
+      playSound('tap');
+      document.getElementById('pack-popup').classList.add('hidden');
+    });
     on('btn-parent-zone', () => { playSound('tap'); openParentZone(); });
     on('btn-parent-back', () => { playSound('tap'); showScreen('screen-galaxy'); });
     on('btn-parent-gate', tryParentGate);

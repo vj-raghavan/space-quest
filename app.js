@@ -37,7 +37,7 @@ const gameState = {
   musicLevel: 'notes',       // 'notes', 'beats', 'measures'
   anglesLevel: 'turns',      // 'turns', 'combine', 'convert'
   puzzleLevel: 'mystery',    // 'mystery', 'emoji', 'magic'
-  pokemonLevel: 'identity',  // 'identity', 'type', 'evolution'
+  pokemonLevel: 'count',     // 'count', 'identity', 'type', 'evolution', 'battle'
   eqStyle: 'horizontal',     // 'horizontal' (6 + 3 = ?) or 'vertical' (stacked, like on paper)
   missionKey: null,          // 'planet:level' when launched from the galaxy map, 'daily', or null
   injectedQuestions: null,   // pre-built question list (daily mission)
@@ -101,6 +101,9 @@ const BADGES = [
   { id: 'twist_champion', name: 'Twist Champion', emoji: '🤸', desc: 'Got 100% on a Twist & Turn Arena mission!' },
   { id: 'puzzle_genius', name: 'Puzzle Genius', emoji: '🧩', desc: 'Got 100% on a Puzzle Asteroid mission!' },
   { id: 'pokemon_professor', name: 'Pokémon Professor', emoji: '⚡', desc: 'Got 100% on a Poké Galaxy mission!' },
+  { id: 'catcher_10', name: 'Pokémon Catcher', emoji: '🐾', desc: 'Caught 10 Pokémon for your Pokédex!' },
+  { id: 'catcher_50', name: 'Super Catcher', emoji: '🎒', desc: 'Caught 50 Pokémon for your Pokédex!' },
+  { id: 'dex_master', name: 'Dex Master', emoji: '🏆', desc: 'Caught all 151 Pokémon — gotta catch \'em all, DONE!' },
   { id: 'galaxy_hero', name: 'Galaxy Hero', emoji: '🪐', desc: 'Completed 5 or more space missions!' }
 ];
 
@@ -1725,9 +1728,11 @@ function loadQuestion() {
     document.getElementById('game-question-index').innerText = `${gameState.currentQuestionIndex + 1} / ${gameState.questionCount}`;
 
     const pokeSpeech = {
+      count: 'Count the Pokémon and tap the number! 🔢',
       identity: "Who's that Pokémon?! Tap the right name! 🔍",
       type: 'Is it fire, water, or something else? Tap the type! 🔥',
-      evolution: 'Evolution time! Who does it grow into? Tap the picture! ✨'
+      evolution: 'Evolution time! Who does it grow into? Tap the picture! ✨',
+      battle: 'Battle time! Which type wins? ⚔️'
     };
     setMascotExpression('game', pokeSpeech[gameState.pokemonLevel] || "Who's that Pokémon?! ⚡");
   } else if (gameState.activeOp === 'compare') {
@@ -1831,7 +1836,7 @@ function getTimeLimit() {
   if (op === 'music') return { notes: 12, beats: 15, measures: 18 }[gameState.musicLevel] || 15;
   if (op === 'angles') return { turns: 10, combine: 15, convert: 15 }[gameState.anglesLevel] || 12;
   if (op === 'puzzle') return { mystery: 15, emoji: 25, magic: 30 }[gameState.puzzleLevel] || 20;
-  if (op === 'pokemon') return { identity: 12, type: 12, evolution: 15 }[gameState.pokemonLevel] || 12;
+  if (op === 'pokemon') return { count: 12, identity: 12, type: 12, evolution: 15, battle: 12 }[gameState.pokemonLevel] || 12;
   return 8;
 }
 
@@ -2473,6 +2478,17 @@ function submitClockAnswer() {
 // POKÉ GALAXY — Multiple-choice submission
 // ============================================================
 
+// "Gotcha!" banner shown when a NEW Pokémon joins the Pokédex
+function showCatchToast(p) {
+  const toast = document.getElementById('catch-toast');
+  if (!toast) return;
+  toast.innerHTML = `<img src="${pokeSmallSpriteURL(p.id)}" alt=""> Gotcha! <b>${p.name}</b> joined your Pokédex! 📕`;
+  toast.classList.remove('hidden', 'show');
+  void toast.offsetWidth; // restart the animation
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.add('hidden'), 2200);
+}
+
 function submitChoiceAnswer(choiceValue) {
   clearInterval(gameState.timerInterval);
 
@@ -2518,6 +2534,12 @@ function submitChoiceAnswer(choiceValue) {
     mathCard.classList.add('correct');
     rocket.classList.add('animate-pop');
     setTimeout(() => rocket.classList.remove('animate-pop'), 500);
+
+    // A correct answer catches the featured Pokémon for the Pokédex
+    if (q.catchId && typeof Pokedex !== 'undefined' && Pokedex.catchPokemon(q.catchId)) {
+      const caughtP = pokeById(q.catchId);
+      if (caughtP) showCatchToast(caughtP);
+    }
 
     let baseScore = 100;
     let speedBonus = timeTaken < 5.0 ? Math.round(50 * (1 - Math.max(timeTaken - 1.5, 0) / 3.5)) : 0;
@@ -3283,6 +3305,12 @@ function checkAndUnlockBadges(accuracy, avgSpeed) {
 
   if (gameState.activeOp === 'pokemon' && accuracy === 100) {
     addBadge('pokemon_professor');
+  }
+
+  if (typeof Pokedex !== 'undefined') {
+    if (Pokedex.count() >= 10) addBadge('catcher_10');
+    if (Pokedex.count() >= 50) addBadge('catcher_50');
+    if (Pokedex.count() >= Pokedex.total()) addBadge('dex_master');
   }
 
   if (gameState.totalTestsCompleted >= 5) {
