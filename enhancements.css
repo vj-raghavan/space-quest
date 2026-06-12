@@ -1096,6 +1096,75 @@ body.theme-candy .nebula {
   filter: drop-shadow(0 0 12px rgba(255, 210, 90, 0.5));
 }
 
+/* --- Cosmo 2.0: animated SVG mascot --- */
+.mascot-svg svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
+/* Blinking eyes */
+.mascot-svg .m-eye {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: cosmoBlink 4.4s ease-in-out infinite;
+}
+
+@keyframes cosmoBlink {
+  0%, 93%, 100% { transform: scaleY(1); }
+  95.5% { transform: scaleY(0.08); }
+}
+
+/* Gentle waving arm */
+.mascot-svg .m-arm-r {
+  transform-box: fill-box;
+  transform-origin: 20% 85%;
+  animation: cosmoWave 3.2s ease-in-out infinite;
+}
+
+@keyframes cosmoWave {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-22deg); }
+}
+
+/* Glowing antenna tip */
+.mascot-svg .m-antenna-tip {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: cosmoAntenna 2.2s ease-in-out infinite;
+  filter: drop-shadow(0 0 5px rgba(255, 210, 90, 0.9));
+}
+
+@keyframes cosmoAntenna {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.35); opacity: 0.75; }
+}
+
+/* Expressions: default = round eyes + small smile */
+.mascot-svg .m-grin,
+.mascot-svg .m-o,
+.mascot-svg .m-eyes-happy { display: none; }
+
+.mascot-svg.mood-happy .m-smile,
+.mascot-svg.mood-happy .m-eyes-normal { display: none; }
+.mascot-svg.mood-happy .m-grin,
+.mascot-svg.mood-happy .m-eyes-happy { display: block; }
+
+.mascot-svg.mood-oops .m-smile { display: none; }
+.mascot-svg.mood-oops .m-o { display: block; }
+
+/* A joyful hop on correct answers */
+.mascot-svg.mood-happy {
+  animation: cosmoHop 0.6s ease;
+}
+
+@keyframes cosmoHop {
+  0%, 100% { transform: translateY(0) scale(1); }
+  35% { transform: translateY(-12px) scale(1.06); }
+  70% { transform: translateY(0) scale(0.97); }
+}
+
 /* Cosmo's combo backflip */
 @keyframes cosmoFlip {
   0% { transform: rotate(0deg) scale(1); }

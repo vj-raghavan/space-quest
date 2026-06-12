@@ -527,6 +527,8 @@ function stopConfetti() {
 
 // --- Mascot Cosmo Interaction ---
 function setMascotExpression(type, customText = null) {
+  if (typeof setMascotMood === 'function') setMascotMood(type);
+
   const speechElement = document.getElementById(
     type === 'setup' ? 'setup-mascot-speech' : 
     type === 'results' ? 'results-mascot-speech' : 'game-mascot-speech'
@@ -3442,6 +3444,7 @@ function resetToSetup() {
 document.addEventListener('DOMContentLoaded', () => {
   gameState.totalTestsCompleted = parseInt(localStorage.getItem(Players.key('space_quest_tests_completed'))) || 0;
 
+  if (typeof initMascots === 'function') initMascots();
   initSetupUI();
   setupNumpad();
 
