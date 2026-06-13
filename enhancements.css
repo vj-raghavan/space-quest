@@ -1334,3 +1334,43 @@ body.theme-candy .nebula {
   color: var(--success-green);
   font-weight: 700;
 }
+
+/* Buy Me a Coffee (Grown-Up Zone, optional donation) */
+.btn-coffee {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  text-decoration: none;
+  background: #ffdd00;
+  color: #1a1a1a;
+  font-weight: 700;
+  border: none;
+}
+.btn-coffee:hover {
+  background: #ffe533;
+  transform: translateY(-2px);
+}
+
+/* Separate the destructive Reset action into its own quiet danger zone */
+.parent-divider {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin: 26px 0 0;
+}
+.danger-zone {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+#btn-reset-progress {
+  background: transparent;
+  color: oklch(0.7 0.12 25);
+  border: 1px solid oklch(0.55 0.18 25 / 0.5);
+  opacity: 0.75;
+}
+#btn-reset-progress:hover {
+  background: oklch(0.45 0.18 25);
+  color: #fff;
+  opacity: 1;
+}
