@@ -1024,7 +1024,11 @@ function showScreen(screenId) {
   });
   const activeScreen = document.getElementById(screenId);
   activeScreen.classList.remove('hidden');
-  
+
+  // Always start a new screen at the top — the tall static About footer
+  // otherwise leaves the window scrolled down when launching a level.
+  window.scrollTo(0, 0);
+
   // Trigger layout refresh or focus if necessary
   if (screenId === 'screen-setup') {
     stopConfetti();
