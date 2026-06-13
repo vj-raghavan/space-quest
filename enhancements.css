@@ -1197,3 +1197,106 @@ body.theme-candy .nebula {
   .streak-calendar { justify-content: center; }
   .prompt-line { font-size: 1.1rem; }
 }
+
+/* ============================================================
+   SPELLING STAR BASE — letter tiles & word slots
+   ============================================================ */
+.spelling-pad {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-top: 12px;
+  width: 100%;
+}
+.spelling-slots {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.spell-slot {
+  width: 46px;
+  height: 54px;
+  border-radius: 10px;
+  border: 2px dashed rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: #fff;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.spell-slot.filled {
+  border-style: solid;
+  border-color: var(--neon-cyan);
+  background: oklch(0.78 0.18 190 / 0.12);
+}
+.spell-slot.slot-correct {
+  border-color: var(--success-green);
+  color: var(--success-green);
+}
+.spelling-tiles {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 460px;
+}
+.spell-tile {
+  width: 54px;
+  height: 58px;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(180deg, oklch(0.55 0.22 300 / 0.55), oklch(0.4 0.2 290 / 0.55));
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  transition: transform 0.1s, opacity 0.2s, box-shadow 0.15s;
+}
+.spell-tile:hover {
+  transform: translateY(-3px) scale(1.06);
+  box-shadow: 0 0 14px oklch(0.6 0.25 300 / 0.5);
+}
+.spell-tile.used {
+  opacity: 0.2;
+  transform: scale(0.92);
+  pointer-events: none;
+  box-shadow: none;
+}
+.spelling-undo-btn {
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  padding: 9px 20px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.spelling-undo-btn:hover { background: rgba(255, 255, 255, 0.2); }
+.speak-word-btn {
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--neon-cyan);
+  background: oklch(0.78 0.18 190 / 0.12);
+  border: 1px solid var(--neon-cyan);
+  border-radius: 999px;
+  padding: 4px 14px;
+  margin-left: 8px;
+  cursor: pointer;
+  vertical-align: middle;
+  transition: background 0.15s;
+}
+.speak-word-btn:hover { background: oklch(0.78 0.18 190 / 0.25); }
+@media (max-width: 540px) {
+  .spell-slot { width: 34px; height: 44px; font-size: 1.3rem; }
+  .spell-tile { width: 44px; height: 50px; font-size: 1.3rem; }
+}

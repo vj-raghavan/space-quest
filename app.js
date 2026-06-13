@@ -40,6 +40,8 @@ const gameState = {
   pokemonLevel: 'count',     // 'count', 'identity', 'type', 'evolution', 'battle'
   storyLevel: 'onestep',     // 'onestep', 'twostep', 'money'
   estimateLevel: 'round10',  // 'round10', 'round100', 'approx'
+  spellingLevel: 'spot',     // 'spot', 'spot2', 'build', 'build2'
+  spellingBuilt: '',         // letters tapped so far in Word Builder mode
   eqStyle: 'horizontal',     // 'horizontal' (6 + 3 = ?) or 'vertical' (stacked, like on paper)
   missionKey: null,          // 'planet:level' when launched from the galaxy map, 'daily', or null
   injectedQuestions: null,   // pre-built question list (daily mission)
@@ -105,6 +107,8 @@ const BADGES = [
   { id: 'pokemon_professor', name: 'Pokémon Professor', emoji: '⚡', desc: 'Got 100% on a Poké Galaxy mission!' },
   { id: 'story_hero', name: 'Story Hero', emoji: '📖', desc: 'Got 100% on a Mission Control story mission!' },
   { id: 'estimator', name: 'Master Estimator', emoji: '🎯', desc: 'Got 100% on an Estimation Station mission!' },
+  { id: 'spelling_scout', name: 'Spelling Scout', emoji: '🔤', desc: 'Spotted every correct spelling in a mission!' },
+  { id: 'word_wizard', name: 'Word Wizard', emoji: '🪄', desc: 'Built every word perfectly from letter tiles!' },
   { id: 'lightning_legend', name: 'Lightning Legend', emoji: '⚡', desc: 'Averaged under 3 seconds per question in a Lightning Round!' },
   { id: 'catcher_10', name: 'Pokémon Catcher', emoji: '🐾', desc: 'Caught 10 Pokémon for your Pokédex!' },
   { id: 'catcher_50', name: 'Super Catcher', emoji: '🎒', desc: 'Caught 50 Pokémon for your Pokédex!' },
@@ -631,6 +635,7 @@ function initSetupUI() {
       const configPokemon = document.getElementById('config-pokemon');
       const configStory = document.getElementById('config-story');
       const configEstimate = document.getElementById('config-estimate');
+      const configSpelling = document.getElementById('config-spelling');
       const subtitle = document.getElementById('setup-subtitle');
       const multiHeading = configMulti.querySelector('h2');
 
@@ -647,6 +652,7 @@ function initSetupUI() {
       if (configPokemon) configPokemon.classList.add('hidden');
       if (configStory) configStory.classList.add('hidden');
       if (configEstimate) configEstimate.classList.add('hidden');
+      if (configSpelling) configSpelling.classList.add('hidden');
 
       if (op === 'multiply') {
         configMulti.classList.remove('hidden');
@@ -706,6 +712,10 @@ function initSetupUI() {
         if (configEstimate) configEstimate.classList.remove('hidden');
         subtitle.innerText = "Select your estimation level and prepare your rocket!";
         setMascotExpression('setup', "Estimation Station! Round the numbers and guess smart! 🎯");
+      } else if (op === 'spelling') {
+        if (configSpelling) configSpelling.classList.remove('hidden');
+        subtitle.innerText = "Select your spelling level and prepare your rocket!";
+        setMascotExpression('setup', "Spelling Star Base! Spot the right words and build them letter by letter! 🔤");
       }
     });
   });
@@ -817,6 +827,16 @@ function initSetupUI() {
       document.querySelectorAll('#config-estimate .digit-level-btn').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
       gameState.estimateLevel = btn.dataset.level;
+    });
+  });
+
+  // Spelling level buttons
+  document.querySelectorAll('#config-spelling .digit-level-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      playSound('tap');
+      document.querySelectorAll('#config-spelling .digit-level-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      gameState.spellingLevel = btn.dataset.level;
     });
   });
 
@@ -1459,6 +1479,11 @@ function generateQuestions() {
     for (let i = 0; i < targetCount; i++) {
       pool.push(buildEstimateQuestion(gameState.estimateLevel));
     }
+  } else if (gameState.activeOp === 'spelling') {
+    const targetCount = Math.max(50, gameState.questionCount);
+    for (let i = 0; i < targetCount; i++) {
+      pool.push(buildSpellingQuestion(gameState.spellingLevel));
+    }
   } else {
     // Addition & Subtraction Mode
     let minVal = 1, maxVal = 9;
@@ -1579,6 +1604,8 @@ function loadQuestion() {
   if (promptAnswerRowReset) promptAnswerRowReset.classList.remove('hidden');
   const verticalDisplayReset = document.getElementById('vertical-display');
   if (verticalDisplayReset) verticalDisplayReset.classList.add('hidden');
+  const spellingPadReset = document.getElementById('spelling-pad');
+  if (spellingPadReset) spellingPadReset.classList.add('hidden');
 
   const mathCard = document.getElementById('math-card');
   const clockCard = document.getElementById('clock-card');
@@ -1740,6 +1767,31 @@ function loadQuestion() {
       estimate: 'Round the numbers in your head — no exact math needed! 🎯'
     };
     setMascotExpression('game', promptSpeech[qOpKind]);
+  } else if (q.spellWord) {
+    // Word Builder: clue on top, answer slots + scrambled letter tiles below
+    mathCard.classList.remove('hidden');
+    clockCard.classList.add('hidden');
+    const fractionCard = document.getElementById('fraction-card');
+    if (fractionCard) fractionCard.classList.add('hidden');
+    const compareCard = document.getElementById('compare-card');
+    if (compareCard) compareCard.classList.add('hidden');
+
+    document.getElementById('equation-display').classList.add('hidden');
+    document.getElementById('sequence-display').classList.add('hidden');
+    const promptDisplay = document.getElementById('prompt-display');
+    promptDisplay.classList.remove('hidden');
+    document.getElementById('prompt-question').innerHTML = q.html;
+    // The letter slots ARE the answer display — hide the typed-answer slot
+    const answerRow = document.querySelector('.prompt-answer-row');
+    if (answerRow) answerRow.classList.add('hidden');
+
+    renderSpellingPad(q);
+
+    document.getElementById('custom-numpad').classList.add('hidden');
+    document.getElementById('comparison-input-pad').classList.add('hidden');
+    document.getElementById('game-question-index').innerText = `${gameState.currentQuestionIndex + 1} / ${gameState.questionCount}`;
+
+    setMascotExpression('game', 'Read the clue, then tap the letter tiles in order to build the word! 🔤');
   } else if (q.choices) {
     mathCard.classList.remove('hidden');
     clockCard.classList.add('hidden');
@@ -1791,6 +1843,8 @@ function loadQuestion() {
       setMascotExpression('game', 'Read the story — which operation will solve it? 📖');
     } else if (qOpKind === 'estimate') {
       setMascotExpression('game', 'Round each number first, then tap your best estimate! 🎯');
+    } else if (qOpKind === 'spelling') {
+      setMascotExpression('game', 'Look closely — tap the spelling that is exactly right! 🔤');
     } else {
       setMascotExpression('game', 'Tap the right answer! ✨');
     }
@@ -1898,6 +1952,7 @@ function getTimeLimit() {
   if (op === 'pokemon') return { count: 12, identity: 12, type: 12, evolution: 15, battle: 12 }[gameState.pokemonLevel] || 12;
   if (op === 'story') return { onestep: 25, twostep: 35, money: 30 }[gameState.storyLevel] || 30;
   if (op === 'estimate') return { round10: 12, round100: 15, approx: 18 }[gameState.estimateLevel] || 15;
+  if (op === 'spelling') return { spot: 15, spot2: 18, build: 35, build2: 45 }[gameState.spellingLevel] || 25;
   return 8;
 }
 
@@ -1926,6 +1981,7 @@ function updateAnswerDisplay() {
   const qOpKind = (currentQ && currentQ.op) || gameState.activeOp;
 
   if (currentQ && currentQ.choices) return; // multiple choice — nothing typed
+  if (currentQ && currentQ.spellWord) return; // letter tiles draw into their own slots
 
   if (gameState.activeOp === 'sequence') {
     const display = document.getElementById('sequence-answer-display');
@@ -2109,6 +2165,10 @@ function setupNumpad() {
 function handleKeyPress(key) {
   // Multiple-choice questions: keys 1-3 tap the corresponding button
   const curQ = gameState.currentQuestions && gameState.currentQuestions[gameState.currentQuestionIndex];
+  if (curQ && curQ.spellWord) {
+    if (key === 'delete') spellingUndo();
+    return;
+  }
   if (curQ && curQ.choices) {
     if (key >= '1' && key <= '3') {
       const buttons = document.querySelectorAll('#choice-pad .choice-key');
@@ -2150,6 +2210,11 @@ function submitAnswer(isTimeout = false) {
   clearInterval(gameState.timerInterval);
 
   const q = gameState.currentQuestions[gameState.currentQuestionIndex];
+  // Word Builder timeouts route to the spelling submit path
+  if (q.spellWord) {
+    submitSpellingAnswer(true);
+    return;
+  }
   const typedAnswer = isTimeout ? null : Number(gameState.currentAnswer);
   const isCorrect = !isTimeout && typedAnswer === q.expected;
   
@@ -2262,6 +2327,7 @@ function currentLevelTag(q) {
   if (op === 'pokemon') return `pokemon:${gameState.pokemonLevel}`;
   if (op === 'story') return `story:${gameState.storyLevel}`;
   if (op === 'estimate') return `estimate:${gameState.estimateLevel}`;
+  if (op === 'spelling') return `spelling:${gameState.spellingLevel}`;
   return op;
 }
 
@@ -2640,6 +2706,176 @@ function submitChoiceAnswer(choiceValue) {
     setMascotExpression('incorrect');
     updateComboHUD();
     setTimeout(advanceGame, taught ? 3400 : 2400);
+  }
+}
+
+// ============================================================
+// SPELLING STAR BASE — Word Builder letter tiles
+// ============================================================
+
+function renderSpellingPad(q) {
+  gameState.spellingBuilt = '';
+  gameState.spellingSubmitted = false;
+  const pad = document.getElementById('spelling-pad');
+  const slots = document.getElementById('spelling-slots');
+  const tiles = document.getElementById('spelling-tiles');
+  if (!pad || !slots || !tiles) return;
+  slots.innerHTML = '';
+  tiles.innerHTML = '';
+  pad.style.pointerEvents = '';
+
+  const letters = q.spellWord.split('');
+  letters.forEach(() => {
+    const s = document.createElement('div');
+    s.className = 'spell-slot';
+    slots.appendChild(s);
+  });
+
+  // Scramble — re-shuffle if the tiles happen to land already spelling the word
+  let shuffled = letters.slice();
+  do {
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+  } while (shuffled.join('') === q.spellWord && letters.length > 1);
+
+  shuffled.forEach(letter => {
+    const t = document.createElement('button');
+    t.type = 'button';
+    t.className = 'spell-tile';
+    t.innerText = letter;
+    t.addEventListener('click', () => spellingTapTile(t, letter));
+    tiles.appendChild(t);
+  });
+
+  pad.classList.remove('hidden');
+}
+
+function spellingTapTile(tile, letter) {
+  if (tile.classList.contains('used')) return;
+  const q = gameState.currentQuestions[gameState.currentQuestionIndex];
+  if (!q || !q.spellWord) return;
+  playSound('tap');
+
+  tile.classList.add('used');
+  tile.dataset.slot = gameState.spellingBuilt.length;
+  gameState.spellingBuilt += letter;
+
+  const slots = document.querySelectorAll('#spelling-slots .spell-slot');
+  const slot = slots[gameState.spellingBuilt.length - 1];
+  if (slot) {
+    slot.innerText = letter;
+    slot.classList.add('filled');
+  }
+
+  // All slots filled — short pause so the last letter lands, then submit
+  if (gameState.spellingBuilt.length === q.spellWord.length) {
+    document.getElementById('spelling-pad').style.pointerEvents = 'none';
+    setTimeout(() => submitSpellingAnswer(), 350);
+  }
+}
+
+function spellingUndo() {
+  if (!gameState.spellingBuilt) return;
+  playSound('tap');
+  const idx = gameState.spellingBuilt.length - 1;
+  const slots = document.querySelectorAll('#spelling-slots .spell-slot');
+  if (slots[idx]) {
+    slots[idx].innerText = '';
+    slots[idx].classList.remove('filled');
+  }
+  document.querySelectorAll('#spelling-tiles .spell-tile').forEach(t => {
+    if (t.dataset.slot == idx) {
+      t.classList.remove('used');
+      delete t.dataset.slot;
+    }
+  });
+  gameState.spellingBuilt = gameState.spellingBuilt.slice(0, -1);
+}
+
+function submitSpellingAnswer(isTimeout = false) {
+  // The tile auto-submit timer and the round timer can both fire — only one counts
+  if (gameState.spellingSubmitted) return;
+  gameState.spellingSubmitted = true;
+  clearInterval(gameState.timerInterval);
+
+  const q = gameState.currentQuestions[gameState.currentQuestionIndex];
+  const typed = isTimeout ? null : gameState.spellingBuilt.toLowerCase();
+  const isCorrect = !isTimeout && typed === q.expected.toLowerCase();
+  const timeTaken = (performance.now() - gameState.questionStartTime) / 1000;
+
+  const pad = document.getElementById('spelling-pad');
+  if (pad) pad.style.pointerEvents = 'none';
+
+  gameState.answersLog.push({
+    num1: q.promptText,
+    num2: '',
+    expected: q.expected,
+    op: 'spelling',
+    typed: typed,
+    isCorrect: isCorrect,
+    timeTaken: timeTaken,
+    isRematch: !!q.isRematch
+  });
+  Mastery.record(q, isCorrect, timeTaken, currentLevelTag(q));
+
+  const mathCard = document.getElementById('math-card');
+  const rocket = document.getElementById('rocket-ship');
+  const slots = document.querySelectorAll('#spelling-slots .spell-slot');
+
+  if (isCorrect) {
+    gameState.correctAnswersCount++;
+    gameState.combo++;
+    if (gameState.combo > gameState.maxCombo) gameState.maxCombo = gameState.combo;
+
+    slots.forEach(s => s.classList.add('slot-correct'));
+    playSound('correct');
+    mathCard.classList.add('correct');
+    rocket.classList.add('animate-pop');
+    setTimeout(() => rocket.classList.remove('animate-pop'), 500);
+
+    let baseScore = 100;
+    let speedBonus = timeTaken < 8.0 ? Math.round(50 * (1 - Math.max(timeTaken - 3.0, 0) / 5.0)) : 0;
+    let comboMultiplier = gameState.combo >= 9 ? 2.5 : gameState.combo >= 6 ? 2.0 : gameState.combo >= 3 ? 1.5 : 1.0;
+    const pointsEarned = Math.round((baseScore + speedBonus) * comboMultiplier);
+    gameState.score += pointsEarned;
+
+    const scoreVal = document.getElementById('game-score');
+    scoreVal.innerText = gameState.score;
+    scoreVal.classList.add('animate-pop');
+    setTimeout(() => scoreVal.classList.remove('animate-pop'), 400);
+
+    if (gameState.combo > 0 && gameState.combo % 3 === 0) {
+      const idx = Math.min(Math.floor(gameState.combo / 3) - 1, mascotPhrases.combo.length - 1);
+      setMascotExpression('game', mascotPhrases.combo[idx]);
+    } else {
+      setMascotExpression('correct');
+    }
+
+    updateComboHUD();
+    setTimeout(advanceGame, 1200);
+
+  } else {
+    gameState.combo = 0;
+    gameState.missedQuestions.push(q);
+    playSound('wrong');
+    mathCard.classList.add('incorrect');
+    mathCard.classList.add('animate-shake');
+    setTimeout(() => mathCard.classList.remove('animate-shake'), 400);
+
+    // Reveal the correct word in the slots, letter by letter, in green
+    const correct = q.spellWord.split('');
+    slots.forEach((s, i) => {
+      s.innerText = correct[i] || '';
+      s.className = 'spell-slot filled slot-correct';
+    });
+
+    const taught = showTeachingMoment(q);
+
+    setMascotExpression('incorrect');
+    updateComboHUD();
+    setTimeout(advanceGame, taught ? 3600 : 2400);
   }
 }
 
@@ -3227,7 +3463,7 @@ function endGame() {
       } else if (log.subtype === 'subtract') {
         formula.innerText = `${log.num1}/${log.denom || '?'} − ${log.num2}/${log.denom || '?'}`;
       }
-    } else if (['music', 'angles', 'puzzle', 'pokemon', 'story', 'estimate'].includes(log.op)) {
+    } else if (['music', 'angles', 'puzzle', 'pokemon', 'story', 'estimate', 'spelling'].includes(log.op)) {
       formula.innerText = `${log.num1} ${log.op === 'pokemon' ? '→' : '='} ${log.expected}`;
     } else if (log.op === 'sequence') {
       formula.innerText = `Sequence: ${log.num1}, ?`;
@@ -3394,6 +3630,14 @@ function checkAndUnlockBadges(accuracy, avgSpeed) {
 
   if (gameState.activeOp === 'estimate' && accuracy === 100) {
     addBadge('estimator');
+  }
+
+  if (gameState.activeOp === 'spelling' && accuracy === 100) {
+    if (gameState.spellingLevel === 'spot' || gameState.spellingLevel === 'spot2') {
+      addBadge('spelling_scout');
+    } else {
+      addBadge('word_wizard');
+    }
   }
 
   if (gameState.missionKey === 'sprint' && accuracy === 100 && avgSpeed < 3.0) {

@@ -76,6 +76,12 @@ const Progression = (() => {
       { id: 'round100', name: 'Nearest Hundred', desc: 'Round to nearest 100' },
       { id: 'approx', name: 'About How Much?', desc: 'Estimate sums fast' },
     ]},
+    { id: 'spelling', name: 'Spelling Star Base', emoji: '🔤', tagline: 'Word power', levels: [
+      { id: 'spot', name: 'Spelling Scout', desc: 'Tap the right spelling' },
+      { id: 'spot2', name: 'Tricky Spotter', desc: 'Spot tricky words' },
+      { id: 'build', name: 'Word Builder', desc: 'Build words from tiles' },
+      { id: 'build2', name: 'Word Wizard', desc: 'Build tricky words' },
+    ]},
     { id: 'pokemon', name: 'Poké Galaxy', emoji: '⚡', tagline: 'Gotta catch \'em all', levels: [
       { id: 'count', name: 'Pika Count', desc: 'Count the Pokémon!' },
       { id: 'identity', name: "Who's That Pokémon?", desc: 'Name the silhouette' },
@@ -213,6 +219,7 @@ const Progression = (() => {
     else if (planet.id === 'pokemon') s.pokemonLevel = level.id;
     else if (planet.id === 'story') s.storyLevel = level.id;
     else if (planet.id === 'estimate') s.estimateLevel = level.id;
+    else if (planet.id === 'spelling') s.spellingLevel = level.id;
   }
 
   // Derive a missionKey from the current setup-screen state so custom
@@ -235,7 +242,8 @@ const Progression = (() => {
       s.activeOp === 'puzzle' ? s.puzzleLevel :
       s.activeOp === 'pokemon' ? s.pokemonLevel :
       s.activeOp === 'story' ? s.storyLevel :
-      s.activeOp === 'estimate' ? s.estimateLevel : s.compareLevel;
+      s.activeOp === 'estimate' ? s.estimateLevel :
+      s.activeOp === 'spelling' ? s.spellingLevel : s.compareLevel;
     const lvl = planet.levels.find(l => l.id === levelId);
     return lvl ? `${planet.id}:${levelId}` : null;
   }
@@ -823,6 +831,8 @@ const Progression = (() => {
     'pokemon:evolution': '⚡ Pokémon (evolutions)', 'pokemon:battle': '⚡ Pokémon (battles)',
     'story:onestep': '📖 Stories (one-step)', 'story:twostep': '📖 Stories (two-step)', 'story:money': '📖 Stories (money)',
     'estimate:round10': '🎯 Estimation (nearest 10)', 'estimate:round100': '🎯 Estimation (nearest 100)', 'estimate:approx': '🎯 Estimation (about how much)',
+    'spelling:spot': '🔤 Spelling (spot the word)', 'spelling:spot2': '🔤 Spelling (tricky spotter)',
+    'spelling:build': '🔤 Spelling (word builder)', 'spelling:build2': '🔤 Spelling (word wizard)',
   };
 
   function renderModeStats() {

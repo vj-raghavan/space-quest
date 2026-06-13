@@ -64,7 +64,7 @@
         <div class="galaxy-stats-row">
           <div class="galaxy-stat" id="galaxy-streak">🔥 0 day streak</div>
           <div class="galaxy-stat" id="galaxy-coins">⭐ 0 coins</div>
-          <div class="galaxy-stat" id="galaxy-stars">🌟 0 / 147 stars</div>
+          <div class="galaxy-stat" id="galaxy-stars">🌟 0 / 159 stars</div>
           <div class="galaxy-stat hidden" id="galaxy-sprint">⚡ best —</div>
         </div>
       </div>
@@ -120,6 +120,7 @@
         <button class="op-tab-btn" data-op="pokemon">⚡ Pokémon</button>
         <button class="op-tab-btn" data-op="story">📖 Story Problems</button>
         <button class="op-tab-btn" data-op="estimate">🎯 Estimation</button>
+        <button class="op-tab-btn" data-op="spelling">🔤 Spelling</button>
       </div>
 
       <div class="setup-grid">
@@ -421,6 +422,34 @@
           </div>
         </div>
 
+        <!-- Spelling Level Selector -->
+        <div class="setup-card glass-panel hidden" id="config-spelling">
+          <h2>🔤 Choose Spelling Level</h2>
+          <p class="subtitle" style="margin-bottom: 8px; color: var(--neon-cyan);">Pick your word challenge!</p>
+          <div class="digits-selector-grid">
+            <button class="digit-level-btn selected" data-level="spot">
+              <span class="level-emoji">🔍</span>
+              <span class="level-title">Spelling Scout</span>
+              <span class="level-range">Tap the right spelling</span>
+            </button>
+            <button class="digit-level-btn" data-level="spot2">
+              <span class="level-emoji">🕵️</span>
+              <span class="level-title">Tricky Spotter</span>
+              <span class="level-range">Spot tricky words</span>
+            </button>
+            <button class="digit-level-btn" data-level="build">
+              <span class="level-emoji">🧱</span>
+              <span class="level-title">Word Builder</span>
+              <span class="level-range">Build with letter tiles</span>
+            </button>
+            <button class="digit-level-btn" data-level="build2">
+              <span class="level-emoji">🪄</span>
+              <span class="level-title">Word Wizard</span>
+              <span class="level-range">Build tricky words</span>
+            </button>
+          </div>
+        </div>
+
         <!-- Options Selector -->
         <div class="setup-card glass-panel secondary-setup">
           <h2>⚙️ Mission Settings</h2>
@@ -541,6 +570,12 @@
               <div class="prompt-answer-row">
                 <span id="prompt-answer-display" class="answer-empty">?</span>
               </div>
+            </div>
+            <div id="spelling-pad" class="spelling-pad hidden">
+              <!-- Word Builder: answer slots + scrambled letter tiles, built per question in app.js -->
+              <div id="spelling-slots" class="spelling-slots"></div>
+              <div id="spelling-tiles" class="spelling-tiles"></div>
+              <button type="button" id="spelling-undo" class="spelling-undo-btn" onclick="spellingUndo()">⌫ Undo letter</button>
             </div>
             <div id="visual-helper" class="visual-helper-container hidden">
               <!-- Dots or arrays representing the multiplication visually when user needs a hint -->
@@ -898,6 +933,7 @@
   <script src="mastery.js"></script>
   <script src="pokemon.js"></script>
   <script src="story.js"></script>
+  <script src="spelling.js"></script>
   <script src="progression.js"></script>
   <script src="app.js"></script>
 </body>
