@@ -1416,3 +1416,32 @@ body.theme-candy .nebula {
   color: #fff;
 }
 .noscript-banner h1 { font-size: 1.5rem; margin-bottom: 12px; }
+
+/* Reading Rocket — big picture/letter/word choices for early readers */
+.reading-pic {
+  font-size: 5rem;
+  line-height: 1.1;
+  display: inline-block;
+}
+.reading-pic-choice {
+  font-size: 3rem;
+  line-height: 1;
+  display: inline-block;
+}
+.reading-letter {
+  font-size: 2.6rem;
+  font-weight: 800;
+  text-transform: lowercase;
+  display: inline-block;
+}
+.reading-sight {
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  display: inline-block;
+}
+/* Reading choice buttons sit a touch larger/taller for little fingers */
+#choice-pad .choice-key .reading-pic-choice,
+#choice-pad .choice-key .reading-letter {
+  pointer-events: none;
+}

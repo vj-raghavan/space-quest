@@ -113,7 +113,7 @@
         <div class="galaxy-stats-row">
           <div class="galaxy-stat" id="galaxy-streak">🔥 0 day streak</div>
           <div class="galaxy-stat" id="galaxy-coins">⭐ 0 coins</div>
-          <div class="galaxy-stat" id="galaxy-stars">🌟 0 / 162 stars</div>
+          <div class="galaxy-stat" id="galaxy-stars">🌟 0 / 180 stars</div>
           <div class="galaxy-stat hidden" id="galaxy-sprint">⚡ best —</div>
         </div>
       </div>
@@ -170,6 +170,7 @@
         <button class="op-tab-btn" data-op="story">📖 Story Problems</button>
         <button class="op-tab-btn" data-op="estimate">🎯 Estimation</button>
         <button class="op-tab-btn" data-op="spelling">🔤 Spelling</button>
+        <button class="op-tab-btn" data-op="reading">📚 Reading</button>
       </div>
 
       <div class="setup-grid">
@@ -500,6 +501,44 @@
               <span class="level-emoji">🏫</span>
               <span class="level-title">My School Words</span>
               <span class="level-range">Your weekly list</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Reading Level Selector -->
+        <div class="setup-card glass-panel hidden" id="config-reading">
+          <h2>📚 Choose Reading Level</h2>
+          <p class="subtitle" style="margin-bottom: 8px; color: var(--neon-cyan);">Listen and tap — no typing or reading needed!</p>
+          <div class="digits-selector-grid">
+            <button class="digit-level-btn selected" data-level="letters">
+              <span class="level-emoji">🔡</span>
+              <span class="level-title">Letter Sounds</span>
+              <span class="level-range">Which letter starts it?</span>
+            </button>
+            <button class="digit-level-btn" data-level="soundmatch">
+              <span class="level-emoji">👂</span>
+              <span class="level-title">Sound Match</span>
+              <span class="level-range">Same starting sound</span>
+            </button>
+            <button class="digit-level-btn" data-level="rhyme">
+              <span class="level-emoji">🎵</span>
+              <span class="level-title">Rhyme Time</span>
+              <span class="level-range">Find the rhyme</span>
+            </button>
+            <button class="digit-level-btn" data-level="sight">
+              <span class="level-emoji">👀</span>
+              <span class="level-title">Sight Words</span>
+              <span class="level-range">Tap the word you hear</span>
+            </button>
+            <button class="digit-level-btn" data-level="cvc">
+              <span class="level-emoji">🧱</span>
+              <span class="level-title">Build-a-Word</span>
+              <span class="level-range">Sound it out & build</span>
+            </button>
+            <button class="digit-level-btn" data-level="myreading">
+              <span class="level-emoji">📖</span>
+              <span class="level-title">My Reading Words</span>
+              <span class="level-range">Your own word list</span>
             </button>
           </div>
         </div>
@@ -914,6 +953,15 @@
             <span id="school-words-saved" class="school-words-saved hidden">Saved! ✅</span>
           </div>
 
+          <h3>📖 My Reading Words</h3>
+          <p class="parent-hint">Type your child's reading words (e.g. their Reading Eggs or school list) — separated by commas or new lines. They become the "My Reading Words" level on the Reading planet, read aloud for listen-and-tap practice.</p>
+          <div id="reading-words-current" class="school-words-current"></div>
+          <textarea id="reading-words-input" class="school-words-input" rows="3" placeholder="e.g. the, look, was, little, fun"></textarea>
+          <div class="school-words-actions">
+            <button class="btn btn-primary" id="btn-save-reading-words">Save Words 💾</button>
+            <span id="reading-words-saved" class="school-words-saved hidden">Saved! ✅</span>
+          </div>
+
           <h3>☕ Enjoying Space Quest?</h3>
           <p class="parent-hint">This is a free, ad-free project built for our family. If it's helping yours, you can leave a tip — totally optional, and it keeps the planets coming!</p>
           <a id="btn-buy-coffee" class="btn btn-coffee" href="https://buymeacoffee.com/vjraghavan" target="_blank" rel="noopener noreferrer">☕ Buy Me a Coffee</a>
@@ -1043,6 +1091,7 @@
   <script src="pokemon.js"></script>
   <script src="story.js"></script>
   <script src="spelling.js"></script>
+  <script src="reading.js"></script>
   <script src="progression.js"></script>
   <script src="app.js"></script>
 </body>

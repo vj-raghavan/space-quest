@@ -42,6 +42,7 @@ const gameState = {
   estimateLevel: 'round10',  // 'round10', 'round100', 'approx'
   spellingLevel: 'spot',     // 'spot', 'spot2', 'build', 'build2'
   spellingBuilt: '',         // letters tapped so far in Word Builder mode
+  readingLevel: 'letters',   // 'letters', 'soundmatch', 'rhyme', 'sight', 'cvc', 'myreading'
   eqStyle: 'horizontal',     // 'horizontal' (6 + 3 = ?) or 'vertical' (stacked, like on paper)
   missionKey: null,          // 'planet:level' when launched from the galaxy map, 'daily', or null
   injectedQuestions: null,   // pre-built question list (daily mission)
@@ -109,6 +110,8 @@ const BADGES = [
   { id: 'estimator', name: 'Master Estimator', emoji: '🎯', desc: 'Got 100% on an Estimation Station mission!' },
   { id: 'spelling_scout', name: 'Spelling Scout', emoji: '🔤', desc: 'Spotted every correct spelling in a mission!' },
   { id: 'word_wizard', name: 'Word Wizard', emoji: '🪄', desc: 'Built every word perfectly from letter tiles!' },
+  { id: 'reading_rocket', name: 'Reading Rocket', emoji: '📚', desc: 'Aced a Reading Rocket listen-and-tap mission!' },
+  { id: 'super_reader', name: 'Super Reader', emoji: '🦸', desc: 'Built or read every word in a reading mission!' },
   { id: 'lightning_legend', name: 'Lightning Legend', emoji: '⚡', desc: 'Averaged under 3 seconds per question in a Lightning Round!' },
   { id: 'catcher_10', name: 'Pokémon Catcher', emoji: '🐾', desc: 'Caught 10 Pokémon for your Pokédex!' },
   { id: 'catcher_50', name: 'Super Catcher', emoji: '🎒', desc: 'Caught 50 Pokémon for your Pokédex!' },
@@ -636,6 +639,7 @@ function initSetupUI() {
       const configStory = document.getElementById('config-story');
       const configEstimate = document.getElementById('config-estimate');
       const configSpelling = document.getElementById('config-spelling');
+      const configReading = document.getElementById('config-reading');
       const subtitle = document.getElementById('setup-subtitle');
       const multiHeading = configMulti.querySelector('h2');
 
@@ -653,6 +657,7 @@ function initSetupUI() {
       if (configStory) configStory.classList.add('hidden');
       if (configEstimate) configEstimate.classList.add('hidden');
       if (configSpelling) configSpelling.classList.add('hidden');
+      if (configReading) configReading.classList.add('hidden');
 
       if (op === 'multiply') {
         configMulti.classList.remove('hidden');
@@ -716,6 +721,10 @@ function initSetupUI() {
         if (configSpelling) configSpelling.classList.remove('hidden');
         subtitle.innerText = "Select your spelling level and prepare your rocket!";
         setMascotExpression('setup', "Spelling Star Base! Spot the right words and build them letter by letter! 🔤");
+      } else if (op === 'reading') {
+        if (configReading) configReading.classList.remove('hidden');
+        subtitle.innerText = "Select your reading level and prepare your rocket!";
+        setMascotExpression('setup', "Reading Rocket! Listen carefully, then tap the picture, letter or word! 📚");
       }
     });
   });
@@ -837,6 +846,16 @@ function initSetupUI() {
       document.querySelectorAll('#config-spelling .digit-level-btn').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
       gameState.spellingLevel = btn.dataset.level;
+    });
+  });
+
+  // Reading level buttons
+  document.querySelectorAll('#config-reading .digit-level-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      playSound('tap');
+      document.querySelectorAll('#config-reading .digit-level-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      gameState.readingLevel = btn.dataset.level;
     });
   });
 
@@ -1484,6 +1503,11 @@ function generateQuestions() {
     for (let i = 0; i < targetCount; i++) {
       pool.push(buildSpellingQuestion(gameState.spellingLevel));
     }
+  } else if (gameState.activeOp === 'reading') {
+    const targetCount = Math.max(50, gameState.questionCount);
+    for (let i = 0; i < targetCount; i++) {
+      pool.push(buildReadingQuestion(gameState.readingLevel));
+    }
   } else {
     // Addition & Subtraction Mode
     let minVal = 1, maxVal = 9;
@@ -1561,6 +1585,12 @@ function launchGame() {
   if (gameState.activeOp === 'spelling' && gameState.spellingLevel === 'school' &&
       (typeof SchoolWords === 'undefined' || SchoolWords.load().length === 0)) {
     alert("🏫 No school words yet! Ask a grown-up to add this week's spelling list in the Grown-Up Zone.");
+    return;
+  }
+
+  if (gameState.activeOp === 'reading' && gameState.readingLevel === 'myreading' &&
+      (typeof ReadingWords === 'undefined' || ReadingWords.load().length === 0)) {
+    alert("📖 No reading words yet! Ask a grown-up to add your reading words in the Grown-Up Zone.");
     return;
   }
 
@@ -1797,7 +1827,11 @@ function loadQuestion() {
     document.getElementById('comparison-input-pad').classList.add('hidden');
     document.getElementById('game-question-index').innerText = `${gameState.currentQuestionIndex + 1} / ${gameState.questionCount}`;
 
-    setMascotExpression('game', 'Read the clue, then tap the letter tiles in order to build the word! 🔤');
+    if (qOpKind === 'reading') {
+      setMascotExpression('game', 'Listen to the word, then tap the letters to build it! 📚');
+    } else {
+      setMascotExpression('game', 'Read the clue, then tap the letter tiles in order to build the word! 🔤');
+    }
   } else if (q.choices) {
     mathCard.classList.remove('hidden');
     clockCard.classList.add('hidden');
@@ -1851,6 +1885,8 @@ function loadQuestion() {
       setMascotExpression('game', 'Round each number first, then tap your best estimate! 🎯');
     } else if (qOpKind === 'spelling') {
       setMascotExpression('game', 'Look closely — tap the spelling that is exactly right! 🔤');
+    } else if (qOpKind === 'reading') {
+      setMascotExpression('game', 'Listen carefully, then tap your answer! 📚');
     } else {
       setMascotExpression('game', 'Tap the right answer! ✨');
     }
@@ -1925,6 +1961,12 @@ function loadQuestion() {
     opElement.innerText = opSymbol;
   }
 
+  // Reading Rocket: a pre-reader can't read the prompt, so speak it aloud.
+  // Small delay so it doesn't collide with the mascot's spoken line.
+  if (qOpKind === 'reading' && q.say && typeof speakWord === 'function') {
+    setTimeout(() => speakWord(q.say), 450);
+  }
+
   gameState.questionStartTime = performance.now();
 
   // Timed Mode logic
@@ -1959,6 +2001,7 @@ function getTimeLimit() {
   if (op === 'story') return { onestep: 25, twostep: 35, money: 30 }[gameState.storyLevel] || 30;
   if (op === 'estimate') return { round10: 12, round100: 15, approx: 18 }[gameState.estimateLevel] || 15;
   if (op === 'spelling') return { spot: 15, spot2: 18, build: 35, build2: 45, school: 40 }[gameState.spellingLevel] || 25;
+  if (op === 'reading') return { letters: 15, soundmatch: 15, rhyme: 15, sight: 15, cvc: 35, myreading: 30 }[gameState.readingLevel] || 20;
   return 8;
 }
 
@@ -2334,6 +2377,7 @@ function currentLevelTag(q) {
   if (op === 'story') return `story:${gameState.storyLevel}`;
   if (op === 'estimate') return `estimate:${gameState.estimateLevel}`;
   if (op === 'spelling') return `spelling:${gameState.spellingLevel}`;
+  if (op === 'reading') return `reading:${gameState.readingLevel}`;
   return op;
 }
 
@@ -2818,7 +2862,7 @@ function submitSpellingAnswer(isTimeout = false) {
     num1: q.promptText,
     num2: '',
     expected: q.expected,
-    op: 'spelling',
+    op: q.op || 'spelling',
     typed: typed,
     isCorrect: isCorrect,
     timeTaken: timeTaken,
@@ -3469,7 +3513,7 @@ function endGame() {
       } else if (log.subtype === 'subtract') {
         formula.innerText = `${log.num1}/${log.denom || '?'} − ${log.num2}/${log.denom || '?'}`;
       }
-    } else if (['music', 'angles', 'puzzle', 'pokemon', 'story', 'estimate', 'spelling'].includes(log.op)) {
+    } else if (['music', 'angles', 'puzzle', 'pokemon', 'story', 'estimate', 'spelling', 'reading'].includes(log.op)) {
       formula.innerText = `${log.num1} ${log.op === 'pokemon' ? '→' : '='} ${log.expected}`;
     } else if (log.op === 'sequence') {
       formula.innerText = `Sequence: ${log.num1}, ?`;
@@ -3643,6 +3687,13 @@ function checkAndUnlockBadges(accuracy, avgSpeed) {
       addBadge('spelling_scout');
     } else {
       addBadge('word_wizard');
+    }
+  }
+
+  if (gameState.activeOp === 'reading' && accuracy === 100) {
+    addBadge('reading_rocket');
+    if (gameState.readingLevel === 'cvc' || gameState.readingLevel === 'myreading') {
+      addBadge('super_reader');
     }
   }
 

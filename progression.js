@@ -83,6 +83,14 @@ const Progression = (() => {
       { id: 'build2', name: 'Word Wizard', desc: 'Build tricky words' },
       { id: 'school', name: 'My School Words', desc: 'Your weekly list' },
     ]},
+    { id: 'reading', name: 'Reading Rocket', emoji: '📚', tagline: 'Learn to read', levels: [
+      { id: 'letters', name: 'Letter Sounds', desc: 'Which letter starts it?' },
+      { id: 'soundmatch', name: 'Sound Match', desc: 'Same starting sound' },
+      { id: 'rhyme', name: 'Rhyme Time', desc: 'Find the rhyme' },
+      { id: 'sight', name: 'Sight Words', desc: 'Tap the word you hear' },
+      { id: 'cvc', name: 'Build-a-Word', desc: 'Sound it out & build' },
+      { id: 'myreading', name: 'My Reading Words', desc: 'Your own word list' },
+    ]},
     { id: 'pokemon', name: 'Poké Galaxy', emoji: '⚡', tagline: 'Gotta catch \'em all', levels: [
       { id: 'count', name: 'Pika Count', desc: 'Count the Pokémon!' },
       { id: 'identity', name: "Who's That Pokémon?", desc: 'Name the silhouette' },
@@ -221,6 +229,7 @@ const Progression = (() => {
     else if (planet.id === 'story') s.storyLevel = level.id;
     else if (planet.id === 'estimate') s.estimateLevel = level.id;
     else if (planet.id === 'spelling') s.spellingLevel = level.id;
+    else if (planet.id === 'reading') s.readingLevel = level.id;
   }
 
   // Derive a missionKey from the current setup-screen state so custom
@@ -244,7 +253,8 @@ const Progression = (() => {
       s.activeOp === 'pokemon' ? s.pokemonLevel :
       s.activeOp === 'story' ? s.storyLevel :
       s.activeOp === 'estimate' ? s.estimateLevel :
-      s.activeOp === 'spelling' ? s.spellingLevel : s.compareLevel;
+      s.activeOp === 'spelling' ? s.spellingLevel :
+      s.activeOp === 'reading' ? s.readingLevel : s.compareLevel;
     const lvl = planet.levels.find(l => l.id === levelId);
     return lvl ? `${planet.id}:${levelId}` : null;
   }
@@ -255,8 +265,9 @@ const Progression = (() => {
 
   function isLevelUnlocked(planet, levelIndex) {
     if (levelIndex === 0) return true;
-    // My School Words is the family's own list — never locked behind stars
+    // Parent-entered word lists are the family's own — never locked behind stars
     if (planet.id === 'spelling' && planet.levels[levelIndex].id === 'school') return true;
+    if (planet.id === 'reading' && planet.levels[levelIndex].id === 'myreading') return true;
     const prev = planet.levels[levelIndex - 1];
     return starsFor(`${planet.id}:${prev.id}`) >= 2;
   }
@@ -766,6 +777,7 @@ const Progression = (() => {
     renderWeakList();
     renderModeStats();
     renderSchoolWords();
+    renderReadingWords();
   }
 
   // --- My School Words management (data lives in spelling.js's SchoolWords) ---
@@ -791,6 +803,35 @@ const Progression = (() => {
     SchoolWords.save(words);
     renderSchoolWords();
     const ok = document.getElementById('school-words-saved');
+    if (ok) {
+      ok.classList.remove('hidden');
+      setTimeout(() => ok.classList.add('hidden'), 2000);
+    }
+  }
+
+  // --- My Reading Words management (data lives in reading.js's ReadingWords) ---
+  function renderReadingWords() {
+    const cur = document.getElementById('reading-words-current');
+    const input = document.getElementById('reading-words-input');
+    if (!cur || typeof ReadingWords === 'undefined') return;
+    const words = ReadingWords.load();
+    cur.innerHTML = words.length
+      ? words.map(w => `<span class="weak-chip">${w}</span>`).join('')
+      : '<p class="parent-empty">No reading words yet — type your child\'s list below.</p>';
+    if (input) input.value = words.join(', ');
+  }
+
+  function saveReadingWordsFromInput() {
+    const input = document.getElementById('reading-words-input');
+    if (!input || typeof ReadingWords === 'undefined') return;
+    const words = [...new Set(
+      input.value.toLowerCase().split(/[\s,;]+/)
+        .map(w => w.replace(/[^a-z]/g, ''))
+        .filter(w => w.length >= 1 && w.length <= 12)
+    )];
+    ReadingWords.save(words);
+    renderReadingWords();
+    const ok = document.getElementById('reading-words-saved');
     if (ok) {
       ok.classList.remove('hidden');
       setTimeout(() => ok.classList.add('hidden'), 2000);
@@ -867,6 +908,9 @@ const Progression = (() => {
     'spelling:spot': '🔤 Spelling (spot the word)', 'spelling:spot2': '🔤 Spelling (tricky spotter)',
     'spelling:build': '🔤 Spelling (word builder)', 'spelling:build2': '🔤 Spelling (word wizard)',
     'spelling:school': '🏫 Spelling (school words)',
+    'reading:letters': '📚 Reading (letter sounds)', 'reading:soundmatch': '📚 Reading (sound match)',
+    'reading:rhyme': '📚 Reading (rhyme)', 'reading:sight': '📚 Reading (sight words)',
+    'reading:cvc': '📚 Reading (build-a-word)', 'reading:myreading': '📖 Reading (my words)',
   };
 
   function renderModeStats() {
@@ -1071,6 +1115,7 @@ const Progression = (() => {
     on('btn-parent-back', () => { playSound('tap'); showScreen('screen-galaxy'); });
     on('btn-parent-gate', tryParentGate);
     on('btn-save-school-words', () => { playSound('tap'); saveSchoolWordsFromInput(); });
+    on('btn-save-reading-words', () => { playSound('tap'); saveReadingWordsFromInput(); });
     on('btn-close-levels', () => {
       playSound('tap');
       document.getElementById('level-popup').classList.add('hidden');
