@@ -3,3 +3,5 @@ package-lock.json
 test-clock.js
 
 .claude/
+playwright/
+playwright-core/
