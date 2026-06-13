@@ -1558,6 +1558,12 @@ function launchGame() {
     return;
   }
 
+  if (gameState.activeOp === 'spelling' && gameState.spellingLevel === 'school' &&
+      (typeof SchoolWords === 'undefined' || SchoolWords.load().length === 0)) {
+    alert("🏫 No school words yet! Ask a grown-up to add this week's spelling list in the Grown-Up Zone.");
+    return;
+  }
+
   playSound('tap');
   generateQuestions();
 
@@ -1952,7 +1958,7 @@ function getTimeLimit() {
   if (op === 'pokemon') return { count: 12, identity: 12, type: 12, evolution: 15, battle: 12 }[gameState.pokemonLevel] || 12;
   if (op === 'story') return { onestep: 25, twostep: 35, money: 30 }[gameState.storyLevel] || 30;
   if (op === 'estimate') return { round10: 12, round100: 15, approx: 18 }[gameState.estimateLevel] || 15;
-  if (op === 'spelling') return { spot: 15, spot2: 18, build: 35, build2: 45 }[gameState.spellingLevel] || 25;
+  if (op === 'spelling') return { spot: 15, spot2: 18, build: 35, build2: 45, school: 40 }[gameState.spellingLevel] || 25;
   return 8;
 }
 

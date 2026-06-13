@@ -14,7 +14,8 @@ const Players = (() => {
     'space_quest_high_score',
     'space_quest_tests_completed',
     'space_quest_unlocked_badges',
-    'space_quest_pokedex_v1'
+    'space_quest_pokedex_v1',
+    'space_quest_school_words_v1'
   ];
 
   let registry = null;

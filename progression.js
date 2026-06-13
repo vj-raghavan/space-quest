@@ -81,6 +81,7 @@ const Progression = (() => {
       { id: 'spot2', name: 'Tricky Spotter', desc: 'Spot tricky words' },
       { id: 'build', name: 'Word Builder', desc: 'Build words from tiles' },
       { id: 'build2', name: 'Word Wizard', desc: 'Build tricky words' },
+      { id: 'school', name: 'My School Words', desc: 'Your weekly list' },
     ]},
     { id: 'pokemon', name: 'Poké Galaxy', emoji: '⚡', tagline: 'Gotta catch \'em all', levels: [
       { id: 'count', name: 'Pika Count', desc: 'Count the Pokémon!' },
@@ -254,6 +255,8 @@ const Progression = (() => {
 
   function isLevelUnlocked(planet, levelIndex) {
     if (levelIndex === 0) return true;
+    // My School Words is the family's own list — never locked behind stars
+    if (planet.id === 'spelling' && planet.levels[levelIndex].id === 'school') return true;
     const prev = planet.levels[levelIndex - 1];
     return starsFor(`${planet.id}:${prev.id}`) >= 2;
   }
@@ -762,6 +765,36 @@ const Progression = (() => {
     renderHeatmap();
     renderWeakList();
     renderModeStats();
+    renderSchoolWords();
+  }
+
+  // --- My School Words management (data lives in spelling.js's SchoolWords) ---
+  function renderSchoolWords() {
+    const cur = document.getElementById('school-words-current');
+    const input = document.getElementById('school-words-input');
+    if (!cur || typeof SchoolWords === 'undefined') return;
+    const words = SchoolWords.load();
+    cur.innerHTML = words.length
+      ? words.map(w => `<span class="weak-chip">${w}</span>`).join('')
+      : '<p class="parent-empty">No school words yet — type this week\'s list below.</p>';
+    if (input) input.value = words.join(', ');
+  }
+
+  function saveSchoolWordsFromInput() {
+    const input = document.getElementById('school-words-input');
+    if (!input || typeof SchoolWords === 'undefined') return;
+    const words = [...new Set(
+      input.value.toLowerCase().split(/[\s,;]+/)
+        .map(w => w.replace(/[^a-z]/g, ''))
+        .filter(w => w.length >= 2 && w.length <= 12)
+    )];
+    SchoolWords.save(words);
+    renderSchoolWords();
+    const ok = document.getElementById('school-words-saved');
+    if (ok) {
+      ok.classList.remove('hidden');
+      setTimeout(() => ok.classList.add('hidden'), 2000);
+    }
   }
 
   function masteryClass(s) {
@@ -833,6 +866,7 @@ const Progression = (() => {
     'estimate:round10': '🎯 Estimation (nearest 10)', 'estimate:round100': '🎯 Estimation (nearest 100)', 'estimate:approx': '🎯 Estimation (about how much)',
     'spelling:spot': '🔤 Spelling (spot the word)', 'spelling:spot2': '🔤 Spelling (tricky spotter)',
     'spelling:build': '🔤 Spelling (word builder)', 'spelling:build2': '🔤 Spelling (word wizard)',
+    'spelling:school': '🏫 Spelling (school words)',
   };
 
   function renderModeStats() {
@@ -1036,6 +1070,7 @@ const Progression = (() => {
     on('btn-parent-zone', () => { playSound('tap'); openParentZone(); });
     on('btn-parent-back', () => { playSound('tap'); showScreen('screen-galaxy'); });
     on('btn-parent-gate', tryParentGate);
+    on('btn-save-school-words', () => { playSound('tap'); saveSchoolWordsFromInput(); });
     on('btn-close-levels', () => {
       playSound('tap');
       document.getElementById('level-popup').classList.add('hidden');

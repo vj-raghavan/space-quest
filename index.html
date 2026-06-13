@@ -64,7 +64,7 @@
         <div class="galaxy-stats-row">
           <div class="galaxy-stat" id="galaxy-streak">🔥 0 day streak</div>
           <div class="galaxy-stat" id="galaxy-coins">⭐ 0 coins</div>
-          <div class="galaxy-stat" id="galaxy-stars">🌟 0 / 159 stars</div>
+          <div class="galaxy-stat" id="galaxy-stars">🌟 0 / 162 stars</div>
           <div class="galaxy-stat hidden" id="galaxy-sprint">⚡ best —</div>
         </div>
       </div>
@@ -446,6 +446,11 @@
               <span class="level-emoji">🪄</span>
               <span class="level-title">Word Wizard</span>
               <span class="level-range">Build tricky words</span>
+            </button>
+            <button class="digit-level-btn" data-level="school">
+              <span class="level-emoji">🏫</span>
+              <span class="level-title">My School Words</span>
+              <span class="level-range">Your weekly list</span>
             </button>
           </div>
         </div>
@@ -850,6 +855,15 @@
 
           <h3>📊 Mission Stats by Mode</h3>
           <div id="parent-mode-stats"></div>
+
+          <h3>🏫 My School Words</h3>
+          <p class="parent-hint">Type this week's spelling list — separate words with commas or new lines. They become the "My School Words" level on the Spelling planet.</p>
+          <div id="school-words-current" class="school-words-current"></div>
+          <textarea id="school-words-input" class="school-words-input" rows="3" placeholder="e.g. necessary, separate, island"></textarea>
+          <div class="school-words-actions">
+            <button class="btn btn-primary" id="btn-save-school-words">Save Words 💾</button>
+            <span id="school-words-saved" class="school-words-saved hidden">Saved! ✅</span>
+          </div>
 
           <button class="btn" id="btn-reset-progress">⚠️ Reset All Progress</button>
         </div>
