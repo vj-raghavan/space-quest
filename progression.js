@@ -681,6 +681,40 @@ const Progression = (() => {
     }).join('');
   }
 
+  // --- Squishy collection screen ---
+  function renderSquishies() {
+    if (typeof Squishies === 'undefined') return;
+    const countEl = document.getElementById('squishy-count');
+    if (countEl) countEl.innerText = `${Squishies.count()} / ${Squishies.total()} collected`;
+    const grid = document.getElementById('squishy-grid');
+    if (!grid) return;
+    grid.innerHTML = Squishies.list().map(s => {
+      const owned = Squishies.isOwned(s.id);
+      // The legendary stays a mystery until everything else is collected.
+      const secret = s.unlock && s.unlock.all && !owned;
+      const name = owned ? s.name : (secret ? '???' : 'Locked');
+      const sub = owned
+        ? `<span class="squishy-rarity rarity-${s.rarity}">${s.rarity}</span>`
+        : `<span class="squishy-hint">${secret ? 'A secret squishy…' : s.hint}</span>`;
+      return `<div class="squishy-cell ${owned ? 'owned' : 'locked'} rarity-${s.rarity}" title="${owned ? s.name : (secret ? 'Secret squishy' : s.hint)}">
+        <span class="squishy-art">${Squishies.svg(s.id, { locked: !owned })}</span>
+        <span class="squishy-name">${name}</span>
+        ${sub}
+      </div>`;
+    }).join('');
+  }
+
+  // Lifetime stats used by the squishy unlock checks.
+  function getStats() {
+    let totalStars = 0;
+    PLANETS.forEach(p => { totalStars += planetStarTotals(p).earned; });
+    return {
+      totalStars,
+      totalMissions: profile.totalMissions || 0,
+      streak: (profile.streak && profile.streak.count) || 0,
+    };
+  }
+
   function renderShopSection(containerId, items, slot) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -1107,6 +1141,12 @@ const Progression = (() => {
     on('btn-sprint', () => { playSound('tap'); startSprint(); });
     on('btn-pokedex', () => { playSound('tap'); renderPokedex(); showScreen('screen-pokedex'); });
     on('btn-pokedex-back', () => { playSound('tap'); showScreen('screen-galaxy'); });
+    on('btn-squishies', () => { playSound('tap'); renderSquishies(); showScreen('screen-squishies'); });
+    on('btn-squishies-back', () => { playSound('tap'); showScreen('screen-galaxy'); });
+    on('btn-close-squishy', () => {
+      playSound('tap');
+      document.getElementById('squishy-popup').classList.add('hidden');
+    });
     on('btn-close-pack', () => {
       playSound('tap');
       document.getElementById('pack-popup').classList.add('hidden');
@@ -1178,5 +1218,5 @@ const Progression = (() => {
     }
   }
 
-  return { init, renderGalaxy, completeMission, applyCosmetics, keyFromState, getName, getJingle, setEqStyle, recordSprint, updateCoinHud };
+  return { init, renderGalaxy, completeMission, applyCosmetics, keyFromState, getName, getJingle, setEqStyle, recordSprint, updateCoinHud, getStats, renderSquishies };
 })();

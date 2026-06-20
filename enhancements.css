@@ -1,7 +1,7 @@
 /* --- Space Quest Enhancements: Galaxy Map, Shop, Daily Missions, Parent Zone, Teaching --- */
 
 /* .screen is display:flex (row); the new screens stack vertically */
-#screen-galaxy, #screen-shop, #screen-parent {
+#screen-galaxy, #screen-shop, #screen-parent, #screen-squishies {
   flex-direction: column;
 }
 
@@ -1109,6 +1109,146 @@ body.theme-candy .nebula {
   height: 110px;
   object-fit: contain;
   filter: drop-shadow(0 0 12px rgba(255, 210, 90, 0.5));
+}
+
+/* --- Squishy Collection --- */
+.squishy-panel {
+  max-width: 880px;
+  margin: 0 auto;
+  width: 100%;
+  text-align: center;
+}
+
+.squishy-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.squishy-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.squishy-cell.owned {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.squishy-cell.owned:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+}
+
+.squishy-art {
+  width: 74px;
+  height: 74px;
+  display: block;
+}
+
+.squishy-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.squishy-cell.owned .squishy-svg {
+  animation: squishBounce 2.4s ease-in-out infinite;
+  transform-origin: 50% 80%;
+}
+
+.squishy-cell.owned:hover .squishy-svg { animation-duration: 0.6s; }
+
+.squishy-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.squishy-cell.locked .squishy-name { opacity: 0.55; }
+
+.squishy-hint {
+  font-size: 0.6rem;
+  line-height: 1.2;
+  opacity: 0.6;
+  text-align: center;
+  max-width: 100%;
+}
+
+.squishy-rarity {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 1px 7px;
+  border-radius: 999px;
+}
+
+.rarity-common .squishy-rarity,  .squishy-rarity.rarity-common  { background: rgba(150, 200, 255, 0.18); color: #bfe0ff; }
+.rarity-rare .squishy-rarity,    .squishy-rarity.rarity-rare    { background: rgba(120, 230, 180, 0.18); color: #b6f5d6; }
+.rarity-epic .squishy-rarity,    .squishy-rarity.rarity-epic    { background: rgba(180, 140, 255, 0.20); color: #dccbff; }
+.rarity-legendary .squishy-rarity, .squishy-rarity.rarity-legendary { background: rgba(255, 210, 80, 0.22); color: #ffe69a; }
+
+.squishy-cell.owned.rarity-epic { border-color: rgba(180, 140, 255, 0.4); }
+.squishy-cell.owned.rarity-legendary {
+  border-color: rgba(255, 210, 80, 0.55);
+  box-shadow: 0 0 18px rgba(255, 210, 80, 0.25);
+}
+
+/* Reward popup */
+.squishy-reveal-list {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  margin: 8px 0;
+  flex-wrap: wrap;
+}
+
+.squishy-reveal-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  animation: squishPop 0.6s cubic-bezier(0.2, 1.4, 0.5, 1) both;
+}
+
+.squishy-reveal-card .squishy-art {
+  width: 120px;
+  height: 120px;
+  filter: drop-shadow(0 0 14px rgba(255, 210, 90, 0.5));
+}
+
+.squishy-reward-box.legendary-reward {
+  border-color: var(--gold-yellow);
+  box-shadow: 0 0 44px rgba(255, 210, 80, 0.55), inset 0 0 24px rgba(255, 210, 80, 0.12);
+}
+
+.squishy-reward-box.legendary-reward .squishy-reveal-card .squishy-art {
+  filter: drop-shadow(0 0 22px rgba(255, 210, 90, 0.9));
+  animation: squishPop 0.6s cubic-bezier(0.2, 1.4, 0.5, 1) both, squishBounce 1.6s ease-in-out 0.6s infinite;
+}
+
+@keyframes squishBounce {
+  0%, 100% { transform: scaleY(1) scaleX(1); }
+  50% { transform: scaleY(0.92) scaleX(1.06); }
+}
+
+@keyframes squishPop {
+  0% { transform: scale(0.2); opacity: 0; }
+  60% { transform: scale(1.12); opacity: 1; }
+  100% { transform: scale(1); }
 }
 
 /* --- Cosmo 2.0: animated SVG mascot --- */

@@ -3481,6 +3481,9 @@ function endGame() {
   if (typeof Progression !== 'undefined') {
     reward = Progression.completeMission(starsCount, accuracy);
   }
+
+  // Squishy rewards run AFTER completeMission so lifetime stars/missions are current.
+  checkAndUnlockSquishies(accuracy);
   const coinsEarnedEl = document.getElementById('coins-earned');
   if (coinsEarnedEl) {
     let coinsText = `+${reward.coins} ⭐ Star Coins`;
@@ -3738,6 +3741,54 @@ function checkAndUnlockBadges(accuracy, avgSpeed) {
   if (badgeContainer.children.length === 0) {
     badgeContainer.innerHTML = '<p style="font-size:0.9rem;color:rgba(255,255,255,0.4);">No badges unlocked yet. Fly more missions to earn them! 🏅</p>';
   }
+}
+
+function checkAndUnlockSquishies(accuracy) {
+  if (typeof Squishies === 'undefined') return;
+  const badges = JSON.parse(localStorage.getItem(Players.key('space_quest_unlocked_badges'))) || [];
+  const stats = (typeof Progression !== 'undefined' && Progression.getStats)
+    ? Progression.getStats()
+    : { totalStars: 0, totalMissions: 0, streak: 0 };
+
+  const newSquishies = Squishies.checkUnlocks({
+    badges,
+    accuracy,
+    totalStars: stats.totalStars,
+    totalMissions: stats.totalMissions,
+    streak: stats.streak,
+    pokedexCount: (typeof Pokedex !== 'undefined') ? Pokedex.count() : 0,
+  });
+
+  if (newSquishies.length) {
+    // Let the stars/score pop on the results screen first, then celebrate.
+    setTimeout(() => showSquishyReward(newSquishies), 1600);
+  }
+}
+
+function showSquishyReward(squishies) {
+  const popup = document.getElementById('squishy-popup');
+  const listEl = document.getElementById('squishy-reveal-list');
+  const titleEl = document.getElementById('squishy-popup-title');
+  if (!popup || !listEl) return;
+
+  const hasLegendary = squishies.some(s => s.rarity === 'legendary');
+  if (titleEl) {
+    titleEl.innerText = hasLegendary
+      ? '🌟 LEGENDARY Squishy unlocked!'
+      : (squishies.length > 1 ? '🎉 New Squishies unlocked!' : '🎉 New Squishy unlocked!');
+  }
+  popup.querySelector('.squishy-reward-box').classList.toggle('legendary-reward', hasLegendary);
+
+  listEl.innerHTML = squishies.map(s => `
+    <div class="squishy-reveal-card rarity-${s.rarity}">
+      <span class="squishy-art">${Squishies.svg(s.id)}</span>
+      <span class="squishy-name">${s.name}</span>
+      <span class="squishy-rarity rarity-${s.rarity}">${s.rarity}</span>
+    </div>
+  `).join('');
+
+  popup.classList.remove('hidden');
+  playSound('victory');
 }
 
 function resetToSetup() {

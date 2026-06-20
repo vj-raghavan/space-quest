@@ -18,6 +18,7 @@ Multiple kids can share one device: a "Who's playing?" picker at launch keeps ea
 - **Galaxy Map** — each skill is a planet with levels; earn up to 3 stars per level, 2 stars unlocks the next level.
 - **Star Coins & Shop** — missions earn coins; spend them on rockets and rocket trails.
 - **Badges, combos, high scores** — in-session rewards on top of long-term progression.
+- **Squishy Collection** — earn cute collectible squishies for unlocking badges and reaching milestones (total stars, missions, streaks, Pokémon caught). Collect them all to reveal the secret legendary Goldie 🧸.
 - **Grown-Up Zone** — parent dashboard (behind a multiplication gate 😉) with a multiplication mastery heatmap, weakest-facts list, and per-mode stats.
 
 ## Run it

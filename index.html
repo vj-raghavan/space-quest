@@ -139,6 +139,7 @@
       <div class="galaxy-actions">
         <button class="btn btn-secondary" id="btn-sprint">⚡ Lightning Round</button>
         <button class="btn btn-secondary" id="btn-pokedex">📕 Pokédex</button>
+        <button class="btn btn-secondary" id="btn-squishies">🧸 Squishies</button>
         <button class="btn btn-secondary" id="btn-custom-mission">🛠️ Custom Mission</button>
         <button class="btn btn-secondary" id="btn-shop">🛒 Star Shop</button>
         <button class="btn btn-secondary" id="btn-parent-zone">👨‍🚀 Grown-Up Zone</button>
@@ -920,6 +921,19 @@
       </div>
     </section>
 
+    <!-- 4c. SQUISHY COLLECTION SCREEN -->
+    <section id="screen-squishies" class="screen hidden">
+      <div class="glass-panel squishy-panel">
+        <h1 class="glow-text">🧸 My Squishies</h1>
+        <p class="subtitle">Earn cute squishies by unlocking badges and reaching big milestones!</p>
+        <div id="squishy-count" class="pokedex-count">0 / 0 collected</div>
+        <div id="squishy-grid" class="squishy-grid"></div>
+        <div class="parent-actions">
+          <button class="btn btn-primary" id="btn-squishies-back">Back to Galaxy 🗺️</button>
+        </div>
+      </div>
+    </section>
+
     <!-- 5. GROWN-UP (PARENT) ZONE SCREEN -->
     <section id="screen-parent" class="screen hidden">
       <div class="glass-panel parent-panel">
@@ -1055,6 +1069,15 @@
     </div>
   </div>
 
+  <!-- New Squishy reward popup -->
+  <div id="squishy-popup" class="trivia-overlay hidden">
+    <div class="trivia-box glass-panel squishy-reward-box">
+      <h2 id="squishy-popup-title" class="trivia-title">🎉 New Squishy unlocked!</h2>
+      <div id="squishy-reveal-list" class="squishy-reveal-list"></div>
+      <button id="btn-close-squishy" class="btn btn-primary">Yay! 🧸</button>
+    </div>
+  </div>
+
   <!-- Player Picker Popup -->
   <div id="player-popup" class="trivia-overlay hidden">
     <div class="trivia-box glass-panel player-box">
@@ -1089,6 +1112,7 @@
   <script src="mascot.js"></script>
   <script src="mastery.js"></script>
   <script src="pokemon.js"></script>
+  <script src="squishies.js"></script>
   <script src="story.js"></script>
   <script src="spelling.js"></script>
   <script src="reading.js"></script>

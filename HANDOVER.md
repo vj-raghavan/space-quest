@@ -32,6 +32,7 @@ Load order in `index.html` **matters** (globals, no modules):
 | `mascot.js` | Cosmo 2.0: inline-SVG animated mascot (`mascotSVG(uid)`, `initMascots()`, `setMascotMood(type)`). |
 | `mastery.js` | Per-fact stats (multiply/divide only: key `m:AxB` normalized, `d:X/Y`) + per-mode buckets. EWMA response time. `weightedSample` biases question selection toward weak/slow facts. |
 | `pokemon.js` | Full Gen-1 dataset (151), `Pokedex` collection module, question builders (count/identity/type/evolution/battle). Sprites hotlinked from PokeAPI CDN (`raw.githubusercontent.com/PokeAPI/sprites/...`; official artwork for questions, 96px sprites for grids/counting). |
+| `squishies.js` | `Squishies` collection module: a reward layer of cute inline-SVG collectibles unlocked by earning badges / hitting milestones (total stars, missions, streak, Pokémon caught). `SQUISHIES` data + `svg(id,{locked})` art + `checkUnlocks(ctx)`. Collect them all to unlock the secret legendary Goldie. |
 | `story.js` | Word-problem + estimation question builders. |
 | `progression.js` | `Progression` module: planet/level config (`PLANETS`), stars, coins + anti-farm, shop (rockets/trails/jingles/themes/pet accessories/Poké Packs), daily mission + streak + Puzzle of the Day, space pet, Lightning Round records, player picker & profile editor UI, parent dashboard, galaxy rendering. |
 | `app.js` | **Loads last.** Game engine: `gameState`, setup screen, question generation dispatch, the four submit paths, rematch, teaching moments, timers, scoring, badges, results, audio synth, bootstrap. |
@@ -54,6 +55,7 @@ Load order in `index.html` **matters** (globals, no modules):
 - `space_quest_profile_v1` — coins, rocket/trail/jingle/theme/petAccessory + `owned[]`, stars per missionKey, streak `{count,lastDate,shieldWeek}`, `dailyHistory[]`, `dailyPlays` (anti-farm counters), `eqStyle`, `petName`, `sprintBest`, name.
 - `space_quest_mastery_v1` — `{facts:{key:{a,c,t}}, modes:{tag:{a,c,t}}}`.
 - `space_quest_pokedex_v1` — array of caught ids.
+- `space_quest_squishies_v1` — array of unlocked squishy ids.
 - `space_quest_high_score`, `space_quest_tests_completed`, `space_quest_unlocked_badges`.
 
 When adding a per-player key, add it to `PLAYER_KEYS` in `players.js` (migration + delete-player cleanup).
