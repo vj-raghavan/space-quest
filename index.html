@@ -113,7 +113,7 @@
         <div class="galaxy-stats-row">
           <div class="galaxy-stat" id="galaxy-streak">🔥 0 day streak</div>
           <div class="galaxy-stat" id="galaxy-coins">⭐ 0 coins</div>
-          <div class="galaxy-stat" id="galaxy-stars">🌟 0 / 180 stars</div>
+          <div class="galaxy-stat" id="galaxy-stars">🌟 0 / 210 stars</div>
           <div class="galaxy-stat hidden" id="galaxy-sprint">⚡ best —</div>
         </div>
       </div>
@@ -172,6 +172,8 @@
         <button class="op-tab-btn" data-op="estimate">🎯 Estimation</button>
         <button class="op-tab-btn" data-op="spelling">🔤 Spelling</button>
         <button class="op-tab-btn" data-op="reading">📚 Reading</button>
+        <button class="op-tab-btn" data-op="abc">🔠 ABC Letters</button>
+        <button class="op-tab-btn" data-op="numbers">🔢 Numbers 123</button>
       </div>
 
       <div class="setup-grid">
@@ -544,6 +546,72 @@
           </div>
         </div>
 
+        <!-- ABC Letters Level Selector -->
+        <div class="setup-card glass-panel hidden" id="config-abc">
+          <h2>🔠 Choose Letter Game</h2>
+          <p class="subtitle" style="margin-bottom: 8px; color: var(--neon-cyan);">Listen, tap, and trace with your finger!</p>
+          <div class="digits-selector-grid">
+            <button class="digit-level-btn selected" data-level="find">
+              <span class="level-emoji">🔍</span>
+              <span class="level-title">Letter Hunt</span>
+              <span class="level-range">Tap the letter you hear</span>
+            </button>
+            <button class="digit-level-btn" data-level="match">
+              <span class="level-emoji">👯</span>
+              <span class="level-title">Big & Small Twins</span>
+              <span class="level-range">Match BIG and small</span>
+            </button>
+            <button class="digit-level-btn" data-level="order">
+              <span class="level-emoji">🚂</span>
+              <span class="level-title">Alphabet Train</span>
+              <span class="level-range">What comes next?</span>
+            </button>
+            <button class="digit-level-btn" data-level="traceupper">
+              <span class="level-emoji">✏️</span>
+              <span class="level-title">Trace BIG Letters</span>
+              <span class="level-range">Write with your finger</span>
+            </button>
+            <button class="digit-level-btn" data-level="tracelower">
+              <span class="level-emoji">🖍️</span>
+              <span class="level-title">Trace small letters</span>
+              <span class="level-range">Write the small twins</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Numbers 123 Level Selector -->
+        <div class="setup-card glass-panel hidden" id="config-numbers">
+          <h2>🔢 Choose Number Game</h2>
+          <p class="subtitle" style="margin-bottom: 8px; color: var(--neon-cyan);">Count, find, and trace the numbers!</p>
+          <div class="digits-selector-grid">
+            <button class="digit-level-btn selected" data-level="count">
+              <span class="level-emoji">🚀</span>
+              <span class="level-title">Count with Cosmo</span>
+              <span class="level-range">Count and tap</span>
+            </button>
+            <button class="digit-level-btn" data-level="find">
+              <span class="level-emoji">🔍</span>
+              <span class="level-title">Number Hunt</span>
+              <span class="level-range">Tap the number you hear</span>
+            </button>
+            <button class="digit-level-btn" data-level="order">
+              <span class="level-emoji">🚂</span>
+              <span class="level-title">Number Train</span>
+              <span class="level-range">What comes next?</span>
+            </button>
+            <button class="digit-level-btn" data-level="trace">
+              <span class="level-emoji">✏️</span>
+              <span class="level-title">Trace Numbers</span>
+              <span class="level-range">Write 0 to 9</span>
+            </button>
+            <button class="digit-level-btn" data-level="teen">
+              <span class="level-emoji">🖍️</span>
+              <span class="level-title">Trace Big Numbers</span>
+              <span class="level-range">Write 10 to 20</span>
+            </button>
+          </div>
+        </div>
+
         <!-- Options Selector -->
         <div class="setup-card glass-panel secondary-setup">
           <h2>⚙️ Mission Settings</h2>
@@ -670,6 +738,14 @@
               <div id="spelling-slots" class="spelling-slots"></div>
               <div id="spelling-tiles" class="spelling-tiles"></div>
               <button type="button" id="spelling-undo" class="spelling-undo-btn" onclick="spellingUndo()">⌫ Undo letter</button>
+            </div>
+            <div id="trace-pad" class="trace-pad hidden">
+              <!-- ABC Base / Number Camp: finger-writing canvas, driven by TracePad in abc.js -->
+              <canvas id="trace-canvas" width="360" height="360"></canvas>
+              <div class="trace-actions">
+                <button type="button" id="trace-clear" class="trace-btn trace-btn-clear" onclick="traceClearTapped()">↺ Start over</button>
+                <button type="button" id="trace-done" class="trace-btn trace-btn-done" onclick="traceDoneTapped()" disabled>✓ Done!</button>
+              </div>
             </div>
             <div id="visual-helper" class="visual-helper-container hidden">
               <!-- Dots or arrays representing the multiplication visually when user needs a hint -->
@@ -1116,6 +1192,7 @@
   <script src="story.js"></script>
   <script src="spelling.js"></script>
   <script src="reading.js"></script>
+  <script src="abc.js"></script>
   <script src="progression.js"></script>
   <script src="app.js"></script>
 </body>

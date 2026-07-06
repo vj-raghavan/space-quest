@@ -6,7 +6,7 @@ A briefing for any agent (or human) picking up this project cold. Last updated: 
 
 A kids' educational game built by the owner (Vijay) for his two children:
 - **Daughter, age 8** — the math side: times tables, arithmetic, fractions, clocks, word problems, estimation, puzzles, plus hobby-themed planets (piano → music math, gymnastics → angles).
-- **Son, age 5** — the Poké Galaxy: tap-to-answer Pokémon quizzes (no typing/reading required) with a collectible Pokédex.
+- **Son, age 5 (Ashwin)** — the Poké Galaxy: tap-to-answer Pokémon quizzes (no typing/reading required) with a collectible Pokédex; Reading Rocket (listen-and-tap phonics); and ABC Base / Number Camp (letter & number recognition plus **finger tracing** of A–Z and 0–20 on a canvas — see `abc.js`, `TracePad`).
 
 Live at **vj-raghavan.github.io/space-quest** (GitHub Pages, auto-deploys from `main` of `vj-raghavan/space-quest`).
 
@@ -34,6 +34,7 @@ Load order in `index.html` **matters** (globals, no modules):
 | `pokemon.js` | Full Gen-1 dataset (151), `Pokedex` collection module, question builders (count/identity/type/evolution/battle). Sprites hotlinked from PokeAPI CDN (`raw.githubusercontent.com/PokeAPI/sprites/...`; official artwork for questions, 96px sprites for grids/counting). |
 | `squishies.js` | `Squishies` collection module: a reward layer of cute inline-SVG collectibles unlocked by earning badges / hitting milestones (total stars, missions, streak, Pokémon caught). `SQUISHIES` data + `svg(id,{locked})` art + `checkUnlocks(ctx)`. Collect them all to unlock the secret legendary Goldie. |
 | `story.js` | Word-problem + estimation question builders. |
+| `abc.js` | ABC Base + Number Camp for the 5yo: letter/number question builders (`buildAbcQuestion`, `buildNumbersQuestion`) and the `TracePad` module — a finger-writing canvas. The child traces a dashed ghost glyph; scoring compares ink against a glyph mask (coverage ≥ 40% of the glyph traced AND precision ≥ 50% of ink on the glyph, so scribbling fails but wobbly honest tracing passes). Questions with `traceChar` get their own render branch in `loadQuestion` and submit via `submitTraceAnswer`. |
 | `progression.js` | `Progression` module: planet/level config (`PLANETS`), stars, coins + anti-farm, shop (rockets/trails/jingles/themes/pet accessories/Poké Packs), daily mission + streak + Puzzle of the Day, space pet, Lightning Round records, player picker & profile editor UI, parent dashboard, galaxy rendering. |
 | `app.js` | **Loads last.** Game engine: `gameState`, setup screen, question generation dispatch, the four submit paths, rematch, teaching moments, timers, scoring, badges, results, audio synth, bootstrap. |
 | `style.css` | Original stylesheet (mostly untouched). `.screen { display:flex }` — row by default! |
