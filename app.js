@@ -43,6 +43,9 @@ const gameState = {
   spellingLevel: 'spot',     // 'spot', 'spot2', 'build', 'build2'
   spellingBuilt: '',         // letters tapped so far in Word Builder mode
   readingLevel: 'letters',   // 'letters', 'soundmatch', 'rhyme', 'sight', 'cvc', 'myreading'
+  abcLevel: 'find',          // 'find', 'match', 'order', 'traceupper', 'tracelower'
+  numbersLevel: 'count',     // 'count', 'find', 'order', 'trace', 'teen'
+  traceSubmitted: false,     // guards double-submit on tracing questions
   eqStyle: 'horizontal',     // 'horizontal' (6 + 3 = ?) or 'vertical' (stacked, like on paper)
   missionKey: null,          // 'planet:level' when launched from the galaxy map, 'daily', or null
   injectedQuestions: null,   // pre-built question list (daily mission)
@@ -112,6 +115,10 @@ const BADGES = [
   { id: 'word_wizard', name: 'Word Wizard', emoji: '🪄', desc: 'Built every word perfectly from letter tiles!' },
   { id: 'reading_rocket', name: 'Reading Rocket', emoji: '📚', desc: 'Aced a Reading Rocket listen-and-tap mission!' },
   { id: 'super_reader', name: 'Super Reader', emoji: '🦸', desc: 'Built or read every word in a reading mission!' },
+  { id: 'alphabet_ace', name: 'Alphabet Ace', emoji: '🔠', desc: 'Found every letter in an ABC Base mission!' },
+  { id: 'writing_wizard', name: 'Writing Wizard', emoji: '✍️', desc: 'Traced every letter beautifully!' },
+  { id: 'number_ninja', name: 'Number Ninja', emoji: '🔢', desc: 'Counted and found every number in a Number Camp mission!' },
+  { id: 'number_artist', name: 'Number Artist', emoji: '🖍️', desc: 'Traced every number perfectly!' },
   { id: 'lightning_legend', name: 'Lightning Legend', emoji: '⚡', desc: 'Averaged under 3 seconds per question in a Lightning Round!' },
   { id: 'catcher_10', name: 'Pokémon Catcher', emoji: '🐾', desc: 'Caught 10 Pokémon for your Pokédex!' },
   { id: 'catcher_50', name: 'Super Catcher', emoji: '🎒', desc: 'Caught 50 Pokémon for your Pokédex!' },
@@ -640,6 +647,8 @@ function initSetupUI() {
       const configEstimate = document.getElementById('config-estimate');
       const configSpelling = document.getElementById('config-spelling');
       const configReading = document.getElementById('config-reading');
+      const configAbc = document.getElementById('config-abc');
+      const configNumbers = document.getElementById('config-numbers');
       const subtitle = document.getElementById('setup-subtitle');
       const multiHeading = configMulti.querySelector('h2');
 
@@ -658,6 +667,8 @@ function initSetupUI() {
       if (configEstimate) configEstimate.classList.add('hidden');
       if (configSpelling) configSpelling.classList.add('hidden');
       if (configReading) configReading.classList.add('hidden');
+      if (configAbc) configAbc.classList.add('hidden');
+      if (configNumbers) configNumbers.classList.add('hidden');
 
       if (op === 'multiply') {
         configMulti.classList.remove('hidden');
@@ -725,6 +736,14 @@ function initSetupUI() {
         if (configReading) configReading.classList.remove('hidden');
         subtitle.innerText = "Select your reading level and prepare your rocket!";
         setMascotExpression('setup', "Reading Rocket! Listen carefully, then tap the picture, letter or word! 📚");
+      } else if (op === 'abc') {
+        if (configAbc) configAbc.classList.remove('hidden');
+        subtitle.innerText = "Select your letter game and prepare your rocket!";
+        setMascotExpression('setup', "ABC Base! Listen, tap, and trace the letters with your finger! ✏️");
+      } else if (op === 'numbers') {
+        if (configNumbers) configNumbers.classList.remove('hidden');
+        subtitle.innerText = "Select your number game and prepare your rocket!";
+        setMascotExpression('setup', "Number Camp! Count, find, and trace the numbers! 🔢");
       }
     });
   });
@@ -856,6 +875,26 @@ function initSetupUI() {
       document.querySelectorAll('#config-reading .digit-level-btn').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
       gameState.readingLevel = btn.dataset.level;
+    });
+  });
+
+  // ABC level buttons
+  document.querySelectorAll('#config-abc .digit-level-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      playSound('tap');
+      document.querySelectorAll('#config-abc .digit-level-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      gameState.abcLevel = btn.dataset.level;
+    });
+  });
+
+  // Numbers level buttons
+  document.querySelectorAll('#config-numbers .digit-level-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      playSound('tap');
+      document.querySelectorAll('#config-numbers .digit-level-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      gameState.numbersLevel = btn.dataset.level;
     });
   });
 
@@ -1512,6 +1551,16 @@ function generateQuestions() {
     for (let i = 0; i < targetCount; i++) {
       pool.push(buildReadingQuestion(gameState.readingLevel));
     }
+  } else if (gameState.activeOp === 'abc') {
+    const targetCount = Math.max(50, gameState.questionCount);
+    for (let i = 0; i < targetCount; i++) {
+      pool.push(buildAbcQuestion(gameState.abcLevel));
+    }
+  } else if (gameState.activeOp === 'numbers') {
+    const targetCount = Math.max(50, gameState.questionCount);
+    for (let i = 0; i < targetCount; i++) {
+      pool.push(buildNumbersQuestion(gameState.numbersLevel));
+    }
   } else {
     // Addition & Subtraction Mode
     let minVal = 1, maxVal = 9;
@@ -1646,6 +1695,8 @@ function loadQuestion() {
   if (verticalDisplayReset) verticalDisplayReset.classList.add('hidden');
   const spellingPadReset = document.getElementById('spelling-pad');
   if (spellingPadReset) spellingPadReset.classList.add('hidden');
+  const tracePadReset = document.getElementById('trace-pad');
+  if (tracePadReset) tracePadReset.classList.add('hidden');
 
   const mathCard = document.getElementById('math-card');
   const clockCard = document.getElementById('clock-card');
@@ -1836,6 +1887,34 @@ function loadQuestion() {
     } else {
       setMascotExpression('game', 'Read the clue, then tap the letter tiles in order to build the word! 🔤');
     }
+  } else if (q.traceChar) {
+    // Trace Pad: prompt on top, big finger-writing canvas below
+    mathCard.classList.remove('hidden');
+    clockCard.classList.add('hidden');
+    const fractionCard = document.getElementById('fraction-card');
+    if (fractionCard) fractionCard.classList.add('hidden');
+    const compareCard = document.getElementById('compare-card');
+    if (compareCard) compareCard.classList.add('hidden');
+
+    document.getElementById('equation-display').classList.add('hidden');
+    document.getElementById('sequence-display').classList.add('hidden');
+    const promptDisplay = document.getElementById('prompt-display');
+    promptDisplay.classList.remove('hidden');
+    document.getElementById('prompt-question').innerHTML = q.html;
+    // The canvas IS the answer — hide the typed-answer slot
+    const answerRow = document.querySelector('.prompt-answer-row');
+    if (answerRow) answerRow.classList.add('hidden');
+
+    gameState.traceSubmitted = false;
+    const tracePad = document.getElementById('trace-pad');
+    if (tracePad) tracePad.classList.remove('hidden');
+    if (typeof TracePad !== 'undefined') TracePad.start(q.traceChar);
+
+    document.getElementById('custom-numpad').classList.add('hidden');
+    document.getElementById('comparison-input-pad').classList.add('hidden');
+    document.getElementById('game-question-index').innerText = `${gameState.currentQuestionIndex + 1} / ${gameState.questionCount}`;
+
+    setMascotExpression('game', 'Trace the glowing shape with your finger, then tap Done! ✏️');
   } else if (q.choices) {
     mathCard.classList.remove('hidden');
     clockCard.classList.add('hidden');
@@ -1891,6 +1970,10 @@ function loadQuestion() {
       setMascotExpression('game', 'Look closely — tap the spelling that is exactly right! 🔤');
     } else if (qOpKind === 'reading') {
       setMascotExpression('game', 'Listen carefully, then tap your answer! 📚');
+    } else if (qOpKind === 'abc') {
+      setMascotExpression('game', 'Listen to Cosmo, then tap the letter! 🔠');
+    } else if (qOpKind === 'numbers') {
+      setMascotExpression('game', 'Count carefully, then tap the number! 🔢');
     } else {
       setMascotExpression('game', 'Tap the right answer! ✨');
     }
@@ -1965,9 +2048,10 @@ function loadQuestion() {
     opElement.innerText = opSymbol;
   }
 
-  // Reading Rocket: a pre-reader can't read the prompt, so speak it aloud.
-  // Small delay so it doesn't collide with the mascot's spoken line.
-  if (qOpKind === 'reading' && q.say && typeof speakWord === 'function') {
+  // Reading Rocket / ABC Base / Number Camp: a pre-reader can't read the
+  // prompt, so speak it aloud. Small delay so it doesn't collide with the
+  // mascot's spoken line.
+  if (['reading', 'abc', 'numbers'].includes(qOpKind) && q.say && typeof speakWord === 'function') {
     setTimeout(() => speakWord(q.say), 450);
   }
 
@@ -2006,6 +2090,8 @@ function getTimeLimit() {
   if (op === 'estimate') return { round10: 12, round100: 15, approx: 18 }[gameState.estimateLevel] || 15;
   if (op === 'spelling') return { spot: 15, spot2: 18, build: 35, build2: 45, school: 40 }[gameState.spellingLevel] || 25;
   if (op === 'reading') return { letters: 15, soundmatch: 15, rhyme: 15, sight: 15, cvc: 35, myreading: 30 }[gameState.readingLevel] || 20;
+  if (op === 'abc') return { find: 15, match: 15, order: 18, traceupper: 60, tracelower: 60 }[gameState.abcLevel] || 20;
+  if (op === 'numbers') return { count: 25, find: 15, order: 18, trace: 60, teen: 75 }[gameState.numbersLevel] || 20;
   return 8;
 }
 
@@ -2035,6 +2121,7 @@ function updateAnswerDisplay() {
 
   if (currentQ && currentQ.choices) return; // multiple choice — nothing typed
   if (currentQ && currentQ.spellWord) return; // letter tiles draw into their own slots
+  if (currentQ && currentQ.traceChar) return; // tracing draws onto its own canvas
 
   if (gameState.activeOp === 'sequence') {
     const display = document.getElementById('sequence-answer-display');
@@ -2222,6 +2309,10 @@ function handleKeyPress(key) {
     if (key === 'delete') spellingUndo();
     return;
   }
+  if (curQ && curQ.traceChar) {
+    if (key === 'delete' && typeof TracePad !== 'undefined') TracePad.clear();
+    return;
+  }
   if (curQ && curQ.choices) {
     if (key >= '1' && key <= '3') {
       const buttons = document.querySelectorAll('#choice-pad .choice-key');
@@ -2266,6 +2357,11 @@ function submitAnswer(isTimeout = false) {
   // Word Builder timeouts route to the spelling submit path
   if (q.spellWord) {
     submitSpellingAnswer(true);
+    return;
+  }
+  // Trace Pad timeouts route to the tracing submit path
+  if (q.traceChar) {
+    submitTraceAnswer(true);
     return;
   }
   const typedAnswer = isTimeout ? null : Number(gameState.currentAnswer);
@@ -2382,6 +2478,8 @@ function currentLevelTag(q) {
   if (op === 'estimate') return `estimate:${gameState.estimateLevel}`;
   if (op === 'spelling') return `spelling:${gameState.spellingLevel}`;
   if (op === 'reading') return `reading:${gameState.readingLevel}`;
+  if (op === 'abc') return `abc:${gameState.abcLevel}`;
+  if (op === 'numbers') return `numbers:${gameState.numbersLevel}`;
   return op;
 }
 
@@ -2930,6 +3028,96 @@ function submitSpellingAnswer(isTimeout = false) {
     setMascotExpression('incorrect');
     updateComboHUD();
     setTimeout(advanceGame, taught ? 3600 : 2400);
+  }
+}
+
+// ============================================================
+// ABC BASE & NUMBER CAMP — Trace Pad submission
+// ============================================================
+
+// Wired to the buttons under the tracing canvas (index.html)
+function traceClearTapped() {
+  playSound('tap');
+  if (typeof TracePad !== 'undefined') TracePad.clear();
+}
+
+function traceDoneTapped() {
+  playSound('tap');
+  submitTraceAnswer();
+}
+
+function submitTraceAnswer(isTimeout = false) {
+  // The Done button and the round timer can both fire — only one counts
+  if (gameState.traceSubmitted) return;
+  gameState.traceSubmitted = true;
+  clearInterval(gameState.timerInterval);
+
+  const q = gameState.currentQuestions[gameState.currentQuestionIndex];
+  const result = isTimeout ? { coverage: 0, precision: 0, pass: false } : TracePad.evaluate();
+  const isCorrect = !isTimeout && result.pass;
+  const timeTaken = (performance.now() - gameState.questionStartTime) / 1000;
+
+  TracePad.finish(isCorrect);
+
+  gameState.answersLog.push({
+    num1: q.promptText,
+    num2: '',
+    expected: q.expected,
+    op: q.op,
+    typed: isTimeout ? null : (isCorrect ? '✏️ traced!' : `traced ${Math.round(result.coverage * 100)}%`),
+    isCorrect: isCorrect,
+    timeTaken: timeTaken,
+    isRematch: !!q.isRematch
+  });
+  Mastery.record(q, isCorrect, timeTaken, currentLevelTag(q));
+
+  const mathCard = document.getElementById('math-card');
+  const rocket = document.getElementById('rocket-ship');
+
+  if (isCorrect) {
+    gameState.correctAnswersCount++;
+    gameState.combo++;
+    if (gameState.combo > gameState.maxCombo) gameState.maxCombo = gameState.combo;
+
+    playSound('correct');
+    mathCard.classList.add('correct');
+    rocket.classList.add('animate-pop');
+    setTimeout(() => rocket.classList.remove('animate-pop'), 500);
+
+    // Say the character again so the shape and the name stick together
+    if (typeof speakWord === 'function') speakWord(`${q.traceChar}! Beautiful writing!`);
+
+    // Tracing is slow, careful work — the speed window is extra generous
+    let baseScore = 100;
+    let speedBonus = timeTaken < 20.0 ? Math.round(50 * (1 - Math.max(timeTaken - 6.0, 0) / 14.0)) : 0;
+    let comboMultiplier = gameState.combo >= 9 ? 2.5 : gameState.combo >= 6 ? 2.0 : gameState.combo >= 3 ? 1.5 : 1.0;
+    const pointsEarned = Math.round((baseScore + speedBonus) * comboMultiplier);
+    gameState.score += pointsEarned;
+
+    const scoreVal = document.getElementById('game-score');
+    scoreVal.innerText = gameState.score;
+    scoreVal.classList.add('animate-pop');
+    setTimeout(() => scoreVal.classList.remove('animate-pop'), 400);
+
+    setMascotExpression('game', `Wow! You wrote ${q.traceChar}! Beautiful writing! ✏️🌟`);
+
+    updateComboHUD();
+    setTimeout(advanceGame, 1600);
+
+  } else {
+    gameState.combo = 0;
+    gameState.missedQuestions.push(q);
+    playSound('wrong');
+    mathCard.classList.add('incorrect');
+    mathCard.classList.add('animate-shake');
+    setTimeout(() => mathCard.classList.remove('animate-shake'), 400);
+
+    // TracePad.finish(false) already painted the solid target shape in green
+    const taught = showTeachingMoment(q);
+
+    setMascotExpression('game', `Almost! Look at the shape of ${q.traceChar} — we'll trace it again soon! 💪`);
+    updateComboHUD();
+    setTimeout(advanceGame, taught ? 3600 : 2600);
   }
 }
 
@@ -3520,7 +3708,7 @@ function endGame() {
       } else if (log.subtype === 'subtract') {
         formula.innerText = `${log.num1}/${log.denom || '?'} − ${log.num2}/${log.denom || '?'}`;
       }
-    } else if (['music', 'angles', 'puzzle', 'pokemon', 'story', 'estimate', 'spelling', 'reading'].includes(log.op)) {
+    } else if (['music', 'angles', 'puzzle', 'pokemon', 'story', 'estimate', 'spelling', 'reading', 'abc', 'numbers'].includes(log.op)) {
       formula.innerText = `${log.num1} ${log.op === 'pokemon' ? '→' : '='} ${log.expected}`;
     } else if (log.op === 'sequence') {
       formula.innerText = `Sequence: ${log.num1}, ?`;
@@ -3701,6 +3889,22 @@ function checkAndUnlockBadges(accuracy, avgSpeed) {
     addBadge('reading_rocket');
     if (gameState.readingLevel === 'cvc' || gameState.readingLevel === 'myreading') {
       addBadge('super_reader');
+    }
+  }
+
+  if (gameState.activeOp === 'abc' && accuracy === 100) {
+    if (gameState.abcLevel === 'traceupper' || gameState.abcLevel === 'tracelower') {
+      addBadge('writing_wizard');
+    } else {
+      addBadge('alphabet_ace');
+    }
+  }
+
+  if (gameState.activeOp === 'numbers' && accuracy === 100) {
+    if (gameState.numbersLevel === 'trace' || gameState.numbersLevel === 'teen') {
+      addBadge('number_artist');
+    } else {
+      addBadge('number_ninja');
     }
   }
 

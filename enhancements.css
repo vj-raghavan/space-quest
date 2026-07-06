@@ -1585,3 +1585,124 @@ body.theme-candy .nebula {
 #choice-pad .choice-key .reading-letter {
   pointer-events: none;
 }
+
+/* ============================================================
+   ABC BASE & NUMBER CAMP — big letters, counting grids, trace pad
+   ============================================================ */
+
+/* Big tappable letter/number choices */
+.abc-letter-choice,
+.abc-number-choice {
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1.1;
+  display: inline-block;
+  min-width: 56px;
+}
+#choice-pad .choice-key .abc-letter-choice,
+#choice-pad .choice-key .abc-number-choice {
+  pointer-events: none;
+}
+
+/* The big uppercase letter shown in Big & Small Twins */
+.abc-target-letter {
+  font-size: 5.5rem;
+  font-weight: 800;
+  line-height: 1;
+  display: inline-block;
+  color: var(--neon-cyan, oklch(0.78 0.18 190));
+  text-shadow: 0 0 24px rgba(80, 200, 255, 0.4);
+}
+
+/* The Alphabet / Number Train */
+.abc-train {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 2.4rem;
+  flex-wrap: wrap;
+}
+.abc-train-car {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 62px;
+  min-height: 62px;
+  padding: 4px 10px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.10);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  font-size: 2.2rem;
+  font-weight: 800;
+}
+.abc-train-mystery {
+  border-color: var(--gold-yellow, gold);
+  color: var(--gold-yellow, gold);
+  border-style: dashed;
+}
+
+/* Counting grid: big, well-spaced emoji so nothing overlaps while counting */
+.num-count-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 14px;
+  max-width: 420px;
+  margin: 12px auto 0;
+}
+.num-count-item {
+  font-size: 2.6rem;
+  line-height: 1;
+}
+
+/* Trace Pad — the finger-writing canvas */
+.trace-pad {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+#trace-canvas {
+  width: min(340px, 82vw);
+  height: min(340px, 82vw);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(120, 210, 255, 0.35);
+  box-shadow: inset 0 0 30px rgba(80, 160, 255, 0.08);
+  touch-action: none;   /* the finger draws, the page must not scroll */
+  cursor: crosshair;
+}
+.trace-actions {
+  display: flex;
+  gap: 14px;
+}
+.trace-btn {
+  font-family: var(--font-main);
+  font-size: 1.15rem;
+  font-weight: 700;
+  padding: 12px 26px;
+  border-radius: 14px;
+  border: 2px solid var(--panel-border, rgba(255,255,255,0.25));
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--space-light, #fff);
+  cursor: pointer;
+  transition: transform 0.15s, background 0.2s;
+  touch-action: manipulation;
+}
+.trace-btn:active { transform: scale(0.95); }
+.trace-btn-done {
+  background: oklch(0.45 0.15 145 / 0.45);
+  border-color: var(--success-green, #3ecf6e);
+}
+.trace-btn-done:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+@media (max-width: 600px) {
+  .abc-letter-choice, .abc-number-choice { font-size: 2.4rem; }
+  .abc-target-letter { font-size: 4.2rem; }
+  .abc-train-car { min-width: 50px; min-height: 50px; font-size: 1.8rem; }
+  .num-count-item { font-size: 2.1rem; }
+}

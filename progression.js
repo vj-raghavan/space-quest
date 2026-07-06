@@ -83,6 +83,20 @@ const Progression = (() => {
       { id: 'build2', name: 'Word Wizard', desc: 'Build tricky words' },
       { id: 'school', name: 'My School Words', desc: 'Your weekly list' },
     ]},
+    { id: 'abc', name: 'ABC Base', emoji: '🔠', tagline: 'Letters & writing', levels: [
+      { id: 'find', name: 'Letter Hunt', desc: 'Tap the letter you hear' },
+      { id: 'match', name: 'Big & Small Twins', desc: 'Match BIG and small' },
+      { id: 'order', name: 'Alphabet Train', desc: 'What comes next?' },
+      { id: 'traceupper', name: 'Trace BIG Letters', desc: 'Write with your finger' },
+      { id: 'tracelower', name: 'Trace small letters', desc: 'Write the small twins' },
+    ]},
+    { id: 'numbers', name: 'Number Camp', emoji: '🔢', tagline: 'Count & write numbers', levels: [
+      { id: 'count', name: 'Count with Cosmo', desc: 'Count and tap' },
+      { id: 'find', name: 'Number Hunt', desc: 'Tap the number you hear' },
+      { id: 'order', name: 'Number Train', desc: 'What comes next?' },
+      { id: 'trace', name: 'Trace Numbers', desc: 'Write 0 to 9' },
+      { id: 'teen', name: 'Trace Big Numbers', desc: 'Write 10 to 20' },
+    ]},
     { id: 'reading', name: 'Reading Rocket', emoji: '📚', tagline: 'Learn to read', levels: [
       { id: 'letters', name: 'Letter Sounds', desc: 'Which letter starts it?' },
       { id: 'soundmatch', name: 'Sound Match', desc: 'Same starting sound' },
@@ -230,6 +244,8 @@ const Progression = (() => {
     else if (planet.id === 'estimate') s.estimateLevel = level.id;
     else if (planet.id === 'spelling') s.spellingLevel = level.id;
     else if (planet.id === 'reading') s.readingLevel = level.id;
+    else if (planet.id === 'abc') s.abcLevel = level.id;
+    else if (planet.id === 'numbers') s.numbersLevel = level.id;
   }
 
   // Derive a missionKey from the current setup-screen state so custom
@@ -254,7 +270,9 @@ const Progression = (() => {
       s.activeOp === 'story' ? s.storyLevel :
       s.activeOp === 'estimate' ? s.estimateLevel :
       s.activeOp === 'spelling' ? s.spellingLevel :
-      s.activeOp === 'reading' ? s.readingLevel : s.compareLevel;
+      s.activeOp === 'reading' ? s.readingLevel :
+      s.activeOp === 'abc' ? s.abcLevel :
+      s.activeOp === 'numbers' ? s.numbersLevel : s.compareLevel;
     const lvl = planet.levels.find(l => l.id === levelId);
     return lvl ? `${planet.id}:${levelId}` : null;
   }
@@ -945,6 +963,12 @@ const Progression = (() => {
     'reading:letters': '📚 Reading (letter sounds)', 'reading:soundmatch': '📚 Reading (sound match)',
     'reading:rhyme': '📚 Reading (rhyme)', 'reading:sight': '📚 Reading (sight words)',
     'reading:cvc': '📚 Reading (build-a-word)', 'reading:myreading': '📖 Reading (my words)',
+    'abc:find': '🔠 Letters (letter hunt)', 'abc:match': '🔠 Letters (big & small)',
+    'abc:order': '🔠 Letters (alphabet order)', 'abc:traceupper': '✏️ Writing (BIG letters)',
+    'abc:tracelower': '✏️ Writing (small letters)',
+    'numbers:count': '🔢 Numbers (counting)', 'numbers:find': '🔢 Numbers (number hunt)',
+    'numbers:order': '🔢 Numbers (what comes next)', 'numbers:trace': '✏️ Writing (numbers 0-9)',
+    'numbers:teen': '✏️ Writing (numbers 10-20)',
   };
 
   function renderModeStats() {

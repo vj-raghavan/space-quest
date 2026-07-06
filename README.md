@@ -2,6 +2,8 @@
 
 A kid-friendly math game: multiplication, division, addition, subtraction, sequences, comparisons, analog clock reading, and fractions — all wrapped in a space adventure with Cosmo the mascot.
 
+For the youngest explorers there's also **ABC Base** and **Number Camp**: letter and number recognition games (everything is spoken aloud and answered by tapping) plus **finger tracing** — the child writes letters A–Z and numbers 0–20 by tracing a glowing dashed shape on a canvas, with forgiving, scribble-proof scoring.
+
 ## How learning works
 
 - **Adaptive practice** — every multiplication/division fact is tracked in `localStorage` (attempts, accuracy, response time). Question selection is weighted toward facts the player gets wrong or answers slowly.
