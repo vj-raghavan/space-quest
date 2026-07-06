@@ -86,7 +86,7 @@ function buildAbcQuestion(level) {
     return {
       op: 'abc',
       say: `Find the letter ${letter}! ${letter} is for ${info.w}!`,
-      html: `<div class="prompt-line">${info.e}</div><div class="prompt-line story-which-op">👂 Tap the letter you hear! ${spellSpeakBtn(`Find the letter ${letter}! ${letter} is for ${info.w}!`)}</div>`,
+      html: `<div class="prompt-line"><span class="reading-pic">${info.e}</span></div><div class="prompt-line story-which-op">👂 Tap the letter you hear! ${spellSpeakBtn(`Find the letter ${letter}! ${letter} is for ${info.w}!`)}</div>`,
       choices: choices.map(l => ({ html: abcBigLetter(l), value: l })),
       promptText: `find letter ${letter}`,
       expected: letter,
@@ -179,7 +179,7 @@ function buildNumbersQuestion(level) {
     return {
       op: 'numbers',
       say: `Find the number ${n}!`,
-      html: `<div class="prompt-line">🔢</div><div class="prompt-line story-which-op">👂 Tap the number you hear! ${spellSpeakBtn(`Find the number ${n}!`)}</div>`,
+      html: `<div class="prompt-line"><span class="reading-pic">👂</span></div><div class="prompt-line story-which-op">Tap the number you hear! ${spellSpeakBtn(`Find the number ${n}!`)}</div>`,
       choices: choices.map(c => ({ html: abcBigNumber(c), value: String(c) })),
       promptText: `find number ${n}`,
       expected: String(n),
