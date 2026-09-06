@@ -84,6 +84,16 @@ const Mastery = (() => {
     return out;
   }
 
+  function questionFromFactKey(key) {
+    if (key.startsWith('m:')) {
+      const [a, b] = key.slice(2).split('x').map(Number);
+      const swap = Math.random() > 0.5;
+      return { num1: swap ? b : a, num2: swap ? a : b, expected: a * b, op: 'multiply' };
+    }
+    const [x, y] = key.slice(2).split('/').map(Number);
+    return { num1: x, num2: y, expected: x / y, op: 'divide' };
+  }
+
   // Up to n ready-to-play question objects for the weakest recorded facts.
   function getWeakFactQuestions(n) {
     const scored = Object.keys(data.facts)
@@ -92,15 +102,30 @@ const Mastery = (() => {
       .sort((x, y) => y.score - x.score)
       .slice(0, n);
 
-    return scored.map(({ key }) => {
-      if (key.startsWith('m:')) {
-        const [a, b] = key.slice(2).split('x').map(Number);
+    return scored.map(({ key }) => questionFromFactKey(key));
+  }
+
+  // Full 2–12 multiply + divide pool used to top up Tricky Facts missions.
+  function standardFactPool() {
+    const pool = [];
+    for (let t = 2; t <= 12; t++) {
+      for (let m = 1; m <= 12; m++) {
         const swap = Math.random() > 0.5;
-        return { num1: swap ? b : a, num2: swap ? a : b, expected: a * b, op: 'multiply' };
+        pool.push({ num1: swap ? m : t, num2: swap ? t : m, expected: t * m, op: 'multiply' });
+        pool.push({ num1: t * m, num2: t, expected: m, op: 'divide' });
       }
-      const [x, y] = key.slice(2).split('/').map(Number);
-      return { num1: x, num2: y, expected: x / y, op: 'divide' };
-    });
+    }
+    return pool;
+  }
+
+  // Short focused set biased to weak/slow facts; fills from the standard
+  // pool so a brand-new player still gets a real mission.
+  function buildTrickyMission(count) {
+    const n = count || 10;
+    const weak = getWeakFactQuestions(Math.max(n, 8));
+    if (weak.length >= n) return weightedSample(weak, n);
+    const pool = weak.concat(standardFactPool());
+    return weightedSample(pool, n);
   }
 
   function getFactStats(a, b) {
@@ -116,5 +141,5 @@ const Mastery = (() => {
     save();
   }
 
-  return { record, weightedSample, getWeakFactQuestions, getFactStats, getModeStats, weaknessScore, factKey, resetAll };
+  return { record, weightedSample, getWeakFactQuestions, getFactStats, getModeStats, weaknessScore, factKey, resetAll, buildTrickyMission };
 })();

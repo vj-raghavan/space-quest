@@ -44,10 +44,11 @@ const gameState = {
   spellingBuilt: '',         // letters tapped so far in Word Builder mode
   readingLevel: 'letters',   // 'letters', 'soundmatch', 'rhyme', 'sight', 'cvc', 'myreading'
   eqStyle: 'horizontal',     // 'horizontal' (6 + 3 = ?) or 'vertical' (stacked, like on paper)
-  missionKey: null,          // 'planet:level' when launched from the galaxy map, 'daily', or null
-  injectedQuestions: null,   // pre-built question list (daily mission)
+  missionKey: null,          // 'planet:level' when launched from the galaxy map, 'daily', 'sprint', 'tricky', or null
+  injectedQuestions: null,   // pre-built question list (daily / tricky missions)
   missedQuestions: [],       // wrong answers this round, queued for the rematch
-  rematchDone: false         // whether the end-of-round rematch already ran
+  rematchDone: false,        // whether the end-of-round rematch already ran
+  sprintTable: 'all'         // Lightning Round table: 'all' or 2–12
 };
 
 // Mascot Cosmo phrases
@@ -113,6 +114,7 @@ const BADGES = [
   { id: 'reading_rocket', name: 'Reading Rocket', emoji: '📚', desc: 'Aced a Reading Rocket listen-and-tap mission!' },
   { id: 'super_reader', name: 'Super Reader', emoji: '🦸', desc: 'Built or read every word in a reading mission!' },
   { id: 'lightning_legend', name: 'Lightning Legend', emoji: '⚡', desc: 'Averaged under 3 seconds per question in a Lightning Round!' },
+  { id: 'fact_crusher', name: 'Fact Crusher', emoji: '🎯', desc: 'Cleared a Tricky Facts mission with a perfect score!' },
   { id: 'catcher_10', name: 'Pokémon Catcher', emoji: '🐾', desc: 'Caught 10 Pokémon for your Pokédex!' },
   { id: 'catcher_50', name: 'Super Catcher', emoji: '🎒', desc: 'Caught 50 Pokémon for your Pokédex!' },
   { id: 'dex_master', name: 'Dex Master', emoji: '🏆', desc: 'Caught all 151 Pokémon — gotta catch \'em all, DONE!' },
@@ -1038,7 +1040,9 @@ function showScreen(screenId) {
   }
 
   if (screenId === 'screen-galaxy') {
-    stopConfetti();
+    const familyPopup = document.getElementById('family-goal-popup');
+    const familyOpen = familyPopup && !familyPopup.classList.contains('hidden');
+    if (!familyOpen) stopConfetti();
     const triviaPopup = document.getElementById('trivia-popup');
     if (triviaPopup) triviaPopup.classList.add('hidden');
     if (typeof Progression !== 'undefined') Progression.renderGalaxy();
@@ -1047,7 +1051,7 @@ function showScreen(screenId) {
 
 // Generate the randomized arithmetic pool
 function generateQuestions() {
-  // Daily missions arrive as a pre-built list of the player's weakest facts
+  // Daily / Tricky Facts missions arrive as a pre-built list
   if (gameState.injectedQuestions && gameState.injectedQuestions.length > 0) {
     gameState.currentQuestions = gameState.injectedQuestions.map(q => ({ ...q }));
     gameState.questionCount = gameState.currentQuestions.length;
@@ -3446,20 +3450,29 @@ function endGame() {
     playSound('correct');
   }
 
-  // Lightning Round: the headline is your TIME, racing your own best
+  // Lightning Round: the headline is your TIME, racing your own best for this table
   if (gameState.missionKey === 'sprint' && typeof Progression !== 'undefined') {
     const sprintTime = parseFloat(totalTime.toFixed(1));
-    const res = Progression.recordSprint(sprintTime);
+    const tableKey = gameState.sprintTable || 'all';
+    const res = Progression.recordSprint(sprintTime, tableKey);
+    const tableLabel = tableKey === 'all' ? 'all tables' : `the ×${tableKey} table`;
     headline.innerText = `⚡ Lightning Round: ${sprintTime}s`;
     if (res.isRecord) {
       subhead.innerText = res.prevBest
-        ? `NEW RECORD! You beat your old best of ${res.prevBest}s! 🏆`
-        : 'Your first Lightning Round — that\'s the time to beat! 🏆';
+        ? `NEW RECORD for ${tableLabel}! You beat your old best of ${res.prevBest}s! 🏆`
+        : `Your first ${tableLabel} Lightning Round — that's the time to beat! 🏆`;
       playSound('victory');
       startConfetti();
     } else {
-      subhead.innerText = `Your best is ${res.best}s — so close! Try again! ⚡`;
+      subhead.innerText = `Your best for ${tableLabel} is ${res.best}s — so close! Try again! ⚡`;
     }
+  }
+
+  if (gameState.missionKey === 'tricky' && starsCount === 3) {
+    headline.innerText = '🎯 Tricky Facts crushed!';
+    subhead.innerText = 'Those sticky facts did not stand a chance — Cosmo is bursting with pride! 💫';
+    playSound('victory');
+    startConfetti();
   }
 
   document.getElementById('res-score').innerText = gameState.score;
@@ -3485,12 +3498,17 @@ function endGame() {
   // Squishy rewards run AFTER completeMission so lifetime stars/missions are current.
   checkAndUnlockSquishies(accuracy);
   const coinsEarnedEl = document.getElementById('coins-earned');
-  if (coinsEarnedEl) {
+    if (coinsEarnedEl) {
     let coinsText = `+${reward.coins} ⭐ Star Coins`;
     if (reward.dailyBonus) coinsText += '  ·  Daily Mission Streak! 🔥';
     if (reward.diminished) coinsText += '  ·  Replay reward — explore a new level for full coins! 🗺️';
+    if (reward.familyGoalJustCompleted) coinsText += '  ·  Family goal complete! 🎉';
     coinsEarnedEl.innerText = coinsText;
     coinsEarnedEl.classList.remove('hidden');
+  }
+
+  if (reward.familyGoalJustCompleted && typeof Progression !== 'undefined' && Progression.celebrateFamilyGoal) {
+    setTimeout(() => Progression.celebrateFamilyGoal(), 1800);
   }
 
   const reviewList = document.getElementById('review-list');
@@ -3706,6 +3724,10 @@ function checkAndUnlockBadges(accuracy, avgSpeed) {
 
   if (gameState.missionKey === 'sprint' && accuracy === 100 && avgSpeed < 3.0) {
     addBadge('lightning_legend');
+  }
+
+  if (gameState.missionKey === 'tricky' && accuracy === 100) {
+    addBadge('fact_crusher');
   }
 
   if (typeof Pokedex !== 'undefined') {

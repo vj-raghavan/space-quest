@@ -1,6 +1,6 @@
 # Space Quest — Agent Handover Document
 
-A briefing for any agent (or human) picking up this project cold. Last updated: June 2026.
+A briefing for any agent (or human) picking up this project cold. Last updated: September 2026.
 
 ## What this is
 
@@ -47,18 +47,19 @@ Load order in `index.html` **matters** (globals, no modules):
 - Submission paths: `submitAnswer` (numpad), `submitClockAnswer`, `submitFractionAnswer`, `submitCompareAnswer`, `submitChoiceAnswer` (multiple choice; also catches Pokémon via `q.catchId`). All record to `Mastery` and push `answersLog`.
 - Wrong answers: queue into `missedQuestions` → end-of-round **rematch** (max 5, skipped for sprint); show a **teaching moment** (`q.teach` string, or generated dot-arrays/decompositions) in `#visual-helper`.
 - `endGame()`: stars (100%→3, ≥80→2, ≥50→1), `Progression.completeMission` (coins with replay-diminishing multiplier per `missionKey` per day: full ×2, then 50%, then 20%), badges, sprint record handling, review list.
-- `gameState.missionKey`: `'planet:level'` (galaxy launches and matching custom missions), `'daily'`, `'sprint'`, or null.
+- `gameState.missionKey`: `'planet:level'` (galaxy launches and matching custom missions), `'daily'`, `'sprint'`, `'tricky'`, or null.
 
 ## Storage (all namespaced by `Players.key()` → `<base>:<playerId>`)
 
 - `space_quest_players_v1` — registry (NOT namespaced): `{players:[{id,name,avatar}], activeId}`.
-- `space_quest_profile_v1` — coins, rocket/trail/jingle/theme/petAccessory + `owned[]`, stars per missionKey, streak `{count,lastDate,shieldWeek}`, `dailyHistory[]`, `dailyPlays` (anti-farm counters), `eqStyle`, `petName`, `sprintBest`, name.
+- `space_quest_profile_v1` — coins, rocket/trail/jingle/theme/petAccessory + `owned[]`, stars per missionKey, streak `{count,lastDate,shieldWeek}`, `dailyHistory[]`, `dailyPlays` (anti-farm counters), `eqStyle`, `petName`, `sprintBest` (legacy mixed Lightning Round time), `sprintBests` `{all, 2…12}` per-table Lightning Round bests, name.
 - `space_quest_mastery_v1` — `{facts:{key:{a,c,t}}, modes:{tag:{a,c,t}}}`.
 - `space_quest_pokedex_v1` — array of caught ids.
 - `space_quest_squishies_v1` — array of unlocked squishy ids.
 - `space_quest_high_score`, `space_quest_tests_completed`, `space_quest_unlocked_badges`.
+- `space_quest_family_goal_v1` — **not namespaced** (shared by every player on the device): `{kind:'stars'|'dailies', target, period:'week', weekId, progress, pendingCelebrate}`. Cooperative family total only — never per-child scores.
 
-When adding a per-player key, add it to `PLAYER_KEYS` in `players.js` (migration + delete-player cleanup).
+When adding a per-player key, add it to `PLAYER_KEYS` in `players.js` (migration + delete-player cleanup). Family-wide keys stay un-namespaced and are **not** listed in `PLAYER_KEYS`.
 
 ## How to add a new planet (the recurring task)
 
@@ -91,11 +92,14 @@ The Poké Galaxy uses Nintendo-owned names and artwork. Acceptable as a private 
 
 ## Current state & known opportunities
 
-Everything described above is **built, browser-verified, and deployed** (HEAD: profile editing, `f9a2971`). Not built / discussed ideas:
-- Co-op family goals (explicitly avoid competitive leaderboards).
-- Per-table sprint bests (current Lightning Round best is global, tables 2–12).
+Everything described above is **built, browser-verified, and deployed**, plus the three features in this handover update:
+
+- **Co-op family goals** — shared weekly target (stars or daily missions) on the galaxy map; Grown-Up Zone can set/reset; Cosmo + confetti celebration when the family finishes together. Storage: `space_quest_family_goal_v1` (not per-player).
+- **Tricky Facts on-demand** — galaxy + custom-setup buttons launch a 10-question mission via `Mastery.buildTrickyMission` / `weightedSample`; rematch + teaching moments; `missionKey: 'tricky'`; **Fact Crusher** badge on a clean 100% run.
+- **Per-table Lightning Round bests** — picker for ×2–×12 plus mixed “all tables”; `profile.sprintBests`; legacy `sprintBest` migrates to `sprintBests.all` only (not copied onto every table).
+
+Not built / discussed ideas:
 - Teacher/classroom features (dashboard exists for parents only, behind a multiplication gate).
-- "Tricky facts" on-demand practice button (mastery data already supports it).
 - Editing non-active players' profiles (deliberately scoped out — prevents sibling mischief).
 - PWA manifest/service worker (would also be step 1 of app-store wrapping).
 
