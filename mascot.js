@@ -83,12 +83,13 @@ function initMascots() {
 function setMascotMood(type) {
   const containerId =
     type === 'setup' ? 'mascot-setup' :
-    type === 'results' ? 'mascot-results' : 'mascot-img';
+    type === 'results' ? 'mascot-results' :
+    type === 'family' ? 'mascot-family' : 'mascot-img';
   const el = document.getElementById(containerId);
   if (!el) return;
 
   el.classList.remove('mood-happy', 'mood-oops');
-  if (type === 'correct') el.classList.add('mood-happy');
+  if (type === 'correct' || type === 'family') el.classList.add('mood-happy');
   else if (type === 'incorrect') el.classList.add('mood-oops');
 
   if (type === 'correct' || type === 'incorrect') {

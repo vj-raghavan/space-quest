@@ -108,6 +108,88 @@
 .streak-letter { opacity: 0.6; }
 .streak-dot { font-size: 0.85rem; }
 
+/* Family goal (cooperative, never a race) */
+.family-goal-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(140, 220, 255, 0.4);
+  box-shadow: 0 0 20px rgba(80, 180, 255, 0.12);
+  flex-wrap: wrap;
+}
+.family-goal-card.family-goal-done {
+  border-color: rgba(255, 210, 80, 0.55);
+  box-shadow: 0 0 22px rgba(255, 200, 80, 0.22);
+}
+.family-goal-info {
+  width: 100%;
+}
+.family-goal-info h2 {
+  margin-bottom: 4px;
+  color: var(--neon-cyan);
+}
+.family-goal-info p {
+  font-size: 0.95rem;
+  opacity: 0.85;
+  margin-bottom: 10px;
+}
+.family-goal-bar {
+  width: 100%;
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.family-goal-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--neon-cyan), var(--gold-yellow));
+  transition: width 0.45s ease;
+}
+.family-goal-count {
+  font-weight: 700;
+  color: var(--gold-yellow);
+  margin-bottom: 0 !important;
+}
+.family-goal-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 12px;
+}
+.family-goal-custom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.family-goal-custom label {
+  font-size: 0.85rem;
+  opacity: 0.75;
+}
+.family-goal-custom select,
+.family-goal-custom input[type="number"] {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--panel-border);
+  color: var(--space-light);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-family: var(--font-main);
+  font-size: 1rem;
+}
+.sprint-best-chip {
+  white-space: nowrap;
+  font-weight: 700;
+  color: var(--gold-yellow);
+}
+#galaxy-sprint {
+  cursor: pointer;
+}
+
 /* Planet grid */
 .planets-grid {
   display: grid;

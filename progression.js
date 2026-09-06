@@ -160,7 +160,8 @@ const Progression = (() => {
     theme: 'default',
     petName: '',
     petAccessory: 'none',
-    sprintBest: null,
+    sprintBest: null,      // legacy mixed Lightning Round best (tables 2–12)
+    sprintBests: {},       // per-table Lightning Round bests: { all, 2, 3, ... }
     owned: ['rocket', 'cyan', 'classic', 'default', 'none'],
     stars: {},          // missionKey -> best star count (0-3)
     streak: { count: 0, lastDate: null, shieldWeek: null },
@@ -187,6 +188,12 @@ const Progression = (() => {
     if (!p.name && Players.active().name) {
       p.name = Players.active().name;
       p.namePromptShown = true;
+    }
+    if (!p.sprintBests || typeof p.sprintBests !== 'object') p.sprintBests = {};
+    // Old profiles stored one global Lightning Round best for mixed tables 2–12.
+    // Keep that as the "all tables" record rather than copying it onto every table.
+    if (p.sprintBest && (p.sprintBests.all == null)) {
+      p.sprintBests.all = p.sprintBest;
     }
     return p;
   }
@@ -305,8 +312,9 @@ const Progression = (() => {
     if (starsEl) starsEl.innerText = `🌟 ${totalEarned} / ${totalMax} stars`;
     const sprintEl = document.getElementById('galaxy-sprint');
     if (sprintEl) {
-      if (profile.sprintBest) {
-        sprintEl.innerText = `⚡ best ${profile.sprintBest}s`;
+      const chip = sprintChipLabel();
+      if (chip) {
+        sprintEl.innerText = chip;
         sprintEl.classList.remove('hidden');
       } else {
         sprintEl.classList.add('hidden');
@@ -314,6 +322,7 @@ const Progression = (() => {
     }
     updateCoinHud();
     renderPet(totalEarned);
+    renderFamilyGoalCard();
 
     // Daily mission card state
     const dailyBtn = document.getElementById('btn-daily');
@@ -393,25 +402,272 @@ const Progression = (() => {
     });
   }
 
-  // --- Lightning Round (sprint): race your own best time ---
-  function startSprint() {
+  // --- Lightning Round (sprint): race your own best time, per table ---
+  const SPRINT_TABLES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+
+  function sprintBestFor(key) {
+    const map = profile.sprintBests || {};
+    if (map[key] != null) return map[key];
+    if (key === 'all' && profile.sprintBest) return profile.sprintBest;
+    return null;
+  }
+
+  function sprintChipLabel() {
+    const map = profile.sprintBests || {};
+    let fastestKey = null;
+    let fastest = null;
+    SPRINT_TABLES.forEach(t => {
+      const v = map[t];
+      if (v != null && (fastest == null || v < fastest)) {
+        fastest = v;
+        fastestKey = t;
+      }
+    });
+    if (fastestKey != null) return `⚡ ×${fastestKey} ${fastest}s`;
+    const mixed = sprintBestFor('all');
+    if (mixed != null) return `⚡ mix ${mixed}s`;
+    return null;
+  }
+
+  function formatSprintBest(key) {
+    const v = sprintBestFor(key);
+    return v != null ? `${v}s` : '—';
+  }
+
+  function openSprintPicker() {
+    const popup = document.getElementById('sprint-popup');
+    const list = document.getElementById('sprint-table-list');
+    if (!popup || !list) return;
+    list.innerHTML = '';
+
+    const addRow = (key, label, desc) => {
+      const row = document.createElement('button');
+      row.className = 'level-row sprint-table-row';
+      const best = formatSprintBest(key);
+      row.innerHTML = `
+        <span class="level-row-main">
+          <span class="level-row-name">${label}</span>
+          <span class="level-row-desc">${desc}</span>
+        </span>
+        <span class="level-row-stars sprint-best-chip">⚡ ${best}</span>
+      `;
+      row.addEventListener('click', () => {
+        playSound('tap');
+        popup.classList.add('hidden');
+        startSprint(key);
+      });
+      list.appendChild(row);
+    };
+
+    addRow('all', 'All tables', '×2 through ×12 · 20 questions');
+    SPRINT_TABLES.forEach(t => addRow(t, `Times table ×${t}`, `12 questions, just the ${t}s`));
+
+    popup.classList.remove('hidden');
+  }
+
+  function startSprint(tableKey) {
+    const key = tableKey == null ? 'all' : tableKey;
     gameState.injectedQuestions = null;
     gameState.activeOp = 'multiply';
-    gameState.selectedTables = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-    gameState.questionCount = 20;
+    gameState.sprintTable = key;
+    if (key === 'all') {
+      gameState.selectedTables = [...SPRINT_TABLES];
+      gameState.questionCount = 20;
+    } else {
+      gameState.selectedTables = [Number(key)];
+      gameState.questionCount = 12;
+    }
     gameState.gameMode = 'adventure';
     gameState.missionKey = 'sprint';
     launchGame();
   }
 
-  function recordSprint(time) {
-    const prevBest = profile.sprintBest;
+  function recordSprint(time, tableKey) {
+    const key = tableKey == null ? 'all' : tableKey;
+    if (!profile.sprintBests) profile.sprintBests = {};
+    const prevBest = sprintBestFor(key);
     if (!prevBest || time < prevBest) {
-      profile.sprintBest = time;
+      profile.sprintBests[key] = time;
+      if (key === 'all') profile.sprintBest = time;
       saveProfile();
-      return { isRecord: true, prevBest, best: time };
+      return { isRecord: true, prevBest, best: time, table: key };
     }
-    return { isRecord: false, best: prevBest };
+    return { isRecord: false, best: prevBest, table: key };
+  }
+
+  // --- Tricky Facts: short mission biased to this player's weakest facts ---
+  function startTrickyFacts() {
+    const questions = (typeof Mastery !== 'undefined' && Mastery.buildTrickyMission)
+      ? Mastery.buildTrickyMission(10)
+      : [];
+    if (!questions.length) {
+      alert('🎯 Play a few times-table missions first — then Cosmo can pick your trickiest facts!');
+      return;
+    }
+    gameState.injectedQuestions = questions;
+    gameState.activeOp = 'multiply';
+    gameState.selectedTables = [...SPRINT_TABLES];
+    gameState.questionCount = questions.length;
+    gameState.gameMode = 'adventure';
+    gameState.missionKey = 'tricky';
+    launchGame();
+  }
+
+  // --- Family goals (shared across all player profiles on this device) ---
+  // Not namespaced: kids contribute together. Never a leaderboard.
+  const FAMILY_GOAL_KEY = 'space_quest_family_goal_v1';
+
+  function familyGoalLabel(goal) {
+    if (!goal) return '';
+    if (goal.kind === 'dailies') {
+      return `Complete ${goal.target} daily missions as a family`;
+    }
+    return `Earn ${goal.target} stars together this week`;
+  }
+
+  function defaultFamilyGoal() {
+    return {
+      kind: 'stars',
+      target: 20,
+      period: 'week',
+      weekId: weekId(),
+      progress: 0,
+      pendingCelebrate: false,
+    };
+  }
+
+  function loadFamilyGoal() {
+    let goal = defaultFamilyGoal();
+    try {
+      const raw = localStorage.getItem(FAMILY_GOAL_KEY);
+      if (raw) goal = { ...goal, ...JSON.parse(raw) };
+    } catch (e) { /* keep default */ }
+    if (goal.period === 'week' && goal.weekId !== weekId()) {
+      goal.weekId = weekId();
+      goal.progress = 0;
+      goal.pendingCelebrate = false;
+      saveFamilyGoal(goal);
+    }
+    if (!goal.kind) goal.kind = 'stars';
+    if (!goal.target) goal.target = goal.kind === 'dailies' ? 5 : 20;
+    if (typeof goal.progress !== 'number' || goal.progress < 0) goal.progress = 0;
+    return goal;
+  }
+
+  function saveFamilyGoal(goal) {
+    localStorage.setItem(FAMILY_GOAL_KEY, JSON.stringify(goal));
+  }
+
+  function familyCrewNames() {
+    const names = Players.list().map(p => p.name || 'Explorer');
+    if (names.length === 0) return 'our crew';
+    if (names.length === 1) return names[0];
+    if (names.length === 2) return `${names[0]} & ${names[1]}`;
+    return names.slice(0, -1).join(', ') + ' & ' + names[names.length - 1];
+  }
+
+  function contributeFamilyGoal(starsCount, dailyBonus) {
+    const goal = loadFamilyGoal();
+    let add = 0;
+    if (goal.kind === 'dailies') {
+      if (dailyBonus) add = 1;
+    } else if (starsCount > 0) {
+      add = starsCount;
+    }
+    if (add <= 0) return { justCompleted: false, goal };
+
+    const before = goal.progress;
+    const alreadyDone = before >= goal.target;
+    goal.progress = before + add;
+    const justCompleted = !alreadyDone && goal.progress >= goal.target;
+    if (justCompleted) goal.pendingCelebrate = true;
+    saveFamilyGoal(goal);
+    return { justCompleted, goal };
+  }
+
+  function setFamilyGoal(kind, target) {
+    const k = kind === 'dailies' ? 'dailies' : 'stars';
+    const t = Math.max(1, Math.min(99, parseInt(target, 10) || (k === 'dailies' ? 5 : 20)));
+    const goal = {
+      kind: k,
+      target: t,
+      period: 'week',
+      weekId: weekId(),
+      progress: 0,
+      pendingCelebrate: false,
+    };
+    saveFamilyGoal(goal);
+    return goal;
+  }
+
+  function resetFamilyGoalProgress() {
+    const goal = loadFamilyGoal();
+    goal.progress = 0;
+    goal.pendingCelebrate = false;
+    goal.weekId = weekId();
+    saveFamilyGoal(goal);
+    return goal;
+  }
+
+  function renderFamilyGoalCard() {
+    const card = document.getElementById('family-goal-card');
+    if (!card) return;
+    const goal = loadFamilyGoal();
+    const pct = Math.min(100, Math.round((goal.progress / goal.target) * 100));
+    const done = goal.progress >= goal.target;
+    const crew = familyCrewNames();
+    const unit = goal.kind === 'dailies' ? 'daily missions' : 'stars';
+    card.classList.toggle('family-goal-done', done);
+    const desc = document.getElementById('family-goal-desc');
+    const fill = document.getElementById('family-goal-fill');
+    const count = document.getElementById('family-goal-count');
+    const title = document.getElementById('family-goal-title');
+    if (title) title.innerText = done ? '🎉 Family Goal Complete!' : '👨‍👩‍👧‍👦 Family Goal';
+    if (desc) {
+      desc.innerText = done
+        ? `Wow! ${crew} did it together — ${familyGoalLabel(goal).toLowerCase()}!`
+        : `${crew} — ${familyGoalLabel(goal)}. No racing, just helping!`;
+    }
+    if (fill) fill.style.width = pct + '%';
+    if (count) count.innerText = `${Math.min(goal.progress, goal.target)} / ${goal.target} ${unit}`;
+
+    if (goal.pendingCelebrate) {
+      setTimeout(() => celebrateFamilyGoal(), 400);
+    }
+  }
+
+  function renderParentFamilyGoal() {
+    const summary = document.getElementById('parent-family-summary');
+    if (!summary) return;
+    const goal = loadFamilyGoal();
+    const done = goal.progress >= goal.target;
+    summary.innerHTML = `
+      <p><strong>${familyGoalLabel(goal)}</strong></p>
+      <p class="parent-hint">Together: ${goal.progress} / ${goal.target}${done ? ' — complete! 🎉' : ''} · resets with the new week</p>
+      <p class="parent-hint">Progress is a family total (not a per-child race). Changing the goal starts this week fresh.</p>
+    `;
+    const kindSel = document.getElementById('family-goal-kind');
+    const targetInput = document.getElementById('family-goal-target');
+    if (kindSel) kindSel.value = goal.kind;
+    if (targetInput) targetInput.value = goal.target;
+  }
+
+  function celebrateFamilyGoal() {
+    const goal = loadFamilyGoal();
+    if (!goal.pendingCelebrate) return;
+    goal.pendingCelebrate = false;
+    saveFamilyGoal(goal);
+    renderFamilyGoalCard();
+
+    const popup = document.getElementById('family-goal-popup');
+    const speech = document.getElementById('family-goal-speech');
+    if (speech) {
+      speech.innerText = `Teamwork! ${familyCrewNames()} reached the family goal — Cosmo is doing a happy orbit! 🪐`;
+    }
+    if (popup) popup.classList.remove('hidden');
+    if (typeof setMascotMood === 'function') setMascotMood('family');
+    if (typeof playSound === 'function') playSound('victory');
+    if (typeof startConfetti === 'function') startConfetti();
   }
 
   function renderStreakCalendar() {
@@ -591,7 +847,14 @@ const Progression = (() => {
     profile.totalMissions += 1;
     saveProfile();
     updateCoinHud();
-    return { coins, dailyBonus, diminished: multiplier < 1 };
+
+    const family = contributeFamilyGoal(starsCount, dailyBonus);
+    return {
+      coins,
+      dailyBonus,
+      diminished: multiplier < 1,
+      familyGoalJustCompleted: family.justCompleted,
+    };
   }
 
   // --- Cosmetics & shop ---
@@ -807,6 +1070,7 @@ const Progression = (() => {
   function showParentDashboard() {
     document.getElementById('parent-gate').classList.add('hidden');
     document.getElementById('parent-dashboard').classList.remove('hidden');
+    renderParentFamilyGoal();
     renderHeatmap();
     renderWeakList();
     renderModeStats();
@@ -1138,7 +1402,51 @@ const Progression = (() => {
     on('btn-setup-back', () => { playSound('tap'); showScreen('screen-galaxy'); });
     on('btn-shop', () => { playSound('tap'); renderShop(); showScreen('screen-shop'); });
     on('btn-shop-back', () => { playSound('tap'); showScreen('screen-galaxy'); });
-    on('btn-sprint', () => { playSound('tap'); startSprint(); });
+    on('btn-sprint', () => { playSound('tap'); openSprintPicker(); });
+    on('galaxy-sprint', () => { playSound('tap'); openSprintPicker(); });
+    on('btn-close-sprint', () => {
+      playSound('tap');
+      document.getElementById('sprint-popup').classList.add('hidden');
+    });
+    on('btn-tricky-facts', () => { playSound('tap'); startTrickyFacts(); });
+    on('btn-tricky-facts-setup', () => { playSound('tap'); startTrickyFacts(); });
+    on('btn-family-goal-ok', () => {
+      playSound('tap');
+      const popup = document.getElementById('family-goal-popup');
+      if (popup) popup.classList.add('hidden');
+      if (typeof stopConfetti === 'function') stopConfetti();
+    });
+    on('btn-family-goal-save', () => {
+      playSound('tap');
+      const kind = (document.getElementById('family-goal-kind') || {}).value;
+      const target = (document.getElementById('family-goal-target') || {}).value;
+      setFamilyGoal(kind, target);
+      renderParentFamilyGoal();
+      const ok = document.getElementById('family-goal-saved');
+      if (ok) {
+        ok.classList.remove('hidden');
+        setTimeout(() => ok.classList.add('hidden'), 2000);
+      }
+    });
+    on('btn-family-goal-reset', () => {
+      playSound('tap');
+      if (confirm('Reset this week\'s family goal progress? The kids start together from zero — no one is compared.')) {
+        resetFamilyGoalProgress();
+        renderParentFamilyGoal();
+      }
+    });
+    document.querySelectorAll('.family-goal-preset').forEach(btn => {
+      btn.addEventListener('click', () => {
+        playSound('tap');
+        setFamilyGoal(btn.dataset.kind, btn.dataset.target);
+        renderParentFamilyGoal();
+        const ok = document.getElementById('family-goal-saved');
+        if (ok) {
+          ok.classList.remove('hidden');
+          setTimeout(() => ok.classList.add('hidden'), 2000);
+        }
+      });
+    });
     on('btn-pokedex', () => { playSound('tap'); renderPokedex(); showScreen('screen-pokedex'); });
     on('btn-pokedex-back', () => { playSound('tap'); showScreen('screen-galaxy'); });
     on('btn-squishies', () => { playSound('tap'); renderSquishies(); showScreen('screen-squishies'); });
@@ -1218,5 +1526,5 @@ const Progression = (() => {
     }
   }
 
-  return { init, renderGalaxy, completeMission, applyCosmetics, keyFromState, getName, getJingle, setEqStyle, recordSprint, updateCoinHud, getStats, renderSquishies };
+  return { init, renderGalaxy, completeMission, applyCosmetics, keyFromState, getName, getJingle, setEqStyle, recordSprint, updateCoinHud, getStats, renderSquishies, startTrickyFacts, celebrateFamilyGoal };
 })();

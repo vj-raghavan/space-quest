@@ -132,12 +132,24 @@
         <button class="btn btn-primary btn-glow" id="btn-daily">Start! 🚀</button>
       </div>
 
+      <div class="family-goal-card glass-panel" id="family-goal-card">
+        <div class="family-goal-info">
+          <h2 id="family-goal-title">👨‍👩‍👧‍👦 Family Goal</h2>
+          <p id="family-goal-desc">Earn 20 stars together this week — everyone helps, nobody races!</p>
+          <div class="family-goal-bar" aria-hidden="true">
+            <div class="family-goal-fill" id="family-goal-fill"></div>
+          </div>
+          <p class="family-goal-count" id="family-goal-count">0 / 20 stars</p>
+        </div>
+      </div>
+
       <div class="planets-grid" id="planets-grid">
         <!-- Planet cards rendered by progression.js -->
       </div>
 
       <div class="galaxy-actions">
         <button class="btn btn-secondary" id="btn-sprint">⚡ Lightning Round</button>
+        <button class="btn btn-secondary" id="btn-tricky-facts">🎯 Tricky Facts</button>
         <button class="btn btn-secondary" id="btn-pokedex">📕 Pokédex</button>
         <button class="btn btn-secondary" id="btn-squishies">🧸 Squishies</button>
         <button class="btn btn-secondary" id="btn-custom-mission">🛠️ Custom Mission</button>
@@ -193,6 +205,8 @@
             <button id="btn-select-all" class="text-link-btn">Select All</button>
             <button id="btn-clear-all" class="text-link-btn">Clear All</button>
           </div>
+          <button class="btn btn-secondary" id="btn-tricky-facts-setup" style="margin-top:12px;">🎯 Practice Tricky Facts</button>
+          <p class="subtitle" style="margin-top:8px;font-size:0.85rem;">A short mission of your weakest × and ÷ facts.</p>
         </div>
 
         <!-- Digit Level Selector for Addition/Subtraction -->
@@ -948,6 +962,27 @@
         </div>
 
         <div id="parent-dashboard" class="hidden">
+          <h3>👨‍👩‍👧‍👦 Family Goal</h3>
+          <p class="parent-hint">A shared weekly target both kids contribute to. Totals only — never a per-child race or leaderboard.</p>
+          <div id="parent-family-summary"></div>
+          <div class="family-goal-presets">
+            <button class="btn btn-secondary family-goal-preset" data-kind="stars" data-target="20">20 stars this week</button>
+            <button class="btn btn-secondary family-goal-preset" data-kind="stars" data-target="40">40 stars this week</button>
+            <button class="btn btn-secondary family-goal-preset" data-kind="dailies" data-target="5">5 daily missions</button>
+          </div>
+          <div class="family-goal-custom">
+            <label for="family-goal-kind">Type</label>
+            <select id="family-goal-kind">
+              <option value="stars">Stars together</option>
+              <option value="dailies">Daily missions together</option>
+            </select>
+            <label for="family-goal-target">Target</label>
+            <input id="family-goal-target" type="number" min="1" max="99" value="20">
+            <button class="btn btn-primary" id="btn-family-goal-save">Save Goal 💾</button>
+            <button class="btn btn-secondary" id="btn-family-goal-reset">Reset this week</button>
+            <span id="family-goal-saved" class="school-words-saved hidden">Saved! ✅</span>
+          </div>
+
           <h3>✖️ Multiplication Mastery Map</h3>
           <p class="parent-hint">🟩 Mastered · 🟨 Getting there · 🟥 Needs practice · 🟦 Too few attempts · ⬜ Not seen yet</p>
           <div id="parent-heatmap" class="parent-heatmap"></div>
@@ -1054,6 +1089,26 @@
       <h2 class="trivia-title" id="level-popup-title">🪐 Planet Multiplia</h2>
       <div id="level-list" class="level-list"></div>
       <button id="btn-close-levels" class="btn btn-secondary">Close</button>
+    </div>
+  </div>
+
+  <!-- Lightning Round table picker -->
+  <div id="sprint-popup" class="trivia-overlay hidden">
+    <div class="trivia-box glass-panel level-box">
+      <h2 class="trivia-title">⚡ Lightning Round</h2>
+      <p class="trivia-text">Race your own best time — pick a times table! Your records stay private to this explorer.</p>
+      <div id="sprint-table-list" class="level-list"></div>
+      <button id="btn-close-sprint" class="btn btn-secondary">Close</button>
+    </div>
+  </div>
+
+  <!-- Family goal celebration -->
+  <div id="family-goal-popup" class="trivia-overlay hidden">
+    <div class="trivia-box glass-panel">
+      <div class="mascot-avatar-results mascot-svg" id="mascot-family" data-mascot></div>
+      <h2 class="trivia-title">🎉 Family Goal Complete!</h2>
+      <p id="family-goal-speech" class="trivia-text">Teamwork! You did it together — Cosmo is doing a happy orbit! 🪐</p>
+      <button id="btn-family-goal-ok" class="btn btn-primary">We did it! 🌟</button>
     </div>
   </div>
 
