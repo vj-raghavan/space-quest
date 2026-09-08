@@ -17,7 +17,8 @@ const Players = (() => {
     'space_quest_pokedex_v1',
     'space_quest_squishies_v1',
     'space_quest_school_words_v1',
-    'space_quest_reading_words_v1'
+    'space_quest_reading_words_v1',
+    'space_quest_dressup_v1'
   ];
 
   let registry = null;

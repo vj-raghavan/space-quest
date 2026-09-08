@@ -34,7 +34,8 @@ Load order in `index.html` **matters** (globals, no modules):
 | `pokemon.js` | Full Gen-1 dataset (151), `Pokedex` collection module, question builders (count/identity/type/evolution/battle). Sprites hotlinked from PokeAPI CDN (`raw.githubusercontent.com/PokeAPI/sprites/...`; official artwork for questions, 96px sprites for grids/counting). |
 | `squishies.js` | `Squishies` collection module: a reward layer of cute inline-SVG collectibles unlocked by earning badges / hitting milestones (total stars, missions, streak, Pokémon caught). `SQUISHIES` data + `svg(id,{locked})` art + `checkUnlocks(ctx)`. Collect them all to unlock the secret legendary Goldie. |
 | `story.js` | Word-problem + estimation question builders. |
-| `progression.js` | `Progression` module: planet/level config (`PLANETS`), stars, coins + anti-farm, shop (rockets/trails/jingles/themes/pet accessories/Poké Packs), daily mission + streak + Puzzle of the Day, space pet, Lightning Round records, player picker & profile editor UI, parent dashboard, galaxy rendering. |
+| `progression.js` | `Progression` module: planet/level config (`PLANETS`), stars, coins + anti-farm, shop (rockets/trails/jingles/themes/pet accessories/Poké Packs), daily mission + streak + Puzzle of the Day, space pet, Lightning Round records, player picker & profile editor UI, parent dashboard, galaxy rendering. `awardMiniCoins(gameId, base)` pays a tiny arcade treat with the same daily replay curve (`minigame:<id>`). |
+| `minigames.js` | Mini Games arcade: hub registry `GAMES`, star-gated unlocks (threshold on `Progression.getStats().totalStars`, never spent), Cosmo Dress-Up look in `localStorage`, silly tap games. Loads **after** `progression.js`, **before** `app.js`. `MiniGames.init()` from bootstrap; `MiniGames.stop()` from `showScreen` when leaving play. |
 | `app.js` | **Loads last.** Game engine: `gameState`, setup screen, question generation dispatch, the four submit paths, rematch, teaching moments, timers, scoring, badges, results, audio synth, bootstrap. |
 | `style.css` | Original stylesheet (mostly untouched). `.screen { display:flex }` — row by default! |
 | `enhancements.css` | Everything added since: galaxy/shop/pokedex/pet/themes/vertical-layout/choice-pad/mascot CSS. |
@@ -56,6 +57,7 @@ Load order in `index.html` **matters** (globals, no modules):
 - `space_quest_mastery_v1` — `{facts:{key:{a,c,t}}, modes:{tag:{a,c,t}}}`.
 - `space_quest_pokedex_v1` — array of caught ids.
 - `space_quest_squishies_v1` — array of unlocked squishy ids.
+- `space_quest_dressup_v1` — Cosmo Dress-Up look `{color, hat, outfit, extra}` (also drawn on the galaxy-map mascot).
 - `space_quest_high_score`, `space_quest_tests_completed`, `space_quest_unlocked_badges`.
 - `space_quest_family_goal_v1` — **not namespaced** (shared by every player on the device): `{kind:'stars'|'dailies', target, period:'week', weekId, progress, pendingCelebrate}`. Cooperative family total only — never per-child scores.
 
@@ -73,6 +75,16 @@ When adding a per-player key, add it to `PLAYER_KEYS` in `players.js` (migration
 8. Update the static stars total in galaxy HTML (`🌟 0 / N stars`, N = totalLevels×3) — `renderGalaxy` recomputes it anyway.
 9. Optional badge: `BADGES` entry + condition in `checkAndUnlockBadges`.
 10. Review-list display branch in `endGame` if the op isn't covered.
+
+## How to add a mini-game
+
+Unlocks use **lifetime planet stars** (`Progression.getStats().totalStars`). Stars are a threshold, not a currency — kids never lose stars by playing.
+
+1. Write a `startFoo(root, hud)` function in `minigames.js`. Call `beginSession()` first so RAF/timers are tracked; use `freeze(sess)` before a finish overlay so spawn loops stop. Big tap targets, short rounds, cheer text, no fail-shame.
+2. Push onto `GAMES`: `{ id, title, emoji, blurb, unlockStars, start: startFoo }`. The hub grid renders this array — stagger `unlockStars` so the first silly game is an early treat (~8) and dress-up sits mid-pack (~22). Max planet stars is currently **180**.
+3. Screens: hub `#screen-minigames`, play `#screen-minigame-play` / `#mg-play-root`. CSS in `enhancements.css` (those screens must stay `flex-direction: column`).
+4. Optional: `Progression.awardMiniCoins(id)` on round complete (anti-farm via `dailyPlays` key `minigame:<id>`).
+5. Do **not** copy copyrighted meme characters. Original space/Cosmo silliness only. Mini-games must not touch `gameState` mission flow.
 
 ## Gotchas (each of these bit us once)
 
@@ -92,8 +104,9 @@ The Poké Galaxy uses Nintendo-owned names and artwork. Acceptable as a private 
 
 ## Current state & known opportunities
 
-Everything described above is **built, browser-verified, and deployed**, plus the three features in this handover update:
+Everything described above is **built**, plus:
 
+- **Mini Games arcade** — galaxy teaser + hub; six original games (Star Stealer, Zoom Zoom Planet Pop, Purple Blip Tap, Cosmo Dress-Up, Wiggle Walk, Moon Boing). Star-gated by total stars earned; dress-up look persists per player and shows on the galaxy Cosmo.
 - **Co-op family goals** — shared weekly target (stars or daily missions) on the galaxy map; Grown-Up Zone can set/reset; Cosmo + confetti celebration when the family finishes together. Storage: `space_quest_family_goal_v1` (not per-player).
 - **Tricky Facts on-demand** — galaxy + custom-setup buttons launch a 10-question mission via `Mastery.buildTrickyMission` / `weightedSample`; rematch + teaching moments; `missionKey: 'tricky'`; **Fact Crusher** badge on a clean 100% run.
 - **Per-table Lightning Round bests** — picker for ×2–×12 plus mixed “all tables”; `profile.sprintBests`; legacy `sprintBest` migrates to `sprintBests.all` only (not copied onto every table).

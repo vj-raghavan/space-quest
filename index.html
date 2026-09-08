@@ -110,6 +110,7 @@
         <button id="btn-edit-name" class="btn-edit-name" title="Change name">✏️</button>
         <button id="btn-switch-player" class="player-chip" title="Switch player">🚀 Switch Player ▾</button>
         <p class="subtitle">Pick a planet and start your mission!</p>
+        <div id="galaxy-cosmo" class="galaxy-cosmo" aria-hidden="true"></div>
         <div class="galaxy-stats-row">
           <div class="galaxy-stat" id="galaxy-streak">🔥 0 day streak</div>
           <div class="galaxy-stat" id="galaxy-coins">⭐ 0 coins</div>
@@ -147,7 +148,16 @@
         <!-- Planet cards rendered by progression.js -->
       </div>
 
+      <div class="minigames-teaser glass-panel" id="minigames-teaser">
+        <div class="daily-info">
+          <h2>🎮 Mini Games</h2>
+          <p>Silly fun Cosmo unlocked with stars — dress-up, popping planets, and more!</p>
+        </div>
+        <button class="btn btn-primary btn-glow" id="btn-minigames-play" type="button">Play! 🎉</button>
+      </div>
+
       <div class="galaxy-actions">
+        <button class="btn btn-primary" id="btn-minigames">🎮 Mini Games</button>
         <button class="btn btn-secondary" id="btn-sprint">⚡ Lightning Round</button>
         <button class="btn btn-secondary" id="btn-tricky-facts">🎯 Tricky Facts</button>
         <button class="btn btn-secondary" id="btn-pokedex">📕 Pokédex</button>
@@ -948,6 +958,30 @@
       </div>
     </section>
 
+    <!-- 4d. MINI GAMES HUB -->
+    <section id="screen-minigames" class="screen hidden">
+      <div class="glass-panel minigames-panel">
+        <h1 class="glow-text">🎮 Mini Games</h1>
+        <p class="subtitle">Earn stars on planets to unlock silly games. Stars stay yours — nothing is spent!</p>
+        <div id="minigames-stars" class="pokedex-count">🌟 0 stars earned</div>
+        <p id="minigames-lock-msg" class="mg-lock-msg hidden"></p>
+        <div id="minigame-grid" class="minigame-grid"></div>
+        <div class="parent-actions">
+          <button class="btn btn-primary" id="btn-minigames-back">Back to Galaxy 🗺️</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4e. MINI GAME PLAY -->
+    <section id="screen-minigame-play" class="screen hidden">
+      <div class="mg-play-bar glass-panel">
+        <button class="btn btn-secondary" id="btn-minigame-exit" type="button">← Mini Games</button>
+        <h2 id="mg-play-title">Mini Game</h2>
+        <div id="mg-play-hud" class="mg-play-hud"></div>
+      </div>
+      <div id="mg-play-root" class="mg-play-root"></div>
+    </section>
+
     <!-- 5. GROWN-UP (PARENT) ZONE SCREEN -->
     <section id="screen-parent" class="screen hidden">
       <div class="glass-panel parent-panel">
@@ -1172,6 +1206,7 @@
   <script src="spelling.js"></script>
   <script src="reading.js"></script>
   <script src="progression.js"></script>
+  <script src="minigames.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
