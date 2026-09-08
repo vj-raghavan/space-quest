@@ -643,6 +643,7 @@ const MiniGames = (() => {
     hud.innerHTML = '<span>👗 Mix & match!</span>';
     let look = loadDress();
     const stars = totalStars();
+    let lastCheer = 'You look cosmic!';
 
     function locked(item) {
       return stars < item.unlockStars;
@@ -650,7 +651,7 @@ const MiniGames = (() => {
 
     function paint() {
       root.innerHTML = `
-        <div class="mg-cheer" id="mg-cheer">You look cosmic!</div>
+        <div class="mg-cheer" id="mg-cheer">${lastCheer}</div>
         <div class="dress-layout">
           ${dressedStage('dressup', look, 'play-size')}
           <div class="dress-cols">
@@ -675,7 +676,7 @@ const MiniGames = (() => {
           look[slot] = btn.dataset.dress;
           saveDress(look);
           playSound('tap');
-          cheer('Ooh fancy!');
+          lastCheer = 'Ooh fancy!';
           paint();
           renderGalaxyCosmo();
         });
