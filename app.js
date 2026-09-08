@@ -1047,6 +1047,10 @@ function showScreen(screenId) {
     if (triviaPopup) triviaPopup.classList.add('hidden');
     if (typeof Progression !== 'undefined') Progression.renderGalaxy();
   }
+
+  if (screenId !== 'screen-minigame-play' && typeof MiniGames !== 'undefined') {
+    MiniGames.stop();
+  }
 }
 
 // Generate the randomized arithmetic pool
@@ -3829,4 +3833,5 @@ document.addEventListener('DOMContentLoaded', () => {
   drawClockDial();
 
   if (typeof Progression !== 'undefined') Progression.init();
+  if (typeof MiniGames !== 'undefined') MiniGames.init();
 });

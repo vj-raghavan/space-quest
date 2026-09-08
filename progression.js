@@ -339,6 +339,10 @@ const Progression = (() => {
     }
     renderStreakCalendar();
 
+    if (typeof MiniGames !== 'undefined' && MiniGames.renderGalaxyCosmo) {
+      MiniGames.renderGalaxyCosmo();
+    }
+
     // Planet cards
     const grid = document.getElementById('planets-grid');
     if (!grid) return;
@@ -855,6 +859,23 @@ const Progression = (() => {
       diminished: multiplier < 1,
       familyGoalJustCompleted: family.justCompleted,
     };
+  }
+
+  // Tiny coin treats for finishing a mini-game round. Same daily replay
+  // curve as missions, keyed per game, so arcade farming stays a trickle.
+  function awardMiniCoins(gameId, base = 3) {
+    const playKey = 'minigame:' + gameId;
+    const multiplier = replayMultiplier(playKey);
+    const coins = Math.max(0, Math.round(base * multiplier));
+    profile.dailyPlays.counts[playKey] = (profile.dailyPlays.counts[playKey] || 0) + 1;
+    if (coins > 0) {
+      profile.coins += coins;
+      saveProfile();
+      updateCoinHud();
+    } else {
+      saveProfile();
+    }
+    return { coins, diminished: multiplier < 1 };
   }
 
   // --- Cosmetics & shop ---
@@ -1526,5 +1547,5 @@ const Progression = (() => {
     }
   }
 
-  return { init, renderGalaxy, completeMission, applyCosmetics, keyFromState, getName, getJingle, setEqStyle, recordSprint, updateCoinHud, getStats, renderSquishies, startTrickyFacts, celebrateFamilyGoal };
+  return { init, renderGalaxy, completeMission, awardMiniCoins, applyCosmetics, keyFromState, getName, getJingle, setEqStyle, recordSprint, updateCoinHud, getStats, renderSquishies, startTrickyFacts, celebrateFamilyGoal };
 })();

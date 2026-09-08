@@ -1,7 +1,8 @@
 /* --- Space Quest Enhancements: Galaxy Map, Shop, Daily Missions, Parent Zone, Teaching --- */
 
 /* .screen is display:flex (row); the new screens stack vertically */
-#screen-galaxy, #screen-shop, #screen-parent, #screen-squishies {
+#screen-galaxy, #screen-shop, #screen-parent, #screen-squishies,
+#screen-minigames, #screen-minigame-play {
   flex-direction: column;
 }
 
@@ -1666,4 +1667,260 @@ body.theme-candy .nebula {
 #choice-pad .choice-key .reading-pic-choice,
 #choice-pad .choice-key .reading-letter {
   pointer-events: none;
+}
+
+/* --- Mini Games arcade --- */
+.minigames-teaser {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 8px 0 16px;
+  border: 1px solid rgba(181, 107, 255, 0.45);
+  box-shadow: 0 0 22px rgba(181, 107, 255, 0.2);
+  cursor: pointer;
+  flex-wrap: wrap;
+  text-align: left;
+}
+.minigames-teaser h2 { color: #e2b6ff; margin-bottom: 4px; }
+.minigames-teaser p { opacity: 0.85; margin: 0; }
+
+.galaxy-cosmo {
+  display: flex;
+  justify-content: center;
+  margin: 8px 0 4px;
+}
+.cosmo-dress-stage {
+  position: relative;
+  width: 168px;
+  height: 168px;
+  margin: 0 auto;
+}
+.cosmo-dress-stage.galaxy-size { width: 92px; height: 92px; }
+.cosmo-dress-stage.play-size { width: 200px; height: 200px; }
+.cosmo-dress-stage.tiny-size { width: 72px; height: 72px; }
+.cosmo-dress-body, .cosmo-dress-body .mascot-svg, .cosmo-dress-body svg {
+  width: 100%;
+  height: 100%;
+}
+.cosmo-overlays { position: absolute; inset: 0; pointer-events: none; }
+.dress-piece {
+  position: absolute;
+  font-size: 1.6rem;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.35));
+}
+.galaxy-size .dress-piece { font-size: 1rem; }
+.play-size .dress-piece { font-size: 2rem; }
+.tiny-size .dress-piece { font-size: 0.85rem; }
+.dress-hat { top: -6%; left: 50%; transform: translateX(-50%); }
+.dress-hat-prop { animation: whirly 1.1s linear infinite; }
+.dress-outfit { bottom: 8%; right: 4%; }
+.dress-outfit-cape { right: auto; left: -4%; bottom: 18%; }
+.dress-outfit-tutu { bottom: 6%; left: 50%; right: auto; transform: translateX(-50%); }
+.dress-extra { top: 38%; left: 50%; transform: translateX(-50%); }
+.dress-extra-sparkle { top: 8%; left: auto; right: 0; }
+@keyframes whirly { to { transform: translateX(-50%) rotate(360deg); } }
+
+.minigames-panel {
+  width: 100%;
+  max-width: 880px;
+  margin: 0 auto;
+  text-align: center;
+}
+.minigame-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 14px;
+  margin: 16px 0;
+}
+.minigame-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 12px;
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+  border: 1px solid var(--panel-border);
+  min-height: 170px;
+}
+.minigame-card.locked { opacity: 0.72; }
+.minigame-emoji { font-size: 2.4rem; }
+.minigame-title { font-weight: 700; }
+.minigame-blurb { font-size: 0.85rem; opacity: 0.8; }
+.minigame-req {
+  margin-top: auto;
+  font-weight: 700;
+  color: var(--gold-yellow);
+}
+.mg-lock-msg {
+  color: #ffd25a;
+  font-weight: 600;
+}
+
+#screen-minigame-play {
+  align-items: stretch;
+  width: 100%;
+}
+.mg-play-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.mg-play-bar h2 { flex: 1; margin: 0; font-size: 1.2rem; }
+.mg-play-hud { display: flex; gap: 12px; font-weight: 700; color: var(--gold-yellow); }
+.mg-play-root { width: 100%; }
+.mg-hint { text-align: center; opacity: 0.9; margin: 4px 0 8px; }
+.mg-swatch-purple {
+  display: inline-block;
+  background: #b56bff;
+  color: #1a1028;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+.mg-cheer {
+  text-align: center;
+  min-height: 1.6em;
+  font-weight: 800;
+  font-size: 1.15rem;
+  color: #9df5d6;
+}
+.mg-cheer.pop { animation: cosmoHop 0.45s ease; }
+.mg-arena {
+  position: relative;
+  overflow: hidden;
+  height: min(62vh, 520px);
+  border-radius: 18px;
+  background: radial-gradient(circle at 50% 20%, rgba(80, 120, 200, 0.25), rgba(8, 10, 20, 0.5));
+  border: 1px solid var(--panel-border);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.mg-fall, .mg-planet, .mg-blip, .mg-moon, .mg-steer {
+  font-family: inherit;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.mg-fall {
+  position: absolute;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  font-size: 2rem;
+  background: rgba(255,255,255,0.12);
+  transform: translateX(-50%);
+}
+.mg-fall.goo { background: rgba(80, 200, 90, 0.25); }
+.mg-planet {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.12);
+  box-shadow: 0 0 12px rgba(255, 210, 90, 0.3);
+}
+.mg-planet.popped { transform: scale(1.3); opacity: 0; transition: 0.18s; }
+.mg-arena-blips {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding: 16px;
+}
+.mg-blip {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  font-size: 2.6rem;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+}
+.mg-blip.blip-yes { transform: scale(1.12); }
+.mg-blip.blip-no { opacity: 0.45; }
+.mg-wiggle .mg-wiggle-cosmo {
+  position: absolute;
+  bottom: 14%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 2;
+}
+.mg-wiggle canvas { width: 100%; height: 100%; display: block; }
+.mg-steer {
+  position: absolute;
+  bottom: 8px;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  font-size: 2rem;
+  background: rgba(255,255,255,0.16);
+  z-index: 3;
+}
+.mg-steer-l { left: 10px; }
+.mg-steer-r { right: 10px; }
+.mg-boing .mg-hoop {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  transform: translate(-50%, -50%);
+  font-size: 5.5rem;
+  opacity: 0.9;
+  pointer-events: none;
+}
+.mg-moon {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  font-size: 2.8rem;
+  background: rgba(255,255,255,0.1);
+  z-index: 2;
+}
+.mg-finish {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+  text-align: center;
+  padding: 18px 20px;
+  max-width: 90%;
+}
+.mg-play-root { position: relative; }
+.mg-finish-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
+.dress-layout { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; align-items: flex-start; }
+.dress-cols { flex: 1; min-width: 240px; }
+.dress-section h3 { margin: 8px 0 6px; font-size: 1rem; }
+.dress-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 8px;
+}
+.dress-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px;
+  border-radius: 14px;
+  border: 1px solid var(--panel-border);
+  background: rgba(255,255,255,0.08);
+  color: inherit;
+  font-family: inherit;
+  font-size: 0.78rem;
+  min-height: 72px;
+}
+.dress-item.on { outline: 2px solid #9df5d6; }
+.dress-item.locked { opacity: 0.65; }
+.dress-emoji { font-size: 1.5rem; }
+
+@media (max-width: 600px) {
+  .minigame-grid { grid-template-columns: repeat(2, 1fr); }
+  .mg-blip { width: 84px; height: 84px; }
+  .mg-steer { width: 74px; height: 74px; }
 }
