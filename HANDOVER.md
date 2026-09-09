@@ -106,7 +106,7 @@ The Poké Galaxy uses Nintendo-owned names and artwork. Acceptable as a private 
 
 Everything described above is **built**, plus:
 
-- **Mini Games arcade** — galaxy teaser + hub; six original games (Star Stealer, Zoom Zoom Planet Pop, Purple Blip Tap, Cosmo Dress-Up, Wiggle Walk, Moon Boing). Star-gated by total stars earned; dress-up look persists per player and shows on the galaxy Cosmo.
+- **Mini Games arcade** — galaxy teaser + hub; six original games (Steal a Pet, Zoom Zoom Planet Pop, Purple Blip Tap, Cosmo Dress-Up, Wiggle Walk, Moon Boing). Steal a Pet is a catch-the-space-pets rush (internal id still `star-stealer` so `minigame:star-stealer` daily-play keys stay valid). Star-gated by total stars earned; dress-up look persists per player and shows on the galaxy Cosmo.
 - **Co-op family goals** — shared weekly target (stars or daily missions) on the galaxy map; Grown-Up Zone can set/reset; Cosmo + confetti celebration when the family finishes together. Storage: `space_quest_family_goal_v1` (not per-player).
 - **Tricky Facts on-demand** — galaxy + custom-setup buttons launch a 10-question mission via `Mastery.buildTrickyMission` / `weightedSample`; rematch + teaching moments; `missionKey: 'tricky'`; **Fact Crusher** badge on a clean 100% run.
 - **Per-table Lightning Round bests** — picker for ×2–×12 plus mixed “all tables”; `profile.sprintBests`; legacy `sprintBest` migrates to `sprintBests.all` only (not copied onto every table).
