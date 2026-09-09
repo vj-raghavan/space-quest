@@ -81,7 +81,7 @@ When adding a per-player key, add it to `PLAYER_KEYS` in `players.js` (migration
 Unlocks use **lifetime planet stars** (`Progression.getStats().totalStars`). Stars are a threshold, not a currency — kids never lose stars by playing.
 
 1. Write a `startFoo(root, hud)` function in `minigames.js`. Call `beginSession()` first so RAF/timers are tracked; use `freeze(sess)` before a finish overlay so spawn loops stop. Big tap targets, short rounds, cheer text, no fail-shame.
-2. Push onto `GAMES`: `{ id, title, emoji, blurb, unlockStars, start: startFoo }`. The hub grid renders this array — stagger `unlockStars` so the first silly game is an early treat (~8) and dress-up sits mid-pack (~22). Max planet stars is currently **180**.
+2. Push onto `GAMES`: `{ id, title, emoji, blurb, unlockStars, start: startFoo }`. The hub grid renders this array — stagger `unlockStars` so the first silly game is an early treat (~8) and dress-up sits mid-pack (~22). Max planet stars is currently **303** (101 levels × 3). Keep the first games early; later games and dress-up extras can sit higher so there is still something to unlock after ~100 stars. Never raise a threshold a kid has already crossed.
 3. Screens: hub `#screen-minigames`, play `#screen-minigame-play` / `#mg-play-root`. CSS in `enhancements.css` (those screens must stay `flex-direction: column`).
 4. Optional: `Progression.awardMiniCoins(id)` on round complete (anti-farm via `dailyPlays` key `minigame:<id>`).
 5. Do **not** copy copyrighted meme characters. Original space/Cosmo silliness only. Mini-games must not touch `gameState` mission flow.
@@ -110,6 +110,7 @@ Everything described above is **built**, plus:
 - **Co-op family goals** — shared weekly target (stars or daily missions) on the galaxy map; Grown-Up Zone can set/reset; Cosmo + confetti celebration when the family finishes together. Storage: `space_quest_family_goal_v1` (not per-player).
 - **Tricky Facts on-demand** — galaxy + custom-setup buttons launch a 10-question mission via `Mastery.buildTrickyMission` / `weightedSample`; rematch + teaching moments; `missionKey: 'tricky'`; **Fact Crusher** badge on a clean 100% run.
 - **Per-table Lightning Round bests** — picker for ×2–×12 plus mixed “all tables”; `profile.sprintBests`; legacy `sprintBest` migrates to `sprintBests.all` only (not copied onto every table).
+- **Deeper planet levels (Sep 2026)** — galaxy max is **303** stars (101 levels × 3). Extra challenge tiers were appended on existing ops (Classic/Super Hero/Ultra tables, remainders, carry/borrow, elapsed time, equivalent fractions, eighths/dotted/rests, two-step puzzles, Sound Twins spelling, ending-sound reading, Poké Mix, etc.). Existing mission keys are unchanged, so stars already earned stay put. Space pet grows past Stardragon (Starwing / Nebula Wyrm). Mini-game early unlocks stay early; Wiggle Walk / Moon Boing sit at 55 / 90 so a ~100-star kid keeps them.
 
 Not built / discussed ideas:
 - Teacher/classroom features (dashboard exists for parents only, behind a multiplication gate).

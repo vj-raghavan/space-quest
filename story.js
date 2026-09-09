@@ -66,6 +66,61 @@ function buildOneStepStory() {
 }
 
 function buildStoryQuestion(level) {
+  if (level === 'threestep') {
+    const n = storyRand(3, 8), k = storyRand(4, 9), eat = storyRand(2, 10), gift = storyRand(2, 8);
+    return {
+      op: 'story',
+      html: `<div class="prompt-line"><b>${n}</b> boxes hold <b>${k}</b> crystals each. Cosmo eats <b>${eat}</b>, then gives <b>${gift}</b> away.<br>How many crystals are left?</div>`,
+      promptText: `${n} × ${k} − ${eat} − ${gift}`,
+      expected: n * k - eat - gift,
+      teach: `Step 1: ${n} × ${k} = ${n * k}. Step 2: ${n * k} − ${eat} = ${n * k - eat}. Step 3: − ${gift} = ${n * k - eat - gift} 🚀`
+    };
+  }
+
+  if (level === 'elapsed') {
+    const startH = storyRand(1, 8);
+    const hours = storyRand(1, 3);
+    const mins = [0, 15, 30, 45][storyRand(0, 3)];
+    if (Math.random() < 0.5) {
+      return {
+        op: 'story',
+        html: `<div class="prompt-line">Gymnastics starts at <b>${startH}:00</b> and lasts <b>${hours}</b> hour${hours === 1 ? '' : 's'}.<br>What hour does it finish? (just the hour number)</div>`,
+        promptText: `${startH}:00 + ${hours} hours`,
+        expected: startH + hours,
+        teach: `${startH} + ${hours} = ${startH + hours} o'clock ⏰`
+      };
+    }
+    return {
+      op: 'story',
+      html: `<div class="prompt-line">Piano practice is <b>${hours}</b> hour${hours === 1 ? '' : 's'} and <b>${mins}</b> minutes.<br>How many <b>minutes</b> is that?</div>`,
+      promptText: `${hours}h ${mins}m`,
+      expected: hours * 60 + mins,
+      teach: `${hours} × 60 = ${hours * 60}, plus ${mins} = ${hours * 60 + mins} minutes ⏰`
+    };
+  }
+
+  if (level === 'bigger') {
+    const a = storyRand(120, 450), b = storyRand(80, 300);
+    if (Math.random() < 0.5) {
+      return {
+        op: 'story',
+        html: `<div class="prompt-line">A space station has <b>${a}</b> crew and <b>${b}</b> more arrive.<br>How many crew altogether?</div>`,
+        promptText: `${a} + ${b}`,
+        expected: a + b,
+        teach: `${a} + ${b} = ${a + b} 🚀`
+      };
+    }
+    const start = Math.max(a, b) + 50;
+    const take = Math.min(a, b);
+    return {
+      op: 'story',
+      html: `<div class="prompt-line">The cargo bay held <b>${start}</b> crates. Robots moved <b>${take}</b> of them.<br>How many crates remain?</div>`,
+      promptText: `${start} − ${take}`,
+      expected: start - take,
+      teach: `${start} − ${take} = ${start - take} 🚀`
+    };
+  }
+
   if (level === 'money') {
     const variant = storyPick(['change1', 'change5', 'centsTotal', 'dollarTotal']);
     if (variant === 'change1') {
@@ -203,6 +258,63 @@ function buildEstimateQuestion(level) {
       promptText: `round ${n} to nearest 100`,
       expected: rounded,
       teach: `Look at the tens: ${tens}${n % 10} — ${n % 100 >= 50 ? '50 or more rounds UP' : 'less than 50 rounds DOWN'} → ${rounded} 🎯`
+    };
+  }
+
+  if (level === 'round1000') {
+    let n = storyRand(1100, 8900);
+    if (n % 1000 === 0) n += storyRand(50, 400);
+    const rounded = Math.round(n / 1000) * 1000;
+    const hundreds = Math.floor((n % 1000) / 100);
+    return {
+      op: 'estimate',
+      html: `<div class="prompt-line">Round <b>${n}</b> to the nearest <b>1000</b>.</div>`,
+      promptText: `round ${n} to nearest 1000`,
+      expected: rounded,
+      teach: `Look at the hundreds: ${hundreds} — ${n % 1000 >= 500 ? '500 or more rounds UP' : 'less than 500 rounds DOWN'} → ${rounded} 🎯`
+    };
+  }
+
+  if (level === 'approxmul') {
+    const a = storyRand(12, 48), b = storyRand(3, 9);
+    const ra = Math.round(a / 10) * 10;
+    const correct = ra * b;
+    const wrongs = new Set();
+    while (wrongs.size < 2) {
+      const w = correct + storyPick([-b * 10, b * 10, 20, -20]);
+      if (w > 0 && w !== correct) wrongs.add(w);
+    }
+    const opts = [correct, ...wrongs];
+    for (let i = opts.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [opts[i], opts[j]] = [opts[j], opts[i]];
+    }
+    return {
+      op: 'estimate',
+      html: `<div class="prompt-line"><b>About</b> how much is <b>${a} × ${b}</b>?</div><div class="prompt-line story-which-op">Round the bigger number first!</div>`,
+      choices: opts.map(n => ({ html: `about ${n}`, value: String(n) })),
+      promptText: `about ${a} × ${b}`,
+      expected: String(correct),
+      teach: `${a} is about ${ra}, so ${ra} × ${b} = ${correct} 🎯`
+    };
+  }
+
+  if (level === 'closer') {
+    const target = [50, 100, 200, 500][storyRand(0, 3)];
+    let a = target + storyRand(-18, -4);
+    let b = target + storyRand(4, 18);
+    if (Math.abs(a - target) === Math.abs(b - target)) b += 3;
+    const closer = Math.abs(a - target) < Math.abs(b - target) ? a : b;
+    return {
+      op: 'estimate',
+      html: `<div class="prompt-line">Which number is closer to <b>${target}</b>?</div>`,
+      choices: [
+        { html: String(a), value: String(a) },
+        { html: String(b), value: String(b) }
+      ],
+      promptText: `closer to ${target}`,
+      expected: String(closer),
+      teach: `${a} is ${Math.abs(a - target)} away, ${b} is ${Math.abs(b - target)} away → ${closer} is closer to ${target} 🎯`
     };
   }
 

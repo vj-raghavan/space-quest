@@ -280,6 +280,11 @@ function buildPokemonQuestion(level) {
   if (level === 'battle') return buildPokeBattleQuestion();
   if (level === 'type') return buildPokeTypeQuestion();
   if (level === 'evolution') return buildPokeEvolutionQuestion();
+  if (level === 'prevo') return buildPokePrevoQuestion();
+  if (level === 'mix') {
+    const kinds = ['count', 'identity', 'type', 'evolution', 'battle', 'prevo'];
+    return buildPokemonQuestion(kinds[Math.floor(Math.random() * kinds.length)]);
+  }
   return buildPokeIdentityQuestion();
 }
 
@@ -371,6 +376,24 @@ function buildPokeEvolutionQuestion() {
     expected: correctName,
     catchId: correct.id,
     teach: `${p.name} evolves into ${correctName}! ✨`
+  };
+}
+
+function buildPokePrevoQuestion() {
+  const evolvers = POKEDEX.filter(p => p.evolvesTo && p.evolvesTo.length > 0);
+  const p = pokePickRandom(evolvers);
+  const evolvedName = pokePickRandom(p.evolvesTo);
+  const evolved = pokeByName(evolvedName) || p;
+  const wrong = pokePickOthers(POKEDEX, 2, x => x.name === p.name || x.name === evolvedName);
+  const choices = pokeShuffle([p, ...wrong]).map(x => ({ html: pokeImageChoiceHTML(x), value: x.name }));
+  return {
+    op: 'pokemon',
+    html: `<div class="prompt-line">Who does <b>${evolvedName}</b> evolve from?</div><img class="poke-img" src="${pokeSpriteURL(evolved.id)}" alt="${evolvedName}">`,
+    choices: choices,
+    promptText: `${evolvedName} evolved from…`,
+    expected: p.name,
+    catchId: p.id,
+    teach: `${p.name} evolves into ${evolvedName}! ✨`
   };
 }
 

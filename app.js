@@ -20,29 +20,31 @@ const gameState = {
   audioCtx: null,
   totalTestsCompleted: 0,
   activeOp: 'multiply', // 'multiply', 'divide', 'add', 'subtract', 'sequence', 'compare', 'clock', 'fraction'
-  digitLevel: 'single', // 'single', 'double', 'triple', 'mixed'
-  clockLevel: 'hour',    // 'hour', 'quarter', 'five-min', 'precision'
+  digitLevel: 'single', // 'single', 'double', 'triple', 'mixed', 'carry', 'chain', 'missing'
+  clockLevel: 'hour',    // 'hour', 'quarter', 'five-min', 'precision', 'elapsed', 'later', 'duration'
+  multiplyLevel: null,
+  divideLevel: null,
   activeClockInput: 'hour', // 'hour' or 'minute'
   clockInputHour: '',
   clockInputMinute: '',
   clockHourAutoAdvanceTimer: null,
-  fractionLevel: 'identify', // 'identify', 'simplify', 'add', 'subtract'
+  fractionLevel: 'identify', // 'identify', 'simplify', 'add', 'subtract', 'equivalent', 'ofn', 'compare'
   activeFractionInput: 'numerator', // 'numerator' or 'denominator'
   fractionInputNumerator: '',
   fractionInputDenominator: '',
   fractionAutoAdvanceTimer: null,
-  sequenceLevel: 'easy',     // 'easy', 'medium', 'hard'
-  compareLevel: 'easy',      // 'easy', 'medium', 'hard'
+  sequenceLevel: 'easy',     // 'easy', 'medium', 'hard', 'skip', 'cosmic'
+  compareLevel: 'easy',      // 'easy', 'medium', 'hard', 'big', 'mix'
   compareCurrentChoice: '',  // '<', '=', '>'
-  musicLevel: 'notes',       // 'notes', 'beats', 'measures'
-  anglesLevel: 'turns',      // 'turns', 'combine', 'convert'
-  puzzleLevel: 'mystery',    // 'mystery', 'emoji', 'magic'
-  pokemonLevel: 'count',     // 'count', 'identity', 'type', 'evolution', 'battle'
-  storyLevel: 'onestep',     // 'onestep', 'twostep', 'money'
-  estimateLevel: 'round10',  // 'round10', 'round100', 'approx'
-  spellingLevel: 'spot',     // 'spot', 'spot2', 'build', 'build2'
+  musicLevel: 'notes',       // 'notes', 'beats', 'measures', 'eighths', 'dotted', 'rests'
+  anglesLevel: 'turns',      // 'turns', 'combine', 'convert', 'leftover', 'complement'
+  puzzleLevel: 'mystery',    // 'mystery', 'emoji', 'magic', 'secret', 'balance'
+  pokemonLevel: 'count',     // 'count', 'identity', 'type', 'evolution', 'battle', 'prevo', 'mix'
+  storyLevel: 'onestep',     // 'onestep', 'twostep', 'money', 'threestep', 'elapsed', 'bigger'
+  estimateLevel: 'round10',  // 'round10', 'round100', 'approx', 'round1000', 'approxmul', 'closer'
+  spellingLevel: 'spot',     // 'spot', 'spot2', 'build', 'build2', 'homo', 'challenge'
   spellingBuilt: '',         // letters tapped so far in Word Builder mode
-  readingLevel: 'letters',   // 'letters', 'soundmatch', 'rhyme', 'sight', 'cvc', 'myreading'
+  readingLevel: 'letters',   // 'letters', 'soundmatch', 'rhyme', 'sight', 'cvc', 'endsound', 'blend', 'myreading'
   eqStyle: 'horizontal',     // 'horizontal' (6 + 3 = ?) or 'vertical' (stacked, like on paper)
   missionKey: null,          // 'planet:level' when launched from the galaxy map, 'daily', 'sprint', 'tricky', or null
   injectedQuestions: null,   // pre-built question list (daily / tricky missions)
@@ -167,6 +169,10 @@ function usesVerticalLayout(qOp) {
   return gameState.eqStyle === 'vertical' && VERTICAL_OPS.includes(qOp);
 }
 
+function isPromptNumericQuestion(q) {
+  return !!(q && q.html && !q.choices && !q.spellWord);
+}
+
 // Render a question in stacked written form: numbers right-aligned in a
 // column for + − ×, and the long-division bracket for ÷.
 function renderVerticalEquation(q, qOp) {
@@ -277,6 +283,38 @@ function buildPuzzleQuestion(level, rand = Math.random) {
       promptText: `emoji code: ${fb}`,
       expected: b,
       teach: `${fa} + ${fa} = ${2 * a}, so ${fa} = ${a}. Then ${a + b} − ${a} = ${b} 🧩`
+    };
+  }
+
+  if (level === 'secret') {
+    const a = Math.floor(rand() * 8) + 3;
+    const b = Math.floor(rand() * 8) + 2;
+    const c = Math.floor(rand() * 9) + 2;
+    const total = a * b + c;
+    return {
+      op: 'puzzle',
+      html: `<div class="prompt-line">Find the mystery number!</div><div class="prompt-line puzzle-eq"><span class="mystery-box">?</span> × ${b} + ${c} = ${total}</div>`,
+      promptText: `? × ${b} + ${c} = ${total}`,
+      expected: a,
+      teach: `First undo add: ${total} − ${c} = ${a * b}. Then ${a * b} ÷ ${b} = ${a} 🧩`
+    };
+  }
+
+  if (level === 'balance') {
+    const shuffledFruits = [...FRUITS].sort(() => rand() - 0.5);
+    const [fa, fb, fc] = shuffledFruits;
+    const a = Math.floor(rand() * 6) + 2;
+    const b = Math.floor(rand() * 6) + 2;
+    const c = Math.floor(rand() * 6) + 1;
+    return {
+      op: 'puzzle',
+      html: `<div class="prompt-line emoji-eq">${fa} + ${fa} = ${2 * a}</div>
+             <div class="prompt-line emoji-eq">${fa} + ${fb} = ${a + b}</div>
+             <div class="prompt-line emoji-eq">${fb} + ${fc} = ${b + c}</div>
+             <div class="prompt-line emoji-eq">${fa} + ${fb} + ${fc} = <b>?</b></div>`,
+      promptText: `emoji ${fa}+${fb}+${fc}`,
+      expected: a + b + c,
+      teach: `${fa} = ${a}, ${fb} = ${b}, ${fc} = ${c} → ${a} + ${b} + ${c} = ${a + b + c} 🧩`
     };
   }
 
@@ -579,18 +617,19 @@ function initSetupUI() {
   const grid = document.querySelector('.tables-selector-grid');
   grid.innerHTML = '';
   
-  // Tables 1 to 15
-  for (let i = 1; i <= 15; i++) {
+  // Tables 1 to 18 (Ultra Mix uses 16–18)
+  for (let i = 1; i <= 18; i++) {
     const btn = document.createElement('button');
     btn.className = 'table-btn';
     btn.innerText = i;
     btn.dataset.table = i;
     
-    btn.addEventListener('click', () => {
-      playSound('tap');
-      btn.classList.toggle('selected');
-      updateSelectedTablesList();
-    });
+      btn.addEventListener('click', () => {
+        playSound('tap');
+        btn.classList.toggle('selected');
+        gameState.divideLevel = null;
+        updateSelectedTablesList();
+      });
     grid.appendChild(btn);
   }
 
@@ -666,11 +705,13 @@ function initSetupUI() {
         if (multiHeading) multiHeading.innerText = "🎯 Choose Tables to Test";
         subtitle.innerText = "Select your multiplication tables and prepare your rocket!";
         setMascotExpression('setup', "Hi! I'm Cosmo! Select your tables, and let's go explore the math galaxy together! 💫");
+        document.querySelectorAll('.preset-btn[data-preset="remainders"]').forEach(b => b.classList.add('hidden'));
       } else if (op === 'divide') {
         configMulti.classList.remove('hidden');
         if (multiHeading) multiHeading.innerText = "🎯 Choose Divisors to Test";
         subtitle.innerText = "Select your division divisors and prepare your rocket!";
         setMascotExpression('setup', "Division Zone! Divide numbers to split our rocket thruster cells! ➗");
+        document.querySelectorAll('.preset-btn[data-preset="remainders"]').forEach(b => b.classList.remove('hidden'));
       } else if (op === 'add') {
         configDigits.classList.remove('hidden');
         subtitle.innerText = "Select your addition number size and prepare your rocket!";
@@ -1001,7 +1042,17 @@ function applyPreset(preset) {
   else if (preset === 'medium') targets = [3, 4, 6, 11];
   else if (preset === 'hard') targets = [7, 8, 9, 12];
   else if (preset === 'cosmic') targets = [13, 14, 15];
+  else if (preset === 'mix12') targets = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
   else if (preset === 'all') targets = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+  else if (preset === 'ultra') targets = [16, 17, 18];
+  else if (preset === 'remainders') {
+    gameState.divideLevel = 'remainders';
+    gameState.selectedTables = [];
+    buttons.forEach(btn => btn.classList.remove('selected'));
+    return;
+  }
+
+  gameState.divideLevel = null;
 
   buttons.forEach(btn => {
     const val = parseInt(btn.dataset.table);
@@ -1064,7 +1115,24 @@ function generateQuestions() {
 
   const pool = [];
 
-  if (gameState.activeOp === 'multiply') {
+  if (gameState.activeOp === 'divide' && gameState.divideLevel === 'remainders') {
+    const targetCount = Math.max(50, gameState.questionCount);
+    for (let i = 0; i < targetCount; i++) {
+      const d = Math.floor(Math.random() * 8) + 2; // 2-9
+      const quot = Math.floor(Math.random() * 11) + 2; // 2-12
+      const rem = Math.floor(Math.random() * (d - 1)) + 1; // 1 .. d-1
+      const n = quot * d + rem;
+      pool.push({
+        op: 'divide',
+        html: `<div class="prompt-line"><b>${n}</b> ÷ <b>${d}</b> leaves a remainder of <b>?</b></div>`,
+        promptText: `remainder of ${n} ÷ ${d}`,
+        expected: rem,
+        num1: n,
+        num2: d,
+        teach: `${d} × ${quot} = ${quot * d}, leftover ${n} − ${quot * d} = ${rem} 🛰️`
+      });
+    }
+  } else if (gameState.activeOp === 'multiply') {
     if (gameState.selectedTables.length === 0) {
       gameState.selectedTables = [2];
     }
@@ -1102,31 +1170,74 @@ function generateQuestions() {
   } else if (gameState.activeOp === 'clock') {
     const level = gameState.clockLevel;
     const targetCount = Math.max(50, gameState.questionCount);
+    const padMin = m => (m < 10 ? `0${m}` : `${m}`);
+    const clockStr = (h, m) => `${h}:${padMin(m)}`;
 
     for (let i = 0; i < targetCount; i++) {
-      let hour = Math.floor(Math.random() * 12) + 1; // 1 to 12
-      let min = 0;
-
-      if (level === 'hour') {
-        min = 0;
-      } else if (level === 'quarter') {
-        const choices = [0, 15, 30, 45];
-        min = choices[Math.floor(Math.random() * choices.length)];
-      } else if (level === 'five-min') {
-        min = Math.floor(Math.random() * 12) * 5; // 0, 5, 10 ... 55
-      } else { // precision
-        min = Math.floor(Math.random() * 60); // 0 to 59
+      if (level === 'elapsed') {
+        const hour = Math.floor(Math.random() * 12) + 1;
+        const startMin = Math.floor(Math.random() * 10) * 5; // 0-45
+        const span = (Math.floor(Math.random() * 8) + 1) * 5; // 5-40
+        const endMinRaw = startMin + span;
+        const endHour = ((hour - 1 + Math.floor(endMinRaw / 60)) % 12) + 1;
+        const endMin = endMinRaw % 60;
+        pool.push({
+          op: 'clock',
+          html: `<div class="prompt-line">From <b>${clockStr(hour, startMin)}</b> to <b>${clockStr(endHour, endMin)}</b>, how many <b>minutes</b>?</div>`,
+          promptText: `${clockStr(hour, startMin)} to ${clockStr(endHour, endMin)}`,
+          expected: span,
+          teach: `Count the minutes: ${span} minutes pass ⏰`
+        });
+      } else if (level === 'later') {
+        const hour = Math.floor(Math.random() * 12) + 1;
+        const startMin = Math.floor(Math.random() * 10) * 5;
+        const add = (Math.floor(Math.random() * 6) + 1) * 5; // 5-30
+        const endMinRaw = startMin + add;
+        const endHour = ((hour - 1 + Math.floor(endMinRaw / 60)) % 12) + 1;
+        const endMin = endMinRaw % 60;
+        const correct = clockStr(endHour, endMin);
+        const w1 = clockStr(hour, startMin);
+        const w2 = clockStr(endHour, (endMin + 15) % 60);
+        const w3 = clockStr(((hour) % 12) + 1, endMin);
+        const wrongs = [w1, w2, w3].filter(w => w !== correct).slice(0, 2);
+        const opts = [correct, ...wrongs];
+        for (let j = opts.length - 1; j > 0; j--) {
+          const k = Math.floor(Math.random() * (j + 1));
+          [opts[j], opts[k]] = [opts[k], opts[j]];
+        }
+        pool.push({
+          op: 'clock',
+          html: `<div class="prompt-line">It is <b>${clockStr(hour, startMin)}</b>. What time will it be in <b>${add} minutes</b>?</div>`,
+          choices: opts.map(t => ({ html: t, value: t })),
+          promptText: `${clockStr(hour, startMin)} + ${add} min`,
+          expected: correct,
+          teach: `${clockStr(hour, startMin)} + ${add} minutes = ${correct} ⏰`
+        });
+      } else if (level === 'duration') {
+        const hours = Math.floor(Math.random() * 3) + 1; // 1-3
+        const mins = Math.floor(Math.random() * 12) * 5; // 0-55
+        const total = hours * 60 + mins;
+        pool.push({
+          op: 'clock',
+          html: `<div class="prompt-line"><b>${hours}</b> hour${hours === 1 ? '' : 's'} and <b>${mins}</b> minutes = how many <b>minutes</b>?</div>`,
+          promptText: `${hours}h ${mins}m in minutes`,
+          expected: total,
+          teach: `${hours} × 60 = ${hours * 60}, plus ${mins} = ${total} minutes ⏰`
+        });
+      } else {
+        let hour = Math.floor(Math.random() * 12) + 1;
+        let min = 0;
+        if (level === 'hour') min = 0;
+        else if (level === 'quarter') min = [0, 15, 30, 45][Math.floor(Math.random() * 4)];
+        else if (level === 'five-min') min = Math.floor(Math.random() * 12) * 5;
+        else min = Math.floor(Math.random() * 60);
+        pool.push({
+          num1: hour,
+          num2: min,
+          expected: `${hour}:${padMin(min)}`,
+          op: 'clock'
+        });
       }
-
-      const minStr = min < 10 ? `0${min}` : `${min}`;
-      const expectedStr = `${hour}:${minStr}`;
-
-      pool.push({
-        num1: hour,
-        num2: min,
-        expected: expectedStr,
-        op: 'clock'
-      });
     }
   } else if (gameState.activeOp === 'fraction') {
     const level = gameState.fractionLevel;
@@ -1173,6 +1284,56 @@ function generateQuestions() {
         const g = gcd(sumN, d);
         const rn = sumN / g, rd = d / g;
         pool.push({ num1: n1, num2: n2, expected: `${rn}/${rd}`, op: 'fraction', subtype: 'add', denom: d });
+      }
+    } else if (level === 'equivalent') {
+      const bases = [[1,2],[1,3],[2,3],[1,4],[3,4],[1,5],[2,5],[1,6],[1,8],[3,8]];
+      for (let i = 0; i < targetCount; i++) {
+        const [bn, bd] = bases[i % bases.length];
+        const factor = Math.floor(Math.random() * 3) + 2; // 2-4
+        pool.push({
+          num1: bn, num2: bd, expected: `${bn * factor}/${bd * factor}`,
+          op: 'fraction', subtype: 'equivalent', givenDen: bd * factor
+        });
+      }
+    } else if (level === 'ofn') {
+      const facts = [
+        [1, 2], [1, 3], [1, 4], [1, 5], [2, 3], [3, 4]
+      ];
+      for (let i = 0; i < targetCount; i++) {
+        const [n, d] = facts[Math.floor(Math.random() * facts.length)];
+        const groups = Math.floor(Math.random() * 8) + 2; // 2-9
+        const whole = d * groups;
+        const ans = n * groups;
+        pool.push({
+          op: 'fraction',
+          html: `<div class="prompt-line">What is <b>${n}/${d}</b> of <b>${whole}</b>?</div>`,
+          promptText: `${n}/${d} of ${whole}`,
+          expected: ans,
+          teach: `${whole} ÷ ${d} = ${groups}, then ${groups} × ${n} = ${ans} 🍕`
+        });
+      }
+    } else if (level === 'compare') {
+      for (let i = 0; i < targetCount; i++) {
+        const dens = [2, 3, 4, 5, 6, 8];
+        const d1 = dens[Math.floor(Math.random() * dens.length)];
+        let d2 = dens[Math.floor(Math.random() * dens.length)];
+        const n1 = Math.floor(Math.random() * (d1 - 1)) + 1;
+        let n2 = Math.floor(Math.random() * (d2 - 1)) + 1;
+        if (n1 / d1 === n2 / d2) n2 = Math.max(1, n2 - 1);
+        const a = `${n1}/${d1}`, b = `${n2}/${d2}`;
+        const bigger = (n1 / d1) > (n2 / d2) ? a : b;
+        const smaller = bigger === a ? b : a;
+        pool.push({
+          op: 'fraction',
+          html: `<div class="prompt-line">Which fraction is <b>bigger</b>?</div>`,
+          choices: [
+            { html: a, value: a },
+            { html: b, value: b }
+          ],
+          promptText: `${a} vs ${b}`,
+          expected: bigger,
+          teach: `${bigger} is more than ${smaller} — think of pizza slices! 🍕`
+        });
       }
     } else { // subtract
       const denoms = [2, 3, 4, 5, 6, 8];
@@ -1247,6 +1408,34 @@ function generateQuestions() {
             expected: terms[4]
           });
         }
+      } else if (level === 'skip') {
+        const steps = [5, 10, 25, 100];
+        const step = steps[Math.floor(Math.random() * steps.length)];
+        const start = step * (Math.floor(Math.random() * 4) + 1);
+        const terms = [];
+        for (let j = 0; j < 5; j++) terms.push(start + j * step);
+        pool.push({
+          op: 'sequence',
+          subtype: 'skip',
+          terms: terms.slice(0, 4),
+          expected: terms[4]
+        });
+      } else if (level === 'cosmic') {
+        const start = Math.floor(Math.random() * 8) + 2;
+        const step0 = Math.floor(Math.random() * 3) + 1;
+        const grow = Math.floor(Math.random() * 2) + 1;
+        const terms = [start];
+        let step = step0;
+        for (let j = 1; j < 5; j++) {
+          terms.push(terms[j - 1] + step);
+          step += grow;
+        }
+        pool.push({
+          op: 'sequence',
+          subtype: 'cosmic',
+          terms: terms.slice(0, 4),
+          expected: terms[4]
+        });
       } else {
         const isFib = Math.random() > 0.5;
         if (isFib) {
@@ -1331,7 +1520,7 @@ function generateQuestions() {
           lhsVal = numVal; lhsText = `${numVal}`;
           rhsVal = fVal; rhsText = text;
         }
-      } else {
+      } else if (level === 'hard') {
         const generateFormula = () => {
           const opType = ['add', 'subtract', 'multiply'][Math.floor(Math.random() * 3)];
           if (opType === 'add') {
@@ -1360,6 +1549,34 @@ function generateQuestions() {
           }
         }
 
+        lhsVal = f1.val; lhsText = f1.text;
+        rhsVal = f2.val; rhsText = f2.text;
+      } else if (level === 'big') {
+        lhsVal = Math.floor(Math.random() * 800) + 100;
+        if (Math.random() < 0.2) rhsVal = lhsVal;
+        else rhsVal = Math.floor(Math.random() * 800) + 100;
+        lhsText = `${lhsVal}`;
+        rhsText = `${rhsVal}`;
+      } else {
+        const generateMix = () => {
+          const kind = ['add', 'subtract', 'multiply', 'divide'][Math.floor(Math.random() * 4)];
+          if (kind === 'add') {
+            const a = Math.floor(Math.random() * 40) + 10, b = Math.floor(Math.random() * 40) + 10;
+            return { val: a + b, text: `${a} + ${b}` };
+          }
+          if (kind === 'subtract') {
+            const a = Math.floor(Math.random() * 50) + 30, b = Math.floor(Math.random() * 20) + 5;
+            return { val: a - b, text: `${a} − ${b}` };
+          }
+          if (kind === 'multiply') {
+            const a = Math.floor(Math.random() * 8) + 3, b = Math.floor(Math.random() * 8) + 3;
+            return { val: a * b, text: `${a} × ${b}` };
+          }
+          const b = Math.floor(Math.random() * 8) + 2, q = Math.floor(Math.random() * 8) + 2;
+          return { val: q, text: `${b * q} ÷ ${b}` };
+        };
+        const f1 = generateMix();
+        const f2 = generateMix();
         lhsVal = f1.val; lhsText = f1.text;
         rhsVal = f2.val; rhsText = f2.text;
       }
@@ -1425,7 +1642,7 @@ function generateQuestions() {
           expected: total,
           teach: `${chosen.map(t => NOTE_INFO[t].beats).join(' + ')} = ${total} beats 🎶`
         });
-      } else { // measures
+      } else if (level === 'measures') {
         const beatsPerMeasure = [2, 3, 4][Math.floor(Math.random() * 3)];
         const measures = Math.floor(Math.random() * 5) + 2; // 2-6
         pool.push({
@@ -1435,6 +1652,62 @@ function generateQuestions() {
           expected: measures * beatsPerMeasure,
           teach: `${beatsPerMeasure} beats per measure × ${measures} measures = ${measures * beatsPerMeasure} 🎵`
         });
+      } else if (level === 'eighths') {
+        // Even number of eighths so the total stays a whole number of beats
+        const nEighths = [2, 4, 6][Math.floor(Math.random() * 3)];
+        const extras = ['quarter', 'half'];
+        const extra = extras[Math.floor(Math.random() * extras.length)];
+        const chosen = Array(nEighths).fill('eighth');
+        chosen.push(extra);
+        const total = nEighths * 0.5 + NOTE_INFO[extra].beats;
+        pool.push({
+          op: 'music',
+          html: `<div class="prompt-line">How many <b>beats</b> in total?</div><div class="prompt-notes">${chosen.map(t => noteSVG(t)).join('<span class="prompt-plus">+</span>')}</div>`,
+          promptText: chosen.map(t => NOTE_INFO[t].label).join(' + '),
+          expected: total,
+          teach: `${nEighths} eighths = ${nEighths * 0.5} beats, plus ${NOTE_INFO[extra].beats} = ${total} 🎶`
+        });
+      } else if (level === 'dotted') {
+        const variants = [
+          { html: `A <b>dotted half note</b> is a half note plus half of itself.<br>How many <b>beats</b>?`, expected: 3, teach: 'Half note = 2, plus 1 more = 3 beats 🎵' },
+          { html: `A <b>dotted quarter note</b> is a quarter plus half of itself.<br>How many <b>eighth notes</b> fit in it?`, expected: 3, teach: 'Quarter = 2 eighths, plus 1 eighth = 3 eighths 🎵' },
+          { html: `How many <b>quarter notes</b> equal one <b>dotted half</b>?`, expected: 3, teach: 'Dotted half = 3 beats = 3 quarters 🎵' },
+          { html: `Two <b>dotted half notes</b> = how many <b>beats</b>?`, expected: 6, teach: '3 + 3 = 6 beats 🎵' }
+        ];
+        const v = variants[Math.floor(Math.random() * variants.length)];
+        pool.push({
+          op: 'music',
+          html: `<div class="prompt-line">${v.html}</div>`,
+          promptText: 'dotted notes',
+          expected: v.expected,
+          teach: v.teach
+        });
+      } else { // rests
+        const rests = [
+          { name: 'whole rest', beats: 4 },
+          { name: 'half rest', beats: 2 },
+          { name: 'quarter rest', beats: 1 }
+        ];
+        if (Math.random() < 0.5) {
+          const r = rests[Math.floor(Math.random() * rests.length)];
+          pool.push({
+            op: 'music',
+            html: `<div class="prompt-line">How many <b>silent beats</b> is a <b>${r.name}</b>?</div>`,
+            promptText: `beats in a ${r.name}`,
+            expected: r.beats,
+            teach: 'Rests last as long as their matching notes: quarter rest = 1, half rest = 2, whole rest = 4 🤫'
+          });
+        } else {
+          const r1 = rests[Math.floor(Math.random() * rests.length)];
+          const r2 = rests[Math.floor(Math.random() * rests.length)];
+          pool.push({
+            op: 'music',
+            html: `<div class="prompt-line">A <b>${r1.name}</b> then a <b>${r2.name}</b>. How many silent beats?</div>`,
+            promptText: `${r1.name} + ${r2.name}`,
+            expected: r1.beats + r2.beats,
+            teach: `${r1.beats} + ${r2.beats} = ${r1.beats + r2.beats} silent beats 🤫`
+          });
+        }
       }
     }
   } else if (gameState.activeOp === 'angles') {
@@ -1470,6 +1743,25 @@ function generateQuestions() {
           promptText: moves.map(m => m.name).join(' + '),
           expected: total,
           teach: `${moves.map(m => m.deg + '°').join(' + ')} = ${total}° 🤸`
+        });
+      } else if (level === 'leftover') {
+        const t = TURNS.filter(turn => turn.deg < 360)[Math.floor(Math.random() * 3)];
+        const left = 360 - t.deg;
+        pool.push({
+          op: 'angles',
+          html: `<div class="prompt-line">A gymnast did a <b>${t.name}</b> (${t.deg}°).<br>How many <b>degrees</b> to finish a full twist?</div>`,
+          promptText: `360 − ${t.deg}`,
+          expected: left,
+          teach: `A full twist is 360°. ${360} − ${t.deg} = ${left}° 🤸`
+        });
+      } else if (level === 'complement') {
+        const acute = [10, 20, 30, 45, 60, 70][Math.floor(Math.random() * 6)];
+        pool.push({
+          op: 'angles',
+          html: `<div class="prompt-line">A right angle is <b>90°</b>. One part is <b>${acute}°</b>.<br>How many degrees is the other part?</div>`,
+          promptText: `90 − ${acute}`,
+          expected: 90 - acute,
+          teach: `${acute}° + ${90 - acute}° = 90° 🤸`
         });
       } else { // convert
         const variants = [
@@ -1531,6 +1823,76 @@ function generateQuestions() {
 
     const targetCount = Math.max(50, gameState.questionCount);
     for (let i = 0; i < targetCount; i++) {
+      if (level === 'carry') {
+        if (gameState.activeOp === 'add') {
+          const ones1 = Math.floor(Math.random() * 8) + 2; // 2-9
+          const minOnes2 = 10 - ones1;
+          const ones2 = minOnes2 + Math.floor(Math.random() * (10 - minOnes2)); // ones sum >= 10
+          const n1 = (Math.floor(Math.random() * 8) + 1) * 10 + ones1;
+          const n2 = (Math.floor(Math.random() * 8) + 1) * 10 + ones2;
+          pool.push({ num1: n1, num2: n2, expected: n1 + n2, op: 'add' });
+        } else {
+          const ones1 = Math.floor(Math.random() * 8); // 0-7
+          const ones2 = ones1 + 1 + Math.floor(Math.random() * (9 - ones1)); // bigger ones → borrow
+          const tens1 = Math.floor(Math.random() * 8) + 2;
+          const tens2 = Math.floor(Math.random() * tens1);
+          const n1 = tens1 * 10 + ones1;
+          const n2 = tens2 * 10 + ones2;
+          pool.push({ num1: n1, num2: n2, expected: n1 - n2, op: 'subtract' });
+        }
+        continue;
+      }
+      if (level === 'chain') {
+        if (gameState.activeOp === 'add') {
+          const a = Math.floor(Math.random() * 40) + 10;
+          const b = Math.floor(Math.random() * 40) + 10;
+          const c = Math.floor(Math.random() * 20) + 5;
+          pool.push({
+            op: 'add',
+            html: `<div class="prompt-line"><b>${a}</b> + <b>${b}</b> + <b>${c}</b> = ?</div>`,
+            promptText: `${a} + ${b} + ${c}`,
+            expected: a + b + c,
+            teach: `${a} + ${b} = ${a + b}, then + ${c} = ${a + b + c} ➕`
+          });
+        } else {
+          const a = Math.floor(Math.random() * 40) + 50;
+          const b = Math.floor(Math.random() * 20) + 5;
+          const c = Math.floor(Math.random() * 15) + 3;
+          pool.push({
+            op: 'subtract',
+            html: `<div class="prompt-line"><b>${a}</b> − <b>${b}</b> − <b>${c}</b> = ?</div>`,
+            promptText: `${a} − ${b} − ${c}`,
+            expected: a - b - c,
+            teach: `${a} − ${b} = ${a - b}, then − ${c} = ${a - b - c} ➖`
+          });
+        }
+        continue;
+      }
+      if (level === 'missing') {
+        if (gameState.activeOp === 'add') {
+          const a = Math.floor(Math.random() * 40) + 10;
+          const b = Math.floor(Math.random() * 40) + 10;
+          pool.push({
+            op: 'add',
+            html: `<div class="prompt-line"><b>${a}</b> + <b>?</b> = <b>${a + b}</b></div>`,
+            promptText: `${a} + ? = ${a + b}`,
+            expected: b,
+            teach: `${a + b} − ${a} = ${b} ➕`
+          });
+        } else {
+          const a = Math.floor(Math.random() * 50) + 30;
+          const b = Math.floor(Math.random() * 20) + 5;
+          pool.push({
+            op: 'subtract',
+            html: `<div class="prompt-line"><b>${a}</b> − <b>?</b> = <b>${a - b}</b></div>`,
+            promptText: `${a} − ? = ${a - b}`,
+            expected: b,
+            teach: `${a} − ${a - b} = ${b} ➖`
+          });
+        }
+        continue;
+      }
+
       let n1, n2;
       if (level === 'mixed') {
         const sizes = [[1, 9], [10, 99], [100, 999]];
@@ -1547,7 +1909,6 @@ function generateQuestions() {
       if (gameState.activeOp === 'add') {
         expected = n1 + n2;
       } else {
-        // Subtraction: make sure expected is positive
         if (n1 < n2) {
           [n1, n2] = [n2, n1];
         }
@@ -1565,7 +1926,7 @@ function generateQuestions() {
 
   // Adaptive selection for multiplication/division: facts the player gets
   // wrong or answers slowly are much more likely to be picked.
-  if (gameState.activeOp === 'multiply' || gameState.activeOp === 'divide') {
+  if ((gameState.activeOp === 'multiply' || gameState.activeOp === 'divide') && gameState.divideLevel !== 'remainders') {
     gameState.currentQuestions = Mastery.weightedSample(pool, gameState.questionCount);
     return;
   }
@@ -1669,9 +2030,11 @@ function loadQuestion() {
   const flipBtn = document.getElementById('btn-flip-style');
   if (flipBtn) flipBtn.style.display = VERTICAL_OPS.includes(qOpKind) ? '' : 'none';
 
-  if (gameState.activeOp === 'clock') {
+  if (gameState.activeOp === 'clock' && !q.html && !q.choices) {
     mathCard.classList.add('hidden');
     clockCard.classList.remove('hidden');
+    const fractionCardHide = document.getElementById('fraction-card');
+    if (fractionCardHide) fractionCardHide.classList.add('hidden');
 
     const hourHand = document.getElementById('clock-hour-hand');
     const minHand = document.getElementById('clock-min-hand');
@@ -1707,7 +2070,7 @@ function loadQuestion() {
     document.getElementById('game-question-index').innerText = `${gameState.currentQuestionIndex + 1} / ${gameState.questionCount}`;
 
     setMascotExpression('game', `What time is shown on the space clock? Enter hour and minutes! ⏰`);
-  } else if (gameState.activeOp === 'fraction') {
+  } else if (gameState.activeOp === 'fraction' && !q.html && !q.choices) {
     mathCard.classList.add('hidden');
     clockCard.classList.add('hidden');
     const fractionCard = document.getElementById('fraction-card');
@@ -1749,6 +2112,9 @@ function loadQuestion() {
       if (q.subtype === 'simplify') {
         lhsEl.innerHTML = fracHTML(q.num1, q.num2);
         setMascotExpression('game', `Simplify this fraction to its lowest terms! ✂️`);
+      } else if (q.subtype === 'equivalent') {
+        lhsEl.innerHTML = `${fracHTML(q.num1, q.num2)} <span class="fraction-op-symbol">=</span> ${fracHTML('?', q.givenDen)}`;
+        setMascotExpression('game', `Write a fraction equal to this one — use denominator ${q.givenDen}! 🍕`);
       } else if (q.subtype === 'add') {
         lhsEl.innerHTML = `${fracHTML(q.num1, q.denom)} <span class="fraction-op-symbol">+</span> ${fracHTML(q.num2, q.denom)}`;
         setMascotExpression('game', `Add these fractions together! ➕`);
@@ -1784,7 +2150,7 @@ function loadQuestion() {
 
     document.getElementById('custom-numpad').classList.remove('hidden');
     document.getElementById('comparison-input-pad').classList.add('hidden');
-  } else if ((qOpKind === 'music' || qOpKind === 'angles' || qOpKind === 'puzzle' || qOpKind === 'story' || qOpKind === 'estimate') && !q.choices) {
+  } else if (isPromptNumericQuestion(q)) {
     mathCard.classList.remove('hidden');
     clockCard.classList.add('hidden');
     const fractionCard = document.getElementById('fraction-card');
@@ -1812,9 +2178,14 @@ function loadQuestion() {
       angles: 'Gymnastics math! Spin through the degrees! 🤸',
       puzzle: 'Puzzle time! Use your detective brain to crack the code! 🧩',
       story: 'Read the space story carefully, then work it out! 📖',
-      estimate: 'Round the numbers in your head — no exact math needed! 🎯'
+      estimate: 'Round the numbers in your head — no exact math needed! 🎯',
+      clock: 'Count the minutes carefully — you have this! ⏰',
+      fraction: 'Think pizza slices, then type the number! 🍕',
+      add: 'Find the missing number! ➕',
+      subtract: 'Find the missing number! ➖',
+      divide: 'How many are left over after sharing? 🛰️'
     };
-    setMascotExpression('game', promptSpeech[qOpKind]);
+    setMascotExpression('game', promptSpeech[qOpKind] || 'Type the answer! ✨');
   } else if (q.spellWord) {
     // Word Builder: clue on top, answer slots + scrambled letter tiles below
     mathCard.classList.remove('hidden');
@@ -1888,7 +2259,9 @@ function loadQuestion() {
         identity: "Who's that Pokémon?! Tap the right name! 🔍",
         type: 'Is it fire, water, or something else? Tap the type! 🔥',
         evolution: 'Evolution time! Who does it grow into? Tap the picture! ✨',
-        battle: 'Battle time! Which type wins? ⚔️'
+        battle: 'Battle time! Which type wins? ⚔️',
+        prevo: 'Who did this Pokémon evolve from? Tap the picture! 🔙',
+        mix: 'Poké Mix! Every kind of quiz — tap the answer! ⚡'
       };
       setMascotExpression('game', pokeSpeech[gameState.pokemonLevel] || "Who's that Pokémon?! ⚡");
     } else if (qOpKind === 'story') {
@@ -1996,24 +2369,25 @@ function loadQuestion() {
 function getTimeLimit() {
   const op = gameState.activeOp;
   if (op === 'multiply' || op === 'divide') {
+    if (gameState.divideLevel === 'remainders') return 18;
     const hasBigTables = gameState.selectedTables.some(t => t >= 11);
     return hasBigTables ? 12 : 8;
   }
   if (op === 'add' || op === 'subtract') {
-    return { single: 8, double: 15, triple: 25, mixed: 18 }[gameState.digitLevel] || 10;
+    return { single: 8, double: 15, triple: 25, mixed: 18, carry: 18, chain: 22, missing: 16 }[gameState.digitLevel] || 10;
   }
-  if (op === 'sequence') return { easy: 12, medium: 18, hard: 25 }[gameState.sequenceLevel] || 15;
-  if (op === 'compare') return { easy: 8, medium: 12, hard: 15 }[gameState.compareLevel] || 10;
-  if (op === 'clock') return { hour: 10, quarter: 12, 'five-min': 15, precision: 20 }[gameState.clockLevel] || 12;
-  if (op === 'fraction') return { identify: 15, simplify: 20, add: 25, subtract: 25 }[gameState.fractionLevel] || 18;
-  if (op === 'music') return { notes: 12, beats: 15, measures: 18 }[gameState.musicLevel] || 15;
-  if (op === 'angles') return { turns: 10, combine: 15, convert: 15 }[gameState.anglesLevel] || 12;
-  if (op === 'puzzle') return { mystery: 15, emoji: 25, magic: 30 }[gameState.puzzleLevel] || 20;
-  if (op === 'pokemon') return { count: 12, identity: 12, type: 12, evolution: 15, battle: 12 }[gameState.pokemonLevel] || 12;
-  if (op === 'story') return { onestep: 25, twostep: 35, money: 30 }[gameState.storyLevel] || 30;
-  if (op === 'estimate') return { round10: 12, round100: 15, approx: 18 }[gameState.estimateLevel] || 15;
-  if (op === 'spelling') return { spot: 15, spot2: 18, build: 35, build2: 45, school: 40 }[gameState.spellingLevel] || 25;
-  if (op === 'reading') return { letters: 15, soundmatch: 15, rhyme: 15, sight: 15, cvc: 35, myreading: 30 }[gameState.readingLevel] || 20;
+  if (op === 'sequence') return { easy: 12, medium: 18, hard: 25, skip: 16, cosmic: 22 }[gameState.sequenceLevel] || 15;
+  if (op === 'compare') return { easy: 8, medium: 12, hard: 15, big: 12, mix: 18 }[gameState.compareLevel] || 10;
+  if (op === 'clock') return { hour: 10, quarter: 12, 'five-min': 15, precision: 20, elapsed: 20, later: 18, duration: 18 }[gameState.clockLevel] || 12;
+  if (op === 'fraction') return { identify: 15, simplify: 20, add: 25, subtract: 25, equivalent: 22, ofn: 22, compare: 18 }[gameState.fractionLevel] || 18;
+  if (op === 'music') return { notes: 12, beats: 15, measures: 18, eighths: 20, dotted: 18, rests: 15 }[gameState.musicLevel] || 15;
+  if (op === 'angles') return { turns: 10, combine: 15, convert: 15, leftover: 18, complement: 15 }[gameState.anglesLevel] || 12;
+  if (op === 'puzzle') return { mystery: 15, emoji: 25, magic: 30, secret: 28, balance: 32 }[gameState.puzzleLevel] || 20;
+  if (op === 'pokemon') return { count: 12, identity: 12, type: 12, evolution: 15, battle: 12, prevo: 15, mix: 14 }[gameState.pokemonLevel] || 12;
+  if (op === 'story') return { onestep: 25, twostep: 35, money: 30, threestep: 40, elapsed: 30, bigger: 35 }[gameState.storyLevel] || 30;
+  if (op === 'estimate') return { round10: 12, round100: 15, approx: 18, round1000: 16, approxmul: 20, closer: 15 }[gameState.estimateLevel] || 15;
+  if (op === 'spelling') return { spot: 15, spot2: 18, build: 35, build2: 45, homo: 18, challenge: 50, school: 40 }[gameState.spellingLevel] || 25;
+  if (op === 'reading') return { letters: 15, soundmatch: 15, rhyme: 15, sight: 15, cvc: 35, endsound: 15, blend: 15, myreading: 30 }[gameState.readingLevel] || 20;
   return 8;
 }
 
@@ -2057,7 +2431,7 @@ function updateAnswerDisplay() {
     return;
   }
 
-  if (['music', 'angles', 'puzzle', 'story', 'estimate'].includes(qOpKind)) {
+  if (isPromptNumericQuestion(currentQ) || ['music', 'angles', 'puzzle', 'story', 'estimate'].includes(qOpKind)) {
     const display = document.getElementById('prompt-answer-display');
     if (!display) return;
     if (gameState.currentAnswer === '') {
@@ -2238,11 +2612,11 @@ function handleKeyPress(key) {
     }
     return;
   }
-  if (gameState.activeOp === 'fraction') {
+  if (gameState.activeOp === 'fraction' && !(curQ && (curQ.choices || curQ.html))) {
     handleFractionKeyPress(key);
     return;
   }
-  if (gameState.activeOp === 'clock') {
+  if (gameState.activeOp === 'clock' && !(curQ && (curQ.html || curQ.choices))) {
     handleClockKeyPress(key);
     return;
   }
@@ -2350,7 +2724,7 @@ function submitAnswer(isTimeout = false) {
 
     const qSubmitOp = q.op || gameState.activeOp;
     const displayId = qSubmitOp === 'sequence' ? 'sequence-answer-display'
-      : ['music', 'angles', 'puzzle', 'story', 'estimate'].includes(qSubmitOp) ? 'prompt-answer-display'
+      : (isPromptNumericQuestion(q) || ['music', 'angles', 'puzzle', 'story', 'estimate'].includes(qSubmitOp)) ? 'prompt-answer-display'
       : usesVerticalLayout(qSubmitOp) ? 'vertical-answer-display'
       : 'answer-display';
     const display = document.getElementById(displayId);
@@ -3537,13 +3911,17 @@ function endGame() {
         formula.innerText = `Fraction: ${log.num1}/${log.num2}`;
       } else if (log.subtype === 'simplify') {
         formula.innerText = `Simplify: ${log.num1}/${log.num2}`;
+      } else if (log.subtype === 'equivalent') {
+        formula.innerText = `Same slice: ${log.num1}/${log.num2}`;
       } else if (log.subtype === 'add') {
         formula.innerText = `${log.num1}/${log.denom || '?'} + ${log.num2}/${log.denom || '?'}`;
       } else if (log.subtype === 'subtract') {
         formula.innerText = `${log.num1}/${log.denom || '?'} − ${log.num2}/${log.denom || '?'}`;
+      } else {
+        formula.innerText = log.num1 || 'Fraction';
       }
-    } else if (['music', 'angles', 'puzzle', 'pokemon', 'story', 'estimate', 'spelling', 'reading'].includes(log.op)) {
-      formula.innerText = `${log.num1} ${log.op === 'pokemon' ? '→' : '='} ${log.expected}`;
+    } else if (['music', 'angles', 'puzzle', 'pokemon', 'story', 'estimate', 'spelling', 'reading'].includes(log.op) || log.html) {
+      formula.innerText = `${log.num1 || log.promptText || log.op} → ${log.expected}`;
     } else if (log.op === 'sequence') {
       formula.innerText = `Sequence: ${log.num1}, ?`;
     } else if (log.op === 'compare') {
@@ -3712,7 +4090,7 @@ function checkAndUnlockBadges(accuracy, avgSpeed) {
   }
 
   if (gameState.activeOp === 'spelling' && accuracy === 100) {
-    if (gameState.spellingLevel === 'spot' || gameState.spellingLevel === 'spot2') {
+    if (gameState.spellingLevel === 'spot' || gameState.spellingLevel === 'spot2' || gameState.spellingLevel === 'homo') {
       addBadge('spelling_scout');
     } else {
       addBadge('word_wizard');

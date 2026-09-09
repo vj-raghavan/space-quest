@@ -235,10 +235,34 @@ function spellShuffle(arr) {
   return a;
 }
 
+const SPELL_HOMO = [
+  { word: 'there', emoji: '👉', clue: 'Over there — a place', wrongs: ['their', 'they\'re'], hint: '<b>there</b> has HERE hiding in it — a place! 👉' },
+  { word: 'their', emoji: '👥', clue: 'It belongs to them', wrongs: ['there', 'they\'re'], hint: '<b>their</b> has HEIR in it — it belongs to them 👥' },
+  { word: 'too', emoji: '➕', clue: 'Also, or more than you need (too much)', wrongs: ['to', 'two'], hint: '<b>too</b> has an extra O — too much O! ➕' },
+  { word: 'two', emoji: '2️⃣', clue: 'The number after one', wrongs: ['to', 'too'], hint: '<b>two</b> is the number 2 2️⃣' },
+  { word: 'to', emoji: '➡️', clue: 'Going to the park', wrongs: ['too', 'two'], hint: '<b>to</b> is the tiny pointing word ➡️' },
+  { word: 'hear', emoji: '👂', clue: 'What your ears do', wrongs: ['here', 'hair'], hint: 'you HEAR with your EAR 👂' },
+  { word: 'here', emoji: '📍', clue: 'This place, right here', wrongs: ['hear', 'hair'], hint: '<b>here</b> is a place — like there 📍' },
+  { word: 'which', emoji: '❓', clue: 'Which one do you want?', wrongs: ['witch', 'wich'], hint: '<b>which</b> has WH like what/where ❓' },
+  { word: 'witch', emoji: '🧙', clue: 'A storybook magic person with a broom', wrongs: ['which', 'wich'], hint: 'a w<b>itch</b> might <b>itch</b>! 🧙' },
+  { word: 'sun', emoji: '☀️', clue: 'The bright star in the sky', wrongs: ['son', 'sum'], hint: 'the <b>sun</b> shines ☀️' },
+  { word: 'son', emoji: '👦', clue: 'A boy in a family', wrongs: ['sun', 'sum'], hint: '<b>son</b> is a boy 👦' },
+  { word: 'right', emoji: '➡️', clue: 'Not left, or not wrong', wrongs: ['write', 'rite'], hint: '<b>right</b> like the right hand ➡️' },
+  { word: 'write', emoji: '✍️', clue: 'You do this with a pencil', wrongs: ['right', 'rite'], hint: '<b>write</b> has a silent W ✍️' },
+  { word: 'knew', emoji: '💡', clue: 'You already knew the answer', wrongs: ['new', 'gnu'], hint: '<b>knew</b> starts with a silent K 💡' },
+  { word: 'new', emoji: '✨', clue: 'Brand new, not old', wrongs: ['knew', 'gnu'], hint: '<b>new</b> is the opposite of old ✨' },
+  { word: 'sea', emoji: '🌊', clue: 'A huge body of salty water', wrongs: ['see', 'cee'], hint: '<b>sea</b> is water 🌊' },
+  { word: 'see', emoji: '👀', clue: 'What your eyes do', wrongs: ['sea', 'cee'], hint: '<b>see</b> with your eyes 👀' },
+  { word: 'one', emoji: '1️⃣', clue: 'The first counting number', wrongs: ['won', 'wun'], hint: '<b>one</b> is 1 1️⃣' },
+  { word: 'won', emoji: '🏆', clue: 'You won the race!', wrongs: ['one', 'win'], hint: '<b>won</b> is the past of win 🏆' },
+  { word: 'ate', emoji: '🍽️', clue: 'You ate your dinner', wrongs: ['eight', 'at'], hint: '<b>ate</b> is the past of eat 🍽️' },
+  { word: 'eight', emoji: '8️⃣', clue: 'The number after seven', wrongs: ['ate', 'aight'], hint: '<b>eight</b> is 8 — silent GH 8️⃣' }
+];
+
 // Deal words from a shuffled deck so a round repeats as little as possible
 const spellDecks = {};
 function spellNextWord(bankName) {
-  const bank = bankName === 'tricky' ? SPELL_TRICKY : SPELL_EASY;
+  const bank = bankName === 'tricky' ? SPELL_TRICKY : bankName === 'homo' ? SPELL_HOMO : SPELL_EASY;
   if (!spellDecks[bankName] || spellDecks[bankName].length === 0) {
     spellDecks[bankName] = spellShuffle(bank);
   }
@@ -358,11 +382,23 @@ function buildSchoolWordQuestion() {
 
 function buildSpellingQuestion(level) {
   if (level === 'school') return buildSchoolWordQuestion();
-  const tricky = level === 'spot2' || level === 'build2';
+  if (level === 'homo') {
+    const w = spellNextWord('homo');
+    const opts = spellShuffle([w.word, ...w.wrongs]);
+    return {
+      op: 'spelling',
+      html: `<div class="prompt-line">${w.emoji} ${w.clue}</div><div class="prompt-line story-which-op">Which spelling matches the meaning? ${spellSpeakBtn(w.word)}</div>`,
+      choices: opts.map(o => ({ html: o, value: o })),
+      promptText: w.clue,
+      expected: w.word,
+      teach: `The correct spelling is <b>${w.word}</b> — ${w.hint}`
+    };
+  }
+  const tricky = level === 'spot2' || level === 'build2' || level === 'challenge';
   const w = spellNextWord(tricky ? 'tricky' : 'easy');
   const teach = `The correct spelling is <b>${w.word}</b> — ${w.hint}`;
 
-  if (level === 'build' || level === 'build2') {
+  if (level === 'build' || level === 'build2' || level === 'challenge') {
     return {
       op: 'spelling',
       spellWord: w.word.toUpperCase(),
