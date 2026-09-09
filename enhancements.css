@@ -1771,7 +1771,7 @@ body.theme-candy .nebula {
   margin-bottom: 10px;
 }
 .mg-play-bar h2 { flex: 1; margin: 0; font-size: 1.2rem; }
-.mg-play-hud { display: flex; gap: 12px; font-weight: 700; color: var(--gold-yellow); }
+.mg-play-hud { display: flex; gap: 12px; font-weight: 700; color: var(--gold-yellow); flex-wrap: wrap; }
 .mg-play-root { width: 100%; }
 .mg-hint { text-align: center; opacity: 0.9; margin: 4px 0 8px; }
 .mg-swatch-purple {
@@ -1820,7 +1820,7 @@ body.theme-candy .nebula {
 
 /* Steal a Pet — top-down steal / carry / base */
 .mg-arena.mg-steal {
-  height: min(52vh, 460px);
+  height: min(58vh, 520px);
   background:
     radial-gradient(circle at 50% 88%, rgba(60, 201, 160, 0.28), transparent 28%),
     radial-gradient(circle at 16% 18%, rgba(255, 138, 91, 0.22), transparent 22%),
@@ -1971,24 +1971,30 @@ body.theme-candy .nebula {
   pointer-events: none;
 }
 .sap-shop {
+  position: absolute;
+  left: 108px;
+  right: 8px;
+  bottom: 8px;
+  z-index: 9;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  justify-content: center;
-  margin-top: 8px;
+  gap: 6px;
+  justify-content: flex-end;
+  margin-top: 0;
+  pointer-events: auto;
 }
 .sap-up {
-  min-height: 52px;
-  min-width: 120px;
-  flex: 1 1 140px;
-  max-width: 240px;
+  min-height: 48px;
+  min-width: 0;
+  flex: 1 1 90px;
+  max-width: 200px;
   border-radius: 14px;
   border: 1px solid var(--panel-border);
-  background: rgba(255,255,255,0.1);
+  background: rgba(12, 16, 28, 0.82);
   color: inherit;
   font-family: inherit;
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
@@ -1996,7 +2002,8 @@ body.theme-candy .nebula {
 @media (max-width: 600px) {
   .sap-pet { width: 58px; height: 58px; }
   .sap-stick { width: 84px; height: 84px; }
-  .mg-arena.mg-steal { height: min(48vh, 400px); }
+  .mg-arena.mg-steal { height: min(55vh, 440px); }
+  .sap-shop { left: 96px; }
 }
 .mg-planet {
   position: absolute;
@@ -2067,7 +2074,7 @@ body.theme-candy .nebula {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  z-index: 5;
+  z-index: 12;
   text-align: center;
   padding: 18px 20px;
   max-width: 90%;

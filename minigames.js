@@ -246,6 +246,7 @@ const MiniGames = (() => {
     let ended = false;
     let lastTs = t0;
     let stunUntil = 0;
+    let stealGraceUntil = 0;
     const upgrades = { speed: 0, hug: 0, luck: 0 };
     const keys = { u: false, d: false, l: false, r: false };
     const joy = { active: false, x: 0, y: 0 };
@@ -259,15 +260,15 @@ const MiniGames = (() => {
       { id: 3, name: 'Nova Nest', emoji: '💛', x: 86, y: 48, color: '#ffd25a' },
     ];
     const goos = [
-      { x: 50, y: 38 },
-      { x: 36, y: 62 },
-      { x: 64, y: 58 },
+      { x: 42, y: 36 },
+      { x: 32, y: 64 },
+      { x: 68, y: 60 },
     ];
     const guards = rivals.map((b, i) => ({
       rivalId: b.id,
       angle: i * 1.4,
       speed: 1.05 + i * 0.18,
-      orbit: 11 + (i === 3 ? 2 : 0),
+      orbit: 8 + (i === 3 ? 1.5 : 0),
       x: b.x, y: b.y,
     }));
     const worldPets = [];
@@ -276,15 +277,15 @@ const MiniGames = (() => {
 
     function makePet(rarity, rival) {
       const def = pickSpacePet(rarity, upgrades.luck > 0);
-      const inward = rival.x < 50 ? 9 : -9;
+      const inward = rival.x < 50 ? 14 : -14;
       return {
         uid: petUid++,
         def,
         rivalId: rival.id,
         x: rival.x + inward,
-        y: rival.y + 11,
+        y: rival.y + 14,
         homeX: rival.x + inward,
-        homeY: rival.y + 11,
+        homeY: rival.y + 14,
         state: 'parked',
       };
     }
@@ -312,10 +313,8 @@ const MiniGames = (() => {
       <p class="mg-hint">Tap the map or drag the stick. Steal a space pet, then run home to your base!</p>
       <div class="mg-cheer" id="mg-cheer">Go, Cosmo — sneak a pet!</div>
       <div class="mg-arena mg-steal" id="mg-arena"></div>
-      <div class="sap-shop" id="sap-shop"></div>
     `;
     const arena = root.querySelector('#mg-arena');
-    const shop = root.querySelector('#sap-shop');
 
     rivals.forEach(b => {
       const el = document.createElement('div');
@@ -361,6 +360,11 @@ const MiniGames = (() => {
     const petLayer = document.createElement('div');
     petLayer.className = 'sap-pet-layer';
     arena.appendChild(petLayer);
+
+    const shop = document.createElement('div');
+    shop.className = 'sap-shop';
+    shop.id = 'sap-shop';
+    arena.appendChild(shop);
 
     function petButton(pet) {
       const r = PET_RARITY[pet.def.rarity];
@@ -474,7 +478,10 @@ const MiniGames = (() => {
     }
 
     function inHazard() {
-      return guards.some(g => dist(player, g) < 7.2) || goos.some(g => dist(player, g) < 6.5);
+      const gooHit = goos.some(g => dist(player, g) < 6.5);
+      if (gooHit) return true;
+      if (performance.now() < stealGraceUntil) return false;
+      return guards.some(g => dist(player, g) < 5.6);
     }
 
     function tryPickup() {
@@ -485,6 +492,7 @@ const MiniGames = (() => {
       if (!near) return;
       near.state = 'carried';
       carried.push(near);
+      stealGraceUntil = performance.now() + 700;
       playSound('correct');
       cheer(`Got ${near.def.name}! Run home!`);
       renderPets();
@@ -513,9 +521,9 @@ const MiniGames = (() => {
         }
       });
       playSound('correct');
-      cheer(collection.length >= homeMax)
+      cheer(collection.length >= homeMax
         ? 'BASE FULL of space pets! Cosmo is dancing!'
-        : `Safe at base! ${gained.map(p => p.def.emoji).join(' ')}`);
+        : 'Safe at base! ' + gained.map(p => p.def.emoji).join(' '));
       renderPets();
       paintHud();
       paintShop();
@@ -543,15 +551,17 @@ const MiniGames = (() => {
       if (ended) return;
       ended = true;
       freeze(sess);
-      const score = petPower() + coins;
+      const score = petPower();
       const rec = loadStealBest();
       if (score > rec.bestScore) rec.bestScore = score;
       if (collection.length > rec.bestPets) rec.bestPets = collection.length;
       saveStealBest(rec);
+      const n = collection.length;
+      const petWord = n === 1 ? 'pet' : 'pets';
       const names = collection.map(p => p.def.emoji).join(' ') || 'none yet';
       const line = filled
-        ? `Base full! Pet power ${score} · ${names}`
-        : `You brought home ${collection.length} pets · power ${score} (best ${rec.bestScore})`;
+        ? 'Base full! Pet power ' + score + ' · ' + names
+        : 'You brought home ' + n + ' ' + petWord + ' · power ' + score + ' (best ' + rec.bestScore + ')';
       finishOverlay(root, 'steal-a-pet', 'Steal a Pet', line, () => {
         startStealAPet(root, hud);
       });
@@ -607,7 +617,7 @@ const MiniGames = (() => {
     window.addEventListener('pointercancel', joyEnd);
 
     arena.addEventListener('pointerdown', e => {
-      if (e.target.closest('#sap-stick') || e.target.closest('.sap-pet') || e.target.closest('.mg-finish')) return;
+      if (e.target.closest('#sap-stick') || e.target.closest('.sap-pet') || e.target.closest('.sap-shop') || e.target.closest('.mg-finish')) return;
       const box = arena.getBoundingClientRect();
       dest = {
         x: ((e.clientX - box.left) / box.width) * 100,
@@ -680,7 +690,7 @@ const MiniGames = (() => {
         dropSteal(goos.some(g => dist(player, g) < 6.5) ? 'goo' : 'guard');
       }
 
-      if (now - lastIncome >= 900) {
+      if (now - lastIncome >= 2200) {
         lastIncome = now;
         const gain = collection.reduce((s, p) => s + PET_RARITY[p.def.rarity].income, 0);
         if (gain) {
