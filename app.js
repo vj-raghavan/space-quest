@@ -3920,8 +3920,8 @@ function endGame() {
       } else {
         formula.innerText = log.num1 || 'Fraction';
       }
-    } else if (['music', 'angles', 'puzzle', 'pokemon', 'story', 'estimate', 'spelling', 'reading'].includes(log.op) || log.html) {
-      formula.innerText = `${log.num1 || log.promptText || log.op} → ${log.expected}`;
+    } else if (['music', 'angles', 'puzzle', 'pokemon', 'story', 'estimate', 'spelling', 'reading'].includes(log.op) || typeof log.num1 === 'string') {
+      formula.innerText = `${log.num1 || log.op} → ${log.expected}`;
     } else if (log.op === 'sequence') {
       formula.innerText = `Sequence: ${log.num1}, ?`;
     } else if (log.op === 'compare') {
@@ -4031,7 +4031,8 @@ function checkAndUnlockBadges(accuracy, avgSpeed) {
   }
 
   if (gameState.activeOp === 'divide' && accuracy === 100) {
-    const onlyEasy = gameState.selectedTables.every(t => [2, 5, 10].includes(t));
+    const onlyEasy = gameState.selectedTables.length > 0 &&
+      gameState.selectedTables.every(t => [2, 5, 10].includes(t));
     if (onlyEasy) {
       addBadge('division_cadet');
     } else {
