@@ -19,7 +19,7 @@ Multiple kids can share one device: a "Who's playing?" picker at launch keeps ea
 - **Star Coins & Shop** — missions earn coins; spend them on rockets and rocket trails.
 - **Badges, combos, high scores** — in-session rewards on top of long-term progression.
 - **Squishy Collection** — earn cute collectible squishies for unlocking badges and reaching milestones (total stars, missions, streaks, Pokémon caught). Collect them all to reveal the secret legendary Goldie 🧸.
-- **Mini Games** — star-gated arcade (dress-up + silly tap games). Stars unlock games but are never spent.
+- **Mini Games** — star-gated arcade (Steal a Pet, dress-up, silly tap games). Stars unlock games but are never spent.
 - **Grown-Up Zone** — parent dashboard (behind a multiplication gate 😉) with a multiplication mastery heatmap, weakest-facts list, and per-mode stats.
 
 ## Run it

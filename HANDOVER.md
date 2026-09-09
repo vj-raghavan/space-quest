@@ -35,7 +35,7 @@ Load order in `index.html` **matters** (globals, no modules):
 | `squishies.js` | `Squishies` collection module: a reward layer of cute inline-SVG collectibles unlocked by earning badges / hitting milestones (total stars, missions, streak, Pokémon caught). `SQUISHIES` data + `svg(id,{locked})` art + `checkUnlocks(ctx)`. Collect them all to unlock the secret legendary Goldie. |
 | `story.js` | Word-problem + estimation question builders. |
 | `progression.js` | `Progression` module: planet/level config (`PLANETS`), stars, coins + anti-farm, shop (rockets/trails/jingles/themes/pet accessories/Poké Packs), daily mission + streak + Puzzle of the Day, space pet, Lightning Round records, player picker & profile editor UI, parent dashboard, galaxy rendering. `awardMiniCoins(gameId, base)` pays a tiny arcade treat with the same daily replay curve (`minigame:<id>`). |
-| `minigames.js` | Mini Games arcade: hub registry `GAMES`, star-gated unlocks (threshold on `Progression.getStats().totalStars`, never spent), Cosmo Dress-Up look in `localStorage`, silly tap games. Loads **after** `progression.js`, **before** `app.js`. `MiniGames.init()` from bootstrap; `MiniGames.stop()` from `showScreen` when leaving play. |
+| `minigames.js` | Mini Games arcade: hub registry `GAMES`, star-gated unlocks (threshold on `Progression.getStats().totalStars`, never spent), Cosmo Dress-Up look in `localStorage`, **Steal a Pet** (steal → carry → base loop vs NPC yards) plus silly tap games. Loads **after** `progression.js`, **before** `app.js`. `MiniGames.init()` from bootstrap; `MiniGames.stop()` from `showScreen` when leaving play. |
 | `app.js` | **Loads last.** Game engine: `gameState`, setup screen, question generation dispatch, the four submit paths, rematch, teaching moments, timers, scoring, badges, results, audio synth, bootstrap. |
 | `style.css` | Original stylesheet (mostly untouched). `.screen { display:flex }` — row by default! |
 | `enhancements.css` | Everything added since: galaxy/shop/pokedex/pet/themes/vertical-layout/choice-pad/mascot CSS. |
@@ -58,6 +58,7 @@ Load order in `index.html` **matters** (globals, no modules):
 - `space_quest_pokedex_v1` — array of caught ids.
 - `space_quest_squishies_v1` — array of unlocked squishy ids.
 - `space_quest_dressup_v1` — Cosmo Dress-Up look `{color, hat, outfit, extra}` (also drawn on the galaxy-map mascot).
+- `space_quest_steal_pet_v1` — Steal a Pet bests `{bestScore, bestPets}` (run coins stay in-session only).
 - `space_quest_high_score`, `space_quest_tests_completed`, `space_quest_unlocked_badges`.
 - `space_quest_family_goal_v1` — **not namespaced** (shared by every player on the device): `{kind:'stars'|'dailies', target, period:'week', weekId, progress, pendingCelebrate}`. Cooperative family total only — never per-child scores.
 
@@ -106,7 +107,7 @@ The Poké Galaxy uses Nintendo-owned names and artwork. Acceptable as a private 
 
 Everything described above is **built**, plus:
 
-- **Mini Games arcade** — galaxy teaser + hub; six original games (Star Stealer, Zoom Zoom Planet Pop, Purple Blip Tap, Cosmo Dress-Up, Wiggle Walk, Moon Boing). Star-gated by total stars earned; dress-up look persists per player and shows on the galaxy Cosmo.
+- **Mini Games arcade** — galaxy teaser + hub; six original games (**Steal a Pet**, Zoom Zoom Planet Pop, Purple Blip Tap, Cosmo Dress-Up, Wiggle Walk, Moon Boing). Steal a Pet is a single-player steal→carry-home loop vs 4 NPC bases (original Cosmo space pets only — no copied Roblox characters). Star-gated by total stars earned (Steal a Pet still unlocks at 8); dress-up look persists per player and shows on the galaxy Cosmo.
 - **Co-op family goals** — shared weekly target (stars or daily missions) on the galaxy map; Grown-Up Zone can set/reset; Cosmo + confetti celebration when the family finishes together. Storage: `space_quest_family_goal_v1` (not per-player).
 - **Tricky Facts on-demand** — galaxy + custom-setup buttons launch a 10-question mission via `Mastery.buildTrickyMission` / `weightedSample`; rematch + teaching moments; `missionKey: 'tricky'`; **Fact Crusher** badge on a clean 100% run.
 - **Per-table Lightning Round bests** — picker for ×2–×12 plus mixed “all tables”; `profile.sprintBests`; legacy `sprintBest` migrates to `sprintBests.all` only (not copied onto every table).
