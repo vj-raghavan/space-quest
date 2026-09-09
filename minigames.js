@@ -183,15 +183,37 @@ const MiniGames = (() => {
 
   // --- Game implementations ---
 
-  function startStarStealer(root, hud) {
+  // Original Cosmo-style space pets (inline SVG). Not Pokémon, not
+  // Roblox, not any licensed critter — just wholesome squishy friends.
+  function spacePetArt(kind) {
+    const art = {
+      nebu: `<svg viewBox="0 0 64 64" aria-hidden="true"><ellipse cx="32" cy="38" rx="20" ry="17" fill="#b8a6ff"/><ellipse cx="32" cy="44" rx="12" ry="8" fill="#e8e0ff"/><circle cx="32" cy="14" r="4" fill="#9ae6c8"/><rect x="30" y="16" width="4" height="10" rx="2" fill="#9ae6c8"/><circle cx="24" cy="34" r="4.2" fill="#1e2240"/><circle cx="40" cy="34" r="4.2" fill="#1e2240"/><circle cx="25.2" cy="32.6" r="1.4" fill="#fff"/><circle cx="41.2" cy="32.6" r="1.4" fill="#fff"/><path d="M26 44 q6 6 12 0" fill="none" stroke="#6b5cad" stroke-width="2" stroke-linecap="round"/><circle cx="18" cy="42" r="3.2" fill="#ff9ecf"/><circle cx="46" cy="42" r="3.2" fill="#ff9ecf"/></svg>`,
+      cometpup: `<svg viewBox="0 0 64 64" aria-hidden="true"><ellipse cx="18" cy="44" rx="8" ry="5" fill="#ffd28a" transform="rotate(-18 18 44)"/><ellipse cx="34" cy="38" rx="18" ry="15" fill="#ffb066"/><ellipse cx="36" cy="44" rx="10" ry="7" fill="#ffe0c2"/><path d="M18 24 q-6 -14 2 -18 q4 8 10 12" fill="#ff9a3d"/><path d="M42 22 q8 -16 16 -8 q-8 6 -10 16" fill="#ff9a3d"/><circle cx="28" cy="36" r="4" fill="#1e2240"/><circle cx="40" cy="36" r="4" fill="#1e2240"/><circle cx="29.2" cy="34.6" r="1.3" fill="#fff"/><circle cx="41.2" cy="34.6" r="1.3" fill="#fff"/><ellipse cx="34" cy="42" rx="3" ry="2.2" fill="#ff8a6a"/><path d="M28 48 q6 5 12 0" fill="none" stroke="#c46a2e" stroke-width="2" stroke-linecap="round"/></svg>`,
+      glowbun: `<svg viewBox="0 0 64 64" aria-hidden="true"><ellipse cx="22" cy="16" rx="6" ry="14" fill="#c9b6ff"/><ellipse cx="42" cy="16" rx="6" ry="14" fill="#c9b6ff"/><ellipse cx="22" cy="18" rx="3" ry="9" fill="#ffe3f2"/><ellipse cx="42" cy="18" rx="3" ry="9" fill="#ffe3f2"/><ellipse cx="32" cy="40" rx="19" ry="16" fill="#d8ccff"/><ellipse cx="32" cy="46" rx="11" ry="7" fill="#f4eeff"/><circle cx="25" cy="38" r="4" fill="#1e2240"/><circle cx="39" cy="38" r="4" fill="#1e2240"/><circle cx="26.3" cy="36.6" r="1.3" fill="#fff"/><circle cx="40.3" cy="36.6" r="1.3" fill="#fff"/><path d="M27 48 q6 5 12 0" fill="none" stroke="#8a7bc4" stroke-width="2" stroke-linecap="round"/><circle cx="48" cy="46" r="3" fill="#bfe3ff"/></svg>`,
+      zipfin: `<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M10 34 q8 -16 24 -16 q16 0 22 14 q-8 4 -8 8 q0 4 8 8 q-6 12 -22 12 q-16 0 -24 -14 z" fill="#6bd6d0"/><ellipse cx="34" cy="36" rx="10" ry="8" fill="#c6f3f0"/><path d="M12 22 l8 10 l-12 2 z" fill="#8fd0ff"/><path d="M12 46 l8 -8 l-12 -2 z" fill="#8fd0ff"/><circle cx="40" cy="32" r="4.4" fill="#1e2240"/><circle cx="41.4" cy="30.8" r="1.4" fill="#fff"/><path d="M48 36 q6 2 12 0 q-4 6 -12 6 z" fill="#ffd76b"/><circle cx="26" cy="34" r="2" fill="#fff" opacity=".55"/></svg>`,
+      pufforb: `<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="22" cy="34" r="14" fill="#bfe3ff"/><circle cx="42" cy="34" r="14" fill="#bfe3ff"/><circle cx="32" cy="24" r="13" fill="#eef8ff"/><circle cx="32" cy="40" r="15" fill="#d7efff"/><circle cx="24" cy="36" r="4" fill="#1e2240"/><circle cx="40" cy="36" r="4" fill="#1e2240"/><circle cx="25.3" cy="34.6" r="1.3" fill="#fff"/><circle cx="41.3" cy="34.6" r="1.3" fill="#fff"/><path d="M26 46 q8 6 12 0" fill="none" stroke="#6aa8c9" stroke-width="2" stroke-linecap="round"/><circle cx="18" cy="42" r="3" fill="#ffb3c1"/><circle cx="46" cy="42" r="3" fill="#ffb3c1"/></svg>`,
+      mochi: `<svg viewBox="0 0 64 64" aria-hidden="true"><ellipse cx="32" cy="38" rx="21" ry="18" fill="#ff9ecf"/><ellipse cx="32" cy="44" rx="12" ry="8" fill="#ffdcef"/><path d="M18 22 q2 -12 10 -10 q2 8 -2 14" fill="#ff8fb3"/><path d="M46 22 q-2 -12 -10 -10 q-2 8 2 14" fill="#ff8fb3"/><circle cx="24" cy="36" r="4.2" fill="#1e2240"/><circle cx="40" cy="36" r="4.2" fill="#1e2240"/><circle cx="25.3" cy="34.6" r="1.3" fill="#fff"/><circle cx="41.3" cy="34.6" r="1.3" fill="#fff"/><path d="M26 46 q6 6 12 0" fill="none" stroke="#d46a9a" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="40" r="3" fill="#fff0b8"/><circle cx="48" cy="40" r="3" fill="#fff0b8"/></svg>`,
+    };
+    return art[kind] || art.nebu;
+  }
+
+  function startStealAPet(root, hud) {
     const sess = beginSession();
     const duration = 40000;
     let score = 0;
     let combo = 0;
     const t0 = performance.now();
+    const pets = [
+      { kind: 'nebu', name: 'Nebu', pts: 1, line: 'Got Nebu! 💜' },
+      { kind: 'cometpup', name: 'Cometpup', pts: 1, line: 'Cometpup zoom! 🐾' },
+      { kind: 'glowbun', name: 'Glowbun', pts: 1, line: 'Glowbun hug! 🌙' },
+      { kind: 'zipfin', name: 'Zipfin', pts: 2, line: 'Zipfin splash! 🫧' },
+      { kind: 'pufforb', name: 'Pufforb', pts: 1, line: 'Pufforb snuggle! ☁️' },
+      { kind: 'mochi', name: 'Mochi', pts: 2, line: 'Mochi bounce! 🎀' },
+    ];
     root.innerHTML = `
-      <p class="mg-hint">Catch falling stars! Skip the gloopy goo 🟢</p>
-      <div class="mg-cheer" id="mg-cheer">Go, star stealer!</div>
+      <p class="mg-hint">Grab the falling space pets! Skip the sleepy pebbles 🪨</p>
+      <div class="mg-cheer" id="mg-cheer">Steal a pet — gently!</div>
       <div class="mg-arena" id="mg-arena"></div>
     `;
     const arena = root.querySelector('#mg-arena');
@@ -199,35 +221,31 @@ const MiniGames = (() => {
 
     function spawn() {
       if (!session) return;
-      const roll = Math.random();
-      let type = 'star', emoji = '⭐';
-      if (roll > 0.86) { type = 'goo'; emoji = '🟢'; }
-      else if (roll > 0.72) { type = 'sock'; emoji = '🧦'; }
-      else if (roll > 0.58) { type = 'bean'; emoji = '🫘'; }
+      const isRock = Math.random() > 0.84;
+      const pet = pets[Math.floor(Math.random() * pets.length)];
       const el = document.createElement('button');
       el.type = 'button';
-      el.className = 'mg-fall ' + type;
-      el.textContent = emoji;
+      el.className = 'mg-fall ' + (isRock ? 'rock' : 'pet');
+      el.setAttribute('aria-label', isRock ? 'Sleepy pebble' : pet.name);
+      if (isRock) {
+        el.textContent = '🪨';
+      } else {
+        el.innerHTML = spacePetArt(pet.kind);
+      }
       el.style.left = (8 + Math.random() * 78) + '%';
       el.style.top = '-12%';
-      const item = { el, type, y: -12, vy: 18 + Math.random() * 22 };
+      const item = { el, isRock, pet, y: -12, vy: 18 + Math.random() * 22 };
       pointerTap(el, () => {
         if (!session) return;
-        if (type === 'goo') {
+        if (isRock) {
           combo = 0;
-          cheer('Goo! Stars are yummier ⭐', false);
+          cheer('Sleepy pebble! Pets are fluffier 🐾', false);
           playSound('wrong');
         } else {
-          const pts = type === 'star' ? 1 : 2;
           combo += 1;
-          score += pts + Math.min(combo, 8);
+          score += pet.pts + Math.min(combo, 8);
           playSound('correct');
-          const lines = {
-            star: 'STAR STEAL! ⭐',
-            sock: 'Space sock!! 🧦',
-            bean: 'Wobble bean! 🫘',
-          };
-          cheer((combo > 3 ? 'COMBO x' + combo + '! ' : '') + lines[type]);
+          cheer((combo > 3 ? 'COMBO x' + combo + '! ' : '') + pet.line);
         }
         el.remove();
         const idx = bits.indexOf(item);
@@ -240,10 +258,10 @@ const MiniGames = (() => {
 
     function paintHud() {
       const left = Math.max(0, Math.ceil((duration - (performance.now() - t0)) / 1000));
-      hud.innerHTML = `<span>⭐ ${score}</span><span>⏱️ ${left}</span>`;
+      hud.innerHTML = `<span>🐾 ${score}</span><span>⏱️ ${left}</span>`;
     }
 
-    sess.intervals.push(setInterval(spawn, 520));
+    sess.intervals.push(setInterval(spawn, 500));
     spawn(); spawn();
 
     function tick(now) {
@@ -263,8 +281,9 @@ const MiniGames = (() => {
       if (elapsed >= duration) {
         freeze(sess);
         bits.forEach(b => b.el.remove());
-        finishOverlay(root, 'star-stealer', 'Star Stealer', `You snatched ${score} star points!`, () => {
-          startStarStealer(root, hud);
+        // Keep shipped id so dailyPlays['minigame:star-stealer'] still counts.
+        finishOverlay(root, 'star-stealer', 'Steal a Pet', `You snatched ${score} pet points!`, () => {
+          startStealAPet(root, hud);
         });
         return;
       }
@@ -703,12 +722,14 @@ const MiniGames = (() => {
   // Registry — add games here. Hub renders this list.
   const GAMES = [
     {
+      // Display name is Steal a Pet. Internal id stays star-stealer so
+      // already-shipped anti-farm keys (minigame:star-stealer) stay valid.
       id: 'star-stealer',
-      title: 'Star Stealer',
-      emoji: '🌟',
-      blurb: 'Catch falling stars in a silly rush!',
+      title: 'Steal a Pet',
+      emoji: '🐾',
+      blurb: 'Catch cute space pets in a silly rush!',
       unlockStars: 8,
-      start: startStarStealer,
+      start: startStealAPet,
     },
     {
       id: 'planet-pop',

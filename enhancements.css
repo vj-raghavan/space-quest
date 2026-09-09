@@ -1809,14 +1809,25 @@ body.theme-candy .nebula {
 }
 .mg-fall {
   position: absolute;
-  width: 64px;
-  height: 64px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
-  font-size: 2rem;
-  background: rgba(255,255,255,0.12);
+  font-size: 2.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: rgba(255,255,255,0.14);
   transform: translateX(-50%);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.22);
 }
-.mg-fall.goo { background: rgba(80, 200, 90, 0.25); }
+.mg-fall svg {
+  width: 62px;
+  height: 62px;
+  pointer-events: none;
+}
+.mg-fall.pet { background: rgba(255, 210, 240, 0.22); }
+.mg-fall.rock { background: rgba(140, 140, 160, 0.28); }
 .mg-planet {
   position: absolute;
   border-radius: 50%;
