@@ -1771,7 +1771,7 @@ body.theme-candy .nebula {
   margin-bottom: 10px;
 }
 .mg-play-bar h2 { flex: 1; margin: 0; font-size: 1.2rem; }
-.mg-play-hud { display: flex; gap: 12px; font-weight: 700; color: var(--gold-yellow); }
+.mg-play-hud { display: flex; gap: 12px; font-weight: 700; color: var(--gold-yellow); flex-wrap: wrap; }
 .mg-play-root { width: 100%; }
 .mg-hint { text-align: center; opacity: 0.9; margin: 4px 0 8px; }
 .mg-swatch-purple {
@@ -1817,6 +1817,194 @@ body.theme-candy .nebula {
   transform: translateX(-50%);
 }
 .mg-fall.goo { background: rgba(80, 200, 90, 0.25); }
+
+/* Steal a Pet — top-down steal / carry / base */
+.mg-arena.mg-steal {
+  height: min(58vh, 520px);
+  background:
+    radial-gradient(circle at 50% 88%, rgba(60, 201, 160, 0.28), transparent 28%),
+    radial-gradient(circle at 16% 18%, rgba(255, 138, 91, 0.22), transparent 22%),
+    radial-gradient(circle at 84% 18%, rgba(181, 107, 255, 0.22), transparent 22%),
+    radial-gradient(circle at 14% 48%, rgba(60, 201, 160, 0.18), transparent 20%),
+    radial-gradient(circle at 86% 48%, rgba(255, 210, 90, 0.2), transparent 20%),
+    radial-gradient(circle at 50% 20%, rgba(80, 120, 200, 0.25), rgba(8, 10, 20, 0.55));
+}
+.sap-base {
+  position: absolute;
+  width: 22%;
+  min-width: 88px;
+  height: 22%;
+  min-height: 72px;
+  transform: translate(-50%, -50%);
+  border-radius: 22px;
+  border: 2px dashed var(--base, #9df5d6);
+  background: color-mix(in srgb, var(--base, #3cc9a0) 22%, transparent);
+  pointer-events: none;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 4px;
+}
+.sap-home {
+  --base: #9df5d6;
+  width: 30%;
+  height: 24%;
+  border-style: solid;
+  box-shadow: 0 0 18px rgba(157, 245, 214, 0.35);
+}
+.sap-base-name {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+  white-space: nowrap;
+}
+.sap-home-pets {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
+  margin-top: 4px;
+  max-width: 90%;
+}
+.sap-home-chip, .sap-carry-chip {
+  font-size: 1.05rem;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4));
+}
+.sap-goo {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-size: 1.6rem;
+  opacity: 0.85;
+  pointer-events: none;
+  z-index: 2;
+  filter: drop-shadow(0 0 8px rgba(80, 200, 90, 0.6));
+}
+.sap-guard {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-size: 1.45rem;
+  z-index: 4;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+.sap-pet-layer { position: absolute; inset: 0; z-index: 5; }
+.sap-pet {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 64px;
+  height: 64px;
+  border-radius: 50% 46% 50% 42%;
+  border: 3px solid rgba(255,255,255,0.55);
+  background: radial-gradient(circle at 30% 25%, #fff8, var(--pet));
+  color: #1a1028;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+}
+.sap-pet.r-uncommon { box-shadow: 0 0 12px rgba(154, 215, 194, 0.8); }
+.sap-pet.r-rare { box-shadow: 0 0 14px rgba(110, 200, 255, 0.95); }
+.sap-pet.r-legendary {
+  box-shadow: 0 0 18px rgba(255, 210, 90, 1);
+  animation: sapGlow 1.2s ease-in-out infinite alternate;
+}
+@keyframes sapGlow { to { filter: brightness(1.15); } }
+.sap-pet-emoji { font-size: 1.55rem; pointer-events: none; }
+.sap-pet-tag, .sap-pet-rare {
+  pointer-events: none;
+  font-size: 0.52rem;
+  font-weight: 800;
+  max-width: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sap-pet-rare { opacity: 0.75; text-transform: uppercase; }
+.sap-player {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 68px;
+  height: 68px;
+  z-index: 6;
+  pointer-events: none;
+  transition: filter 0.2s;
+}
+.sap-player.carrying { filter: drop-shadow(0 0 10px #ffd25a); }
+.sap-player.stunned { opacity: 0.65; filter: grayscale(0.4); }
+.sap-player .cosmo-dress-stage.tiny-size { width: 64px; height: 64px; }
+.sap-carry-stack {
+  position: absolute;
+  top: -8px;
+  right: -10px;
+  display: flex;
+  gap: 2px;
+}
+.sap-stick {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.14);
+  border: 2px solid rgba(255,255,255,0.28);
+  z-index: 8;
+  touch-action: none;
+}
+.sap-stick-knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 40px;
+  height: 40px;
+  margin: -20px 0 0 -20px;
+  border-radius: 50%;
+  background: rgba(157, 245, 214, 0.85);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  pointer-events: none;
+}
+.sap-shop {
+  position: absolute;
+  left: 108px;
+  right: 8px;
+  bottom: 8px;
+  z-index: 9;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+  margin-top: 0;
+  pointer-events: auto;
+}
+.sap-up {
+  min-height: 48px;
+  min-width: 0;
+  flex: 1 1 90px;
+  max-width: 200px;
+  border-radius: 14px;
+  border: 1px solid var(--panel-border);
+  background: rgba(12, 16, 28, 0.82);
+  color: inherit;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.78rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.sap-up:disabled { opacity: 0.45; cursor: default; }
+@media (max-width: 600px) {
+  .sap-pet { width: 58px; height: 58px; }
+  .sap-stick { width: 84px; height: 84px; }
+  .mg-arena.mg-steal { height: min(55vh, 440px); }
+  .sap-shop { left: 96px; }
+}
 .mg-planet {
   position: absolute;
   border-radius: 50%;
@@ -1886,7 +2074,7 @@ body.theme-candy .nebula {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  z-index: 5;
+  z-index: 12;
   text-align: center;
   padding: 18px 20px;
   max-width: 90%;
