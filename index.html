@@ -114,7 +114,7 @@
         <div class="galaxy-stats-row">
           <div class="galaxy-stat" id="galaxy-streak">🔥 0 day streak</div>
           <div class="galaxy-stat" id="galaxy-coins">⭐ 0 coins</div>
-          <div class="galaxy-stat" id="galaxy-stars">🌟 0 / 180 stars</div>
+          <div class="galaxy-stat" id="galaxy-stars">🌟 0 / 303 stars</div>
           <div class="galaxy-stat hidden" id="galaxy-sprint">⚡ best —</div>
         </div>
       </div>
@@ -205,7 +205,10 @@
             <button class="preset-btn" data-preset="medium">Medium (3, 4, 6, 11)</button>
             <button class="preset-btn" data-preset="hard">Hard (7, 8, 9, 12)</button>
             <button class="preset-btn" data-preset="cosmic">Cosmic (13, 14, 15)</button>
+            <button class="preset-btn" data-preset="mix12">Classic Mix (2 - 12)</button>
             <button class="preset-btn" data-preset="all">Super Hero (1 - 15)</button>
+            <button class="preset-btn" data-preset="ultra">Ultra (16, 17, 18)</button>
+            <button class="preset-btn hidden" data-preset="remainders">Leftover Bits (remainders)</button>
           </div>
           
           <div class="tables-selector-grid">
@@ -244,6 +247,21 @@
               <span class="level-title">Mixed Dust</span>
               <span class="level-range">(All Sizes)</span>
             </button>
+            <button class="digit-level-btn" data-level="carry">
+              <span class="level-emoji">🎒</span>
+              <span class="level-title">Carry / Borrow</span>
+              <span class="level-range">(2-digit regrouping)</span>
+            </button>
+            <button class="digit-level-btn" data-level="chain">
+              <span class="level-emoji">🔗</span>
+              <span class="level-title">Triple Chain</span>
+              <span class="level-range">(Three numbers)</span>
+            </button>
+            <button class="digit-level-btn" data-level="missing">
+              <span class="level-emoji">❓</span>
+              <span class="level-title">Missing Number</span>
+              <span class="level-range">(Find the hidden one)</span>
+            </button>
           </div>
         </div>
 
@@ -271,6 +289,21 @@
               <span class="level-emoji">☄️</span>
               <span class="level-title">Precision Flight</span>
               <span class="level-range">(Any Minute, e.g. 8:12)</span>
+            </button>
+            <button class="digit-level-btn" data-level="elapsed">
+              <span class="level-emoji">⏳</span>
+              <span class="level-title">How Many Minutes?</span>
+              <span class="level-range">(Time between two clocks)</span>
+            </button>
+            <button class="digit-level-btn" data-level="later">
+              <span class="level-emoji">🚀</span>
+              <span class="level-title">Time Travel</span>
+              <span class="level-range">(What time will it be?)</span>
+            </button>
+            <button class="digit-level-btn" data-level="duration">
+              <span class="level-emoji">📐</span>
+              <span class="level-title">Hours to Minutes</span>
+              <span class="level-range">(2 hours 15 min → 135)</span>
             </button>
           </div>
         </div>
@@ -300,6 +333,21 @@
               <span class="level-title">Subtract It</span>
               <span class="level-range">Subtract two fractions</span>
             </button>
+            <button class="digit-level-btn" data-level="equivalent">
+              <span class="level-emoji">🟰</span>
+              <span class="level-title">Same Slice</span>
+              <span class="level-range">Write an equal fraction</span>
+            </button>
+            <button class="digit-level-btn" data-level="ofn">
+              <span class="level-emoji">✂️</span>
+              <span class="level-title">Fraction Of</span>
+              <span class="level-range">Half of 12, third of 9…</span>
+            </button>
+            <button class="digit-level-btn" data-level="compare">
+              <span class="level-emoji">⚖️</span>
+              <span class="level-title">Bigger Slice</span>
+              <span class="level-range">Which fraction is bigger?</span>
+            </button>
           </div>
         </div>
 
@@ -322,6 +370,16 @@
               <span class="level-emoji">🌌</span>
               <span class="level-title">Supernova Growth</span>
               <span class="level-range">Exponentials, geometry & Fibonacci</span>
+            </button>
+            <button class="digit-level-btn" data-level="skip">
+              <span class="level-emoji">⏭️</span>
+              <span class="level-title">Skip Counting</span>
+              <span class="level-range">5s, 10s, 25s, 100s</span>
+            </button>
+            <button class="digit-level-btn" data-level="cosmic">
+              <span class="level-emoji">🌠</span>
+              <span class="level-title">Growing Gaps</span>
+              <span class="level-range">Steps that get bigger each time</span>
             </button>
           </div>
         </div>
@@ -346,6 +404,16 @@
               <span class="level-title">Galactic Force</span>
               <span class="level-range">Compare two formulas (e.g. 3x4 vs 2x6)</span>
             </button>
+            <button class="digit-level-btn" data-level="big">
+              <span class="level-emoji">🪨</span>
+              <span class="level-title">Giant Weights</span>
+              <span class="level-range">Compare big numbers (e.g. 482 vs 518)</span>
+            </button>
+            <button class="digit-level-btn" data-level="mix">
+              <span class="level-emoji">🌀</span>
+              <span class="level-title">Mixed Force</span>
+              <span class="level-range">Add, subtract, multiply & divide</span>
+            </button>
           </div>
         </div>
 
@@ -368,6 +436,21 @@
               <span class="level-emoji">🎼</span>
               <span class="level-title">Measure Math</span>
               <span class="level-range">Beats × measures</span>
+            </button>
+            <button class="digit-level-btn" data-level="eighths">
+              <span class="level-emoji">🎶</span>
+              <span class="level-title">Eighth Note Mix</span>
+              <span class="level-range">Count with eighths (integer beats)</span>
+            </button>
+            <button class="digit-level-btn" data-level="dotted">
+              <span class="level-emoji">✨</span>
+              <span class="level-title">Dotted Notes</span>
+              <span class="level-range">Dotted half = 3 beats</span>
+            </button>
+            <button class="digit-level-btn" data-level="rests">
+              <span class="level-emoji">🤫</span>
+              <span class="level-title">Rest Values</span>
+              <span class="level-range">Silent beats</span>
             </button>
           </div>
         </div>
@@ -392,6 +475,16 @@
               <span class="level-title">Twist Converter</span>
               <span class="level-range">Quarters, halves & twists</span>
             </button>
+            <button class="digit-level-btn" data-level="leftover">
+              <span class="level-emoji">🔄</span>
+              <span class="level-title">Back to Front</span>
+              <span class="level-range">How far to a full twist?</span>
+            </button>
+            <button class="digit-level-btn" data-level="complement">
+              <span class="level-emoji">📐</span>
+              <span class="level-title">Right-Angle Split</span>
+              <span class="level-range">Make 90° together</span>
+            </button>
           </div>
         </div>
 
@@ -414,6 +507,16 @@
               <span class="level-emoji">🔮</span>
               <span class="level-title">Magic Squares</span>
               <span class="level-range">Make rows & columns match</span>
+            </button>
+            <button class="digit-level-btn" data-level="secret">
+              <span class="level-emoji">🕵️</span>
+              <span class="level-title">Two-Step Mystery</span>
+              <span class="level-range">Undo two operations</span>
+            </button>
+            <button class="digit-level-btn" data-level="balance">
+              <span class="level-emoji">⚖️</span>
+              <span class="level-title">Balance Code</span>
+              <span class="level-range">Three-emoji puzzles</span>
             </button>
           </div>
         </div>
@@ -448,6 +551,16 @@
               <span class="level-title">Battle Match</span>
               <span class="level-range">Which type wins?</span>
             </button>
+            <button class="digit-level-btn" data-level="prevo">
+              <span class="level-emoji">🔙</span>
+              <span class="level-title">Who Evolved?</span>
+              <span class="level-range">Who did it evolve from?</span>
+            </button>
+            <button class="digit-level-btn" data-level="mix">
+              <span class="level-emoji">🎲</span>
+              <span class="level-title">Poké Mix</span>
+              <span class="level-range">A bit of every quiz</span>
+            </button>
           </div>
         </div>
 
@@ -471,6 +584,21 @@
               <span class="level-title">Space Market</span>
               <span class="level-range">Money & change</span>
             </button>
+            <button class="digit-level-btn" data-level="threestep">
+              <span class="level-emoji">📚</span>
+              <span class="level-title">Triple Trouble</span>
+              <span class="level-range">Three-step stories</span>
+            </button>
+            <button class="digit-level-btn" data-level="elapsed">
+              <span class="level-emoji">⏰</span>
+              <span class="level-title">Time Stories</span>
+              <span class="level-range">Hours and minutes in a story</span>
+            </button>
+            <button class="digit-level-btn" data-level="bigger">
+              <span class="level-emoji">🐘</span>
+              <span class="level-title">Giant Numbers</span>
+              <span class="level-range">Bigger space stories</span>
+            </button>
           </div>
         </div>
 
@@ -493,6 +621,21 @@
               <span class="level-emoji">🎯</span>
               <span class="level-title">About How Much?</span>
               <span class="level-range">Estimate sums fast</span>
+            </button>
+            <button class="digit-level-btn" data-level="round1000">
+              <span class="level-emoji">🧮</span>
+              <span class="level-title">Nearest Thousand</span>
+              <span class="level-range">Round to nearest 1000</span>
+            </button>
+            <button class="digit-level-btn" data-level="approxmul">
+              <span class="level-emoji">✖️</span>
+              <span class="level-title">About How Many?</span>
+              <span class="level-range">Estimate products</span>
+            </button>
+            <button class="digit-level-btn" data-level="closer">
+              <span class="level-emoji">📍</span>
+              <span class="level-title">Closer To…</span>
+              <span class="level-range">Which number is nearer?</span>
             </button>
           </div>
         </div>
@@ -521,6 +664,16 @@
               <span class="level-emoji">🪄</span>
               <span class="level-title">Word Wizard</span>
               <span class="level-range">Build tricky words</span>
+            </button>
+            <button class="digit-level-btn" data-level="homo">
+              <span class="level-emoji">👯</span>
+              <span class="level-title">Sound Twins</span>
+              <span class="level-range">there / their / they're</span>
+            </button>
+            <button class="digit-level-btn" data-level="challenge">
+              <span class="level-emoji">🏆</span>
+              <span class="level-title">Super Speller</span>
+              <span class="level-range">Build the trickiest words</span>
             </button>
             <button class="digit-level-btn" data-level="school">
               <span class="level-emoji">🏫</span>
@@ -559,6 +712,16 @@
               <span class="level-emoji">🧱</span>
               <span class="level-title">Build-a-Word</span>
               <span class="level-range">Sound it out & build</span>
+            </button>
+            <button class="digit-level-btn" data-level="endsound">
+              <span class="level-emoji">🔚</span>
+              <span class="level-title">Ending Sounds</span>
+              <span class="level-range">Which letter ends it?</span>
+            </button>
+            <button class="digit-level-btn" data-level="blend">
+              <span class="level-emoji">🎯</span>
+              <span class="level-title">End Match</span>
+              <span class="level-range">Same ending sound</span>
             </button>
             <button class="digit-level-btn" data-level="myreading">
               <span class="level-emoji">📖</span>

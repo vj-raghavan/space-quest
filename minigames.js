@@ -25,6 +25,8 @@ const MiniGames = (() => {
     { id: 'prop', emoji: '🚁', name: 'Whirly', unlockStars: 16 },
     { id: 'flower', emoji: '🌸', name: 'Bloom', unlockStars: 22 },
     { id: 'crown', emoji: '👑', name: 'Star crown', unlockStars: 40 },
+    { id: 'comet', emoji: '☄️', name: 'Comet cap', unlockStars: 80 },
+    { id: 'nova', emoji: '🌟', name: 'Nova halo', unlockStars: 140 },
   ];
 
   const OUTFITS = [
@@ -33,6 +35,7 @@ const MiniGames = (() => {
     { id: 'tutu', emoji: '🩰', name: 'Star tutu', unlockStars: 15 },
     { id: 'stripes', emoji: '🎽', name: 'Zoom stripes', unlockStars: 25 },
     { id: 'pack', emoji: '🎒', name: 'Rocket pack', unlockStars: 30 },
+    { id: 'cape2', emoji: '🌈', name: 'Rainbow trail', unlockStars: 120 },
   ];
 
   const EXTRAS = [
@@ -41,6 +44,7 @@ const MiniGames = (() => {
     { id: 'bow', emoji: '🎀', name: 'Bow-wow', unlockStars: 12 },
     { id: 'stache', emoji: '🥸', name: 'Silly stache', unlockStars: 18 },
     { id: 'sparkle', emoji: '✨', name: 'Sparkles', unlockStars: 28 },
+    { id: 'glitter', emoji: '💖', name: 'Heart glitter', unlockStars: 180 },
   ];
 
   const DEFAULT_LOOK = { color: 'mint', hat: 'none', outfit: 'cape', extra: 'none' };
@@ -1174,7 +1178,7 @@ const MiniGames = (() => {
       title: 'Wiggle Walk',
       emoji: '〰️',
       blurb: 'Steer Cosmo along a wiggly coin path.',
-      unlockStars: 35,
+      unlockStars: 55,
       start: startWiggleWalk,
     },
     {
@@ -1182,7 +1186,7 @@ const MiniGames = (() => {
       title: 'Moon Boing',
       emoji: '🌕',
       blurb: 'Tap when the moon boings through the hoop.',
-      unlockStars: 48,
+      unlockStars: 90,
       start: startMoonBoing,
     },
   ];

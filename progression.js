@@ -11,76 +11,113 @@ const Progression = (() => {
       { id: 'medium', name: 'Medium Tables', desc: '×3, ×4, ×6, ×11', tables: [3, 4, 6, 11] },
       { id: 'hard', name: 'Hard Tables', desc: '×7, ×8, ×9, ×12', tables: [7, 8, 9, 12] },
       { id: 'cosmic', name: 'Cosmic Tables', desc: '×13, ×14, ×15', tables: [13, 14, 15] },
+      { id: 'mix12', name: 'Classic Mix', desc: '×2 through ×12', tables: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] },
+      { id: 'hero', name: 'Super Hero Mix', desc: '×1 through ×15', tables: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] },
+      { id: 'ultra', name: 'Ultra Tables', desc: '×16, ×17, ×18', tables: [16, 17, 18] },
     ]},
     { id: 'divide', name: 'Division Station', emoji: '🛰️', tagline: 'Space sharing', levels: [
       { id: 'easy', name: 'Easy Divisors', desc: '÷2, ÷5, ÷10', tables: [2, 5, 10] },
       { id: 'medium', name: 'Medium Divisors', desc: '÷3, ÷4, ÷6', tables: [3, 4, 6] },
       { id: 'hard', name: 'Hard Divisors', desc: '÷7, ÷8, ÷9, ÷12', tables: [7, 8, 9, 12] },
+      { id: 'cosmic', name: 'Cosmic Divisors', desc: '÷11, ÷13, ÷14, ÷15', tables: [11, 13, 14, 15] },
+      { id: 'remainders', name: 'Leftover Bits', desc: 'Find the remainder' },
+      { id: 'mix12', name: 'Division Mix', desc: '÷2 through ÷12', tables: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] },
     ]},
     { id: 'add', name: 'Addition Asteroids', emoji: '☄️', tagline: 'Adding power', levels: [
       { id: 'single', name: 'Single Digits', desc: '1 to 9' },
       { id: 'double', name: 'Double Digits', desc: '10 to 99' },
       { id: 'triple', name: 'Triple Digits', desc: '100 to 999' },
       { id: 'mixed', name: 'Mixed Dust', desc: 'All sizes' },
+      { id: 'carry', name: 'Carry Crew', desc: '2-digit with carry' },
+      { id: 'chain', name: 'Triple Add', desc: 'Add three numbers' },
+      { id: 'missing', name: 'Missing Addend', desc: 'Find the hidden number' },
     ]},
     { id: 'subtract', name: 'Subtraction Nebula', emoji: '🌫️', tagline: 'Taking away', levels: [
       { id: 'single', name: 'Single Digits', desc: '1 to 9' },
       { id: 'double', name: 'Double Digits', desc: '10 to 99' },
       { id: 'triple', name: 'Triple Digits', desc: '100 to 999' },
       { id: 'mixed', name: 'Mixed Dust', desc: 'All sizes' },
+      { id: 'carry', name: 'Borrow Bridge', desc: '2-digit with borrow' },
+      { id: 'chain', name: 'Triple Take', desc: 'Subtract twice' },
+      { id: 'missing', name: 'Missing Number', desc: 'Find what was taken' },
     ]},
     { id: 'sequence', name: 'Pattern Comet', emoji: '💫', tagline: 'Number patterns', levels: [
       { id: 'easy', name: 'Star Steps', desc: 'Easy steps' },
       { id: 'medium', name: 'Nebula Skip', desc: 'Tricky steps' },
       { id: 'hard', name: 'Supernova Growth', desc: 'Doubling & Fibonacci' },
+      { id: 'skip', name: 'Skip Counting', desc: '5s, 10s, 25s, 100s' },
+      { id: 'cosmic', name: 'Growing Gaps', desc: 'Steps that get bigger' },
     ]},
     { id: 'compare', name: 'Balance Belt', emoji: '⚖️', tagline: 'Greater or less', levels: [
       { id: 'easy', name: 'Asteroid Sizes', desc: 'Compare numbers' },
       { id: 'medium', name: 'Double Warp', desc: 'Formula vs number' },
       { id: 'hard', name: 'Galactic Force', desc: 'Formula vs formula' },
+      { id: 'big', name: 'Giant Weights', desc: 'Compare big numbers' },
+      { id: 'mix', name: 'Mixed Force', desc: 'All operations vs each other' },
     ]},
     { id: 'clock', name: 'Clockwork Moon', emoji: '⏰', tagline: 'Telling time', levels: [
       { id: 'hour', name: 'Hour Planets', desc: 'On the hour' },
       { id: 'quarter', name: 'Half & Quarters', desc: 'e.g. 2:30' },
       { id: 'five-min', name: 'Five-Min Sectors', desc: 'e.g. 4:25' },
       { id: 'precision', name: 'Precision Flight', desc: 'Any minute' },
+      { id: 'elapsed', name: 'How Many Minutes?', desc: 'Time between two clocks' },
+      { id: 'later', name: 'Time Travel', desc: 'What time will it be?' },
+      { id: 'duration', name: 'Hours to Minutes', desc: 'Convert hours & minutes' },
     ]},
     { id: 'fraction', name: 'Fraction Pizzeria', emoji: '🍕', tagline: 'Pizza math', levels: [
       { id: 'identify', name: 'Read It', desc: 'Name the fraction' },
       { id: 'simplify', name: 'Simplify It', desc: 'Lowest terms' },
       { id: 'add', name: 'Add It', desc: 'Add fractions' },
       { id: 'subtract', name: 'Subtract It', desc: 'Subtract fractions' },
+      { id: 'equivalent', name: 'Same Slice', desc: 'Equal fractions' },
+      { id: 'ofn', name: 'Fraction Of', desc: 'Half of 12, third of 9…' },
+      { id: 'compare', name: 'Bigger Slice', desc: 'Which fraction is bigger?' },
     ]},
     { id: 'music', name: 'Rhythm Nebula', emoji: '🎵', tagline: 'Piano math', levels: [
       { id: 'notes', name: 'Note Values', desc: 'Beats per note' },
       { id: 'beats', name: 'Beat Counting', desc: 'Add up the notes' },
       { id: 'measures', name: 'Measure Math', desc: 'Beats × measures' },
+      { id: 'eighths', name: 'Eighth Note Mix', desc: 'Count with eighths' },
+      { id: 'dotted', name: 'Dotted Notes', desc: 'Dotted half = 3 beats' },
+      { id: 'rests', name: 'Rest Values', desc: 'Silent beats' },
     ]},
     { id: 'angles', name: 'Twist & Turn Arena', emoji: '🤸', tagline: 'Gymnastics turns', levels: [
       { id: 'turns', name: 'Name the Turn', desc: 'Turns to degrees' },
       { id: 'combine', name: 'Routine Builder', desc: 'Add up the turns' },
       { id: 'convert', name: 'Twist Converter', desc: 'Quarters, halves & twists' },
+      { id: 'leftover', name: 'Back to Front', desc: 'How far to a full twist?' },
+      { id: 'complement', name: 'Right-Angle Split', desc: 'Make 90° together' },
     ]},
     { id: 'puzzle', name: 'Puzzle Asteroid', emoji: '🧩', tagline: 'Brain teasers', levels: [
       { id: 'mystery', name: 'Mystery Number', desc: 'Find the hidden number' },
       { id: 'emoji', name: 'Emoji Equations', desc: 'Crack the fruit code' },
       { id: 'magic', name: 'Magic Squares', desc: 'Make rows & columns match' },
+      { id: 'secret', name: 'Two-Step Mystery', desc: 'Undo two operations' },
+      { id: 'balance', name: 'Balance Code', desc: 'Three-emoji puzzles' },
     ]},
     { id: 'story', name: 'Mission Control', emoji: '📖', tagline: 'Story problems', levels: [
       { id: 'onestep', name: 'Space Stories', desc: 'One-step problems' },
       { id: 'twostep', name: 'Double Trouble', desc: 'Two-step problems' },
       { id: 'money', name: 'Space Market', desc: 'Money & change' },
+      { id: 'threestep', name: 'Triple Trouble', desc: 'Three-step stories' },
+      { id: 'elapsed', name: 'Time Stories', desc: 'Hours and minutes in a story' },
+      { id: 'bigger', name: 'Giant Numbers', desc: 'Bigger space stories' },
     ]},
     { id: 'estimate', name: 'Estimation Station', emoji: '🎯', tagline: 'Rounding & guessing', levels: [
       { id: 'round10', name: 'Nearest Ten', desc: 'Round to nearest 10' },
       { id: 'round100', name: 'Nearest Hundred', desc: 'Round to nearest 100' },
       { id: 'approx', name: 'About How Much?', desc: 'Estimate sums fast' },
+      { id: 'round1000', name: 'Nearest Thousand', desc: 'Round to nearest 1000' },
+      { id: 'approxmul', name: 'About How Many?', desc: 'Estimate products' },
+      { id: 'closer', name: 'Closer To…', desc: 'Which number is nearer?' },
     ]},
     { id: 'spelling', name: 'Spelling Star Base', emoji: '🔤', tagline: 'Word power', levels: [
       { id: 'spot', name: 'Spelling Scout', desc: 'Tap the right spelling' },
       { id: 'spot2', name: 'Tricky Spotter', desc: 'Spot tricky words' },
       { id: 'build', name: 'Word Builder', desc: 'Build words from tiles' },
       { id: 'build2', name: 'Word Wizard', desc: 'Build tricky words' },
+      { id: 'homo', name: 'Sound Twins', desc: 'There / their / they\'re' },
+      { id: 'challenge', name: 'Super Speller', desc: 'Build the trickiest words' },
       { id: 'school', name: 'My School Words', desc: 'Your weekly list' },
     ]},
     { id: 'reading', name: 'Reading Rocket', emoji: '📚', tagline: 'Learn to read', levels: [
@@ -89,6 +126,8 @@ const Progression = (() => {
       { id: 'rhyme', name: 'Rhyme Time', desc: 'Find the rhyme' },
       { id: 'sight', name: 'Sight Words', desc: 'Tap the word you hear' },
       { id: 'cvc', name: 'Build-a-Word', desc: 'Sound it out & build' },
+      { id: 'endsound', name: 'Ending Sounds', desc: 'Which letter ends it?' },
+      { id: 'blend', name: 'End Match', desc: 'Same ending sound' },
       { id: 'myreading', name: 'My Reading Words', desc: 'Your own word list' },
     ]},
     { id: 'pokemon', name: 'Poké Galaxy', emoji: '⚡', tagline: 'Gotta catch \'em all', levels: [
@@ -97,6 +136,8 @@ const Progression = (() => {
       { id: 'type', name: 'Type Match', desc: 'Fire, water, grass…' },
       { id: 'evolution', name: 'Evolution Lab', desc: 'Who evolves into whom?' },
       { id: 'battle', name: 'Battle Match', desc: 'Which type wins?' },
+      { id: 'prevo', name: 'Who Evolved?', desc: 'Who did it evolve from?' },
+      { id: 'mix', name: 'Poké Mix', desc: 'A bit of every quiz' },
     ]},
   ];
 
@@ -140,9 +181,13 @@ const Progression = (() => {
     { id: 'crown', emoji: '👑', name: 'Royal Crown', price: 150 },
   ];
 
-  // Space pet: evolves with total stars, fed by the Daily Mission
+  // Space pet: evolves with total stars, fed by the Daily Mission.
+  // Early stages stay put so a kid at ~100 stars still earns Stardragon;
+  // later forms give something to grow into as the galaxy ceiling rises.
   const PET_STAGES = [
-    { min: 100, emoji: '🐉', name: 'Stardragon', hint: 'Fully grown — legendary!' },
+    { min: 220, emoji: '🌌', name: 'Nebula Wyrm', hint: 'A legend among the stars!' },
+    { min: 160, emoji: '🦋', name: 'Starwing', hint: 'Reach 220 ⭐ to evolve!' },
+    { min: 100, emoji: '🐉', name: 'Stardragon', hint: 'Reach 160 ⭐ to evolve!' },
     { min: 60, emoji: '🦕', name: 'Cosmosaur', hint: 'Reach 100 ⭐ to evolve!' },
     { min: 30, emoji: '🐙', name: 'Wobbles', hint: 'Reach 60 ⭐ to evolve!' },
     { min: 10, emoji: '👾', name: 'Blip', hint: 'Reach 30 ⭐ to evolve!' },
@@ -224,6 +269,9 @@ const Progression = (() => {
   function applyLevel(planet, level, s) {
     s.activeOp = planet.id;
     if (level.tables) s.selectedTables = [...level.tables];
+    else if (planet.id === 'multiply' || planet.id === 'divide') s.selectedTables = [];
+    if (planet.id === 'multiply') s.multiplyLevel = level.id;
+    else if (planet.id === 'divide') s.divideLevel = level.id;
     else if (planet.id === 'add' || planet.id === 'subtract') s.digitLevel = level.id;
     else if (planet.id === 'clock') s.clockLevel = level.id;
     else if (planet.id === 'fraction') s.fractionLevel = level.id;
@@ -245,7 +293,8 @@ const Progression = (() => {
     const planet = PLANETS.find(p => p.id === s.activeOp);
     if (!planet) return null;
     if (s.activeOp === 'multiply' || s.activeOp === 'divide') {
-      const sel = [...s.selectedTables].sort((a, b) => a - b).join(',');
+      if (s.activeOp === 'divide' && s.divideLevel === 'remainders') return 'divide:remainders';
+      const sel = [...(s.selectedTables || [])].sort((a, b) => a - b).join(',');
       const lvl = planet.levels.find(l => l.tables && [...l.tables].sort((a, b) => a - b).join(',') === sel);
       return lvl ? `${planet.id}:${lvl.id}` : null;
     }
@@ -1212,24 +1261,38 @@ const Progression = (() => {
   const MODE_NAMES = {
     multiply: '✖️ Multiplication', divide: '➗ Division',
     'add:single': '➕ Addition (1-digit)', 'add:double': '➕ Addition (2-digit)', 'add:triple': '➕ Addition (3-digit)', 'add:mixed': '➕ Addition (mixed)',
+    'add:carry': '➕ Addition (carry)', 'add:chain': '➕ Addition (triple add)', 'add:missing': '➕ Addition (missing addend)',
     'subtract:single': '➖ Subtraction (1-digit)', 'subtract:double': '➖ Subtraction (2-digit)', 'subtract:triple': '➖ Subtraction (3-digit)', 'subtract:mixed': '➖ Subtraction (mixed)',
+    'subtract:carry': '➖ Subtraction (borrow)', 'subtract:chain': '➖ Subtraction (triple take)', 'subtract:missing': '➖ Subtraction (missing number)',
     'clock:hour': '⏰ Clock (hours)', 'clock:quarter': '⏰ Clock (quarters)', 'clock:five-min': '⏰ Clock (5-min)', 'clock:precision': '⏰ Clock (precision)',
+    'clock:elapsed': '⏰ Clock (elapsed minutes)', 'clock:later': '⏰ Clock (time travel)', 'clock:duration': '⏰ Clock (hours to minutes)',
     'fraction:identify': '🍕 Fractions (read)', 'fraction:simplify': '🍕 Fractions (simplify)', 'fraction:add': '🍕 Fractions (add)', 'fraction:subtract': '🍕 Fractions (subtract)',
+    'fraction:equivalent': '🍕 Fractions (same slice)', 'fraction:ofn': '🍕 Fractions (fraction of)', 'fraction:compare': '🍕 Fractions (bigger slice)',
     'sequence:easy': '💫 Sequences (easy)', 'sequence:medium': '💫 Sequences (medium)', 'sequence:hard': '💫 Sequences (hard)',
+    'sequence:skip': '💫 Sequences (skip counting)', 'sequence:cosmic': '💫 Sequences (growing gaps)',
     'compare:easy': '⚖️ Compare (easy)', 'compare:medium': '⚖️ Compare (medium)', 'compare:hard': '⚖️ Compare (hard)',
+    'compare:big': '⚖️ Compare (giant numbers)', 'compare:mix': '⚖️ Compare (mixed force)',
     'music:notes': '🎵 Music (note values)', 'music:beats': '🎵 Music (beat counting)', 'music:measures': '🎵 Music (measures)',
+    'music:eighths': '🎵 Music (eighths)', 'music:dotted': '🎵 Music (dotted notes)', 'music:rests': '🎵 Music (rests)',
     'angles:turns': '🤸 Turns (degrees)', 'angles:combine': '🤸 Turns (routines)', 'angles:convert': '🤸 Turns (conversions)',
+    'angles:leftover': '🤸 Turns (back to front)', 'angles:complement': '🤸 Turns (right-angle split)',
     'puzzle:mystery': '🧩 Puzzles (mystery number)', 'puzzle:emoji': '🧩 Puzzles (emoji equations)', 'puzzle:magic': '🧩 Puzzles (magic squares)',
+    'puzzle:secret': '🧩 Puzzles (two-step mystery)', 'puzzle:balance': '🧩 Puzzles (balance code)',
     'pokemon:count': '⚡ Pokémon (counting)', 'pokemon:identity': "⚡ Pokémon (who's that)", 'pokemon:type': '⚡ Pokémon (types)',
     'pokemon:evolution': '⚡ Pokémon (evolutions)', 'pokemon:battle': '⚡ Pokémon (battles)',
+    'pokemon:prevo': '⚡ Pokémon (who evolved)', 'pokemon:mix': '⚡ Pokémon (mix)',
     'story:onestep': '📖 Stories (one-step)', 'story:twostep': '📖 Stories (two-step)', 'story:money': '📖 Stories (money)',
+    'story:threestep': '📖 Stories (triple trouble)', 'story:elapsed': '📖 Stories (time)', 'story:bigger': '📖 Stories (giant numbers)',
     'estimate:round10': '🎯 Estimation (nearest 10)', 'estimate:round100': '🎯 Estimation (nearest 100)', 'estimate:approx': '🎯 Estimation (about how much)',
+    'estimate:round1000': '🎯 Estimation (nearest 1000)', 'estimate:approxmul': '🎯 Estimation (about how many)', 'estimate:closer': '🎯 Estimation (closer to)',
     'spelling:spot': '🔤 Spelling (spot the word)', 'spelling:spot2': '🔤 Spelling (tricky spotter)',
     'spelling:build': '🔤 Spelling (word builder)', 'spelling:build2': '🔤 Spelling (word wizard)',
+    'spelling:homo': '🔤 Spelling (sound twins)', 'spelling:challenge': '🔤 Spelling (super speller)',
     'spelling:school': '🏫 Spelling (school words)',
     'reading:letters': '📚 Reading (letter sounds)', 'reading:soundmatch': '📚 Reading (sound match)',
     'reading:rhyme': '📚 Reading (rhyme)', 'reading:sight': '📚 Reading (sight words)',
-    'reading:cvc': '📚 Reading (build-a-word)', 'reading:myreading': '📖 Reading (my words)',
+    'reading:cvc': '📚 Reading (build-a-word)', 'reading:endsound': '📚 Reading (ending sounds)',
+    'reading:blend': '📚 Reading (end match)', 'reading:myreading': '📖 Reading (my words)',
   };
 
   function renderModeStats() {

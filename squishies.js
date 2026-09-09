@@ -40,6 +40,8 @@ const Squishies = (() => {
     { id: 'starlet',    name: 'Starlet',          shape: 'star',   palette: ['#9ad1ff', '#e3f2ff'], rarity: 'common', unlock: { totalStars: 25 }, hint: 'Collect 25 stars in total!' },
     { id: 'supernova',  name: 'Supernova',        shape: 'star',   palette: ['#ff9a62', '#ffd9bf'], rarity: 'rare',   unlock: { totalStars: 50 }, hint: 'Collect 50 stars in total!' },
     { id: 'galaxia',    name: 'Galaxia',          shape: 'planet', palette: ['#a98bff', '#e4daff'], rarity: 'epic',   unlock: { totalStars: 100 }, hint: 'Collect 100 stars in total!' },
+    { id: 'nebula_nug', name: 'Nebula Nugget',    shape: 'planet', palette: ['#6bd6d0', '#c6f3f0'], rarity: 'epic',   unlock: { totalStars: 160 }, hint: 'Collect 160 stars in total!' },
+    { id: 'cosmoth',    name: 'Cosmoth',          shape: 'star',   palette: ['#ffd34d', '#fff1b0'], rarity: 'epic',   unlock: { totalStars: 240 }, hint: 'Collect 240 stars in total!' },
     { id: 'voyager',    name: 'Voyager',          shape: 'rocket', palette: ['#8fd0ff', '#dcefff'], rarity: 'common', unlock: { totalMissions: 10 }, hint: 'Finish 10 missions!' },
     { id: 'captain',    name: 'Captain Squish',   shape: 'blob',   palette: ['#ff7a8a', '#ffd1d7'], rarity: 'rare',   unlock: { totalMissions: 25 }, hint: 'Finish 25 missions!' },
     { id: 'flamey',     name: 'Flamey',           shape: 'blob',   palette: ['#ff9a3d', '#ffd9a8'], rarity: 'rare',   unlock: { streak: 3 }, hint: 'Play 3 days in a row!' },

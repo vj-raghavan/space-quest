@@ -186,6 +186,41 @@ function buildReadingQuestion(level) {
     };
   }
 
+  if (level === 'endsound') {
+    const pic = readPickPic();
+    const last = pic.w.slice(-1);
+    const others = readShuffle('abcdefghijklmnopqrstuvwxyz'.split('').filter(l => l !== last)).slice(0, 2);
+    const choices = readShuffle([last, ...others]);
+    return {
+      op: 'reading',
+      say: pic.w,
+      html: `<div class="prompt-line">${bigEmoji(pic.e)}</div><div class="prompt-line story-which-op">Which letter does <b>${pic.w}</b> <b>end</b> with? ${spellSpeakBtn(pic.w)}</div>`,
+      choices: choices.map(l => ({ html: bigLetter(l), value: l })),
+      promptText: `${pic.w} ends with?`,
+      expected: last,
+      teach: `<b>${pic.w}</b> ends with the <b>${last}</b> sound — ${pic.e}`
+    };
+  }
+
+  if (level === 'blend') {
+    const target = readPickPic();
+    const last = target.w.slice(-1);
+    const sameEnd = READ_PICS.filter(p => p.w.slice(-1) === last && p.w !== target.w);
+    if (!sameEnd.length) return buildReadingQuestion('endsound');
+    const correct = readPick(sameEnd);
+    const distractors = readShuffle(READ_PICS.filter(p => p.w.slice(-1) !== last)).slice(0, 2);
+    const choices = readShuffle([correct, ...distractors]);
+    return {
+      op: 'reading',
+      say: target.w,
+      html: `<div class="prompt-line">${bigEmoji(target.e)}</div><div class="prompt-line story-which-op">Tap the one that <b>ends</b> like <b>${target.w}</b>! ${spellSpeakBtn(target.w)}</div>`,
+      choices: choices.map(p => ({ html: bigEmoji(p.e), value: p.w })),
+      promptText: `ends like ${target.w}`,
+      expected: correct.w,
+      teach: `<b>${target.w}</b> and <b>${correct.w}</b> both end with <b>${last}</b>!`
+    };
+  }
+
   // myreading: parent-entered words (Reading Eggs / school list)
   const list = ReadingWords.load();
   const word = readPick(list).toLowerCase();
