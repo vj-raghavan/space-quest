@@ -2005,31 +2005,37 @@ body.theme-candy .nebula {
 }
 .sap-stick {
   position: absolute;
-  left: 10px;
-  bottom: 10px;
-  width: 92px;
-  height: 92px;
+  left: 4px;
+  bottom: 4px;
+  width: 128px;
+  height: 128px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.14);
-  border: 2px solid rgba(255,255,255,0.28);
+  background: rgba(255,255,255,0.16);
+  border: 3px solid rgba(255,255,255,0.38);
   z-index: 8;
   touch-action: none;
+}
+.sap-stick-hit {
+  position: absolute;
+  inset: -36px;
+  border-radius: 50%;
+  z-index: -1;
 }
 .sap-stick-knob {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 40px;
-  height: 40px;
-  margin: -20px 0 0 -20px;
+  width: 58px;
+  height: 58px;
+  margin: -29px 0 0 -29px;
   border-radius: 50%;
-  background: rgba(157, 245, 214, 0.85);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  background: rgba(157, 245, 214, 0.92);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.35);
   pointer-events: none;
 }
 .sap-shop {
   position: absolute;
-  left: 108px;
+  left: 142px;
   right: 8px;
   bottom: 8px;
   z-index: 9;
@@ -2058,9 +2064,9 @@ body.theme-candy .nebula {
 .sap-up:disabled { opacity: 0.45; cursor: default; }
 @media (max-width: 600px) {
   .sap-pet { width: 58px; height: 58px; }
-  .sap-stick { width: 84px; height: 84px; }
+  .sap-stick { width: 120px; height: 120px; }
   .mg-arena.mg-steal { height: min(55vh, 440px); }
-  .sap-shop { left: 96px; }
+  .sap-shop { left: 132px; }
 }
 .mg-planet {
   position: absolute;
@@ -2139,6 +2145,33 @@ body.theme-candy .nebula {
 .mg-play-root { position: relative; }
 .mg-finish-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
 .dress-layout { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; align-items: flex-start; }
+.dress-chars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin: 6px 0 10px;
+}
+.dress-char {
+  min-width: 88px;
+  min-height: 64px;
+  padding: 8px 10px;
+  border-radius: 16px;
+  border: 1px solid var(--panel-border);
+  background: rgba(255,255,255,0.08);
+  color: inherit;
+  font-family: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  -webkit-tap-highlight-color: transparent;
+}
+.dress-char.on { outline: 2px solid #9df5d6; background: rgba(157, 245, 214, 0.16); }
+.dress-char.locked { opacity: 0.65; }
+.dress-char-emoji { font-size: 1.6rem; }
 .dress-cols { flex: 1; min-width: 240px; }
 .dress-section h3 { margin: 8px 0 6px; font-size: 1rem; }
 .dress-grid {

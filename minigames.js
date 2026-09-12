@@ -49,8 +49,56 @@ const MiniGames = (() => {
 
   const DEFAULT_LOOK = { color: 'mint', hat: 'none', outfit: 'cape', extra: 'none' };
 
-  let session = null;
-  let hubBound = false;
+  const DRESS_CHARS = [
+    { id: 'cosmo', name: 'Cosmo', emoji: '👽', unlockStars: 0, kind: 'cosmo', blurb: 'Galaxy pal' },
+    { id: 'starlet', name: 'Starlet', emoji: '🧒', unlockStars: 0, kind: 'kid', blurb: 'Space kid' },
+    { id: 'nibble', name: 'Nibble', emoji: '🐾', unlockStars: 28, kind: 'pet', blurb: 'Pet buddy' },
+    { id: 'boop', name: 'Boop', emoji: '🛸', unlockStars: 50, kind: 'friend', blurb: 'Silly friend' },
+  ];
+
+  function defaultDressState() {
+    const looks = {};
+    DRESS_CHARS.forEach(ch => { looks[ch.id] = { ...DEFAULT_LOOK }; });
+    return { active: 'cosmo', looks };
+  }
+
+  function loadDressState() {
+    try {
+      const raw = localStorage.getItem(Players.key(DRESS_KEY));
+      if (!raw) return defaultDressState();
+      const data = JSON.parse(raw);
+      if (data && data.looks && typeof data.looks === 'object') {
+        const looks = {};
+        DRESS_CHARS.forEach(ch => {
+          looks[ch.id] = { ...DEFAULT_LOOK, ...(data.looks[ch.id] || {}) };
+        });
+        const active = DRESS_CHARS.some(c => c.id === data.active) ? data.active : 'cosmo';
+        return { active, looks };
+      }
+      return { active: 'cosmo', looks: { cosmo: { ...DEFAULT_LOOK, ...data } } };
+    } catch (e) { /* defaults */ }
+    return defaultDressState();
+  }
+
+  function saveDressState(state) {
+    localStorage.setItem(Players.key(DRESS_KEY), JSON.stringify(state));
+  }
+
+  function loadDress() {
+    const st = loadDressState();
+    return { ...DEFAULT_LOOK, ...(st.looks.cosmo || {}) };
+  }
+
+  function lookForChar(id) {
+    const st = loadDressState();
+    return { ...DEFAULT_LOOK, ...(st.looks[id] || {}) };
+  }
+
+  function saveDress(look) {
+    const st = loadDressState();
+    st.looks.cosmo = { ...DEFAULT_LOOK, ...look };
+    saveDressState(st);
+  }
 
   function totalStars() {
     if (typeof Progression !== 'undefined' && Progression.getStats) {
@@ -63,17 +111,8 @@ const MiniGames = (() => {
     return totalStars() >= (game.unlockStars || 0);
   }
 
-  function loadDress() {
-    try {
-      const raw = localStorage.getItem(Players.key(DRESS_KEY));
-      if (raw) return { ...DEFAULT_LOOK, ...JSON.parse(raw) };
-    } catch (e) { /* defaults */ }
-    return { ...DEFAULT_LOOK };
-  }
-
-  function saveDress(look) {
-    localStorage.setItem(Players.key(DRESS_KEY), JSON.stringify(look));
-  }
+  let session = null;
+  let hubBound = false;
 
   function beginSession() {
     stop();
@@ -161,12 +200,54 @@ const MiniGames = (() => {
     });
   }
 
-  function dressedStage(uid, look, sizeClass) {
+  function characterBodySvg(kind, uid) {
+    if (kind === 'kid') {
+      return `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-label="Starlet the space kid">
+        <circle cx="100" cy="100" r="84" fill="rgba(170,225,255,0.14)" stroke="rgba(255,255,255,0.4)" stroke-width="2.5"/>
+        <ellipse cx="100" cy="128" rx="38" ry="42" fill="#7dd3fc"/>
+        <circle cx="100" cy="78" r="28" fill="#fde68a"/>
+        <circle cx="90" cy="76" r="4" fill="#15203a"/>
+        <circle cx="110" cy="76" r="4" fill="#15203a"/>
+        <path d="M90 90 Q100 98 110 90" fill="none" stroke="#15203a" stroke-width="3" stroke-linecap="round"/>
+        <path d="M72 62 Q100 42 128 62" fill="#38bdf8"/>
+        <ellipse cx="70" cy="128" rx="8" ry="16" fill="#38bdf8"/>
+        <ellipse cx="130" cy="128" rx="8" ry="16" fill="#38bdf8"/>
+      </svg>`;
+    }
+    if (kind === 'pet') {
+      return `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-label="Nibble the space pet">
+        <circle cx="100" cy="100" r="84" fill="rgba(255,210,90,0.12)" stroke="rgba(255,255,255,0.4)" stroke-width="2.5"/>
+        <ellipse cx="100" cy="118" rx="52" ry="40" fill="#fda4af"/>
+        <circle cx="78" cy="72" r="16" fill="#fb7185"/>
+        <circle cx="122" cy="72" r="16" fill="#fb7185"/>
+        <circle cx="88" cy="108" r="6" fill="#15203a"/>
+        <circle cx="112" cy="108" r="6" fill="#15203a"/>
+        <ellipse cx="100" cy="124" rx="8" ry="5" fill="#9f1239"/>
+        <circle cx="70" cy="118" r="6" fill="#fff" opacity="0.7"/>
+      </svg>`;
+    }
+    return `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-label="Boop the silly friend">
+      <circle cx="100" cy="100" r="84" fill="rgba(181,107,255,0.14)" stroke="rgba(255,255,255,0.4)" stroke-width="2.5"/>
+      <ellipse cx="100" cy="118" rx="56" ry="28" fill="#c4b5fd"/>
+      <ellipse cx="100" cy="108" rx="40" ry="36" fill="#a78bfa"/>
+      <circle cx="86" cy="104" r="7" fill="#15203a"/>
+      <circle cx="114" cy="104" r="7" fill="#15203a"/>
+      <circle cx="88" cy="102" r="2.4" fill="#fff"/>
+      <circle cx="116" cy="102" r="2.4" fill="#fff"/>
+      <path d="M88 122 Q100 132 112 122" fill="none" stroke="#15203a" stroke-width="4" stroke-linecap="round"/>
+      <rect x="70" y="78" width="60" height="10" rx="5" fill="#fde68a"/>
+    </svg>`;
+  }
+
+  function dressedStage(uid, look, sizeClass, charId) {
     const color = COLORS.find(c => c.id === look.color) || COLORS[0];
     const hat = HATS.find(h => h.id === look.hat) || HATS[0];
     const outfit = OUTFITS.find(o => o.id === look.outfit) || OUTFITS[0];
     const extra = EXTRAS.find(x => x.id === look.extra) || EXTRAS[0];
-    const svg = (typeof mascotSVG === 'function') ? mascotSVG(uid) : '';
+    const char = DRESS_CHARS.find(c => c.id === charId) || DRESS_CHARS[0];
+    const svg = char.kind === 'cosmo'
+      ? ((typeof mascotSVG === 'function') ? mascotSVG(uid) : '')
+      : characterBodySvg(char.kind, uid);
     return `
       <div class="cosmo-dress-stage ${sizeClass || ''}">
         <div class="cosmo-dress-body" style="filter:hue-rotate(${color.hue}deg)">
@@ -428,7 +509,7 @@ const MiniGames = (() => {
     const stick = document.createElement('div');
     stick.className = 'sap-stick';
     stick.id = 'sap-stick';
-    stick.innerHTML = '<div class="sap-stick-knob" id="sap-stick-knob"></div>';
+    stick.innerHTML = '<div class="sap-stick-hit" id="sap-stick-hit"></div><div class="sap-stick-knob" id="sap-stick-knob"></div>';
     arena.appendChild(stick);
     const knob = stick.querySelector('#sap-stick-knob');
 
@@ -782,13 +863,24 @@ const MiniGames = (() => {
       const box = stick.getBoundingClientRect();
       const cx = box.left + box.width / 2;
       const cy = box.top + box.height / 2;
-      let dx = (e.clientX - cx) / (box.width / 2);
-      let dy = (e.clientY - cy) / (box.height / 2);
-      const mag = Math.hypot(dx, dy) || 1;
-      if (mag > 1) { dx /= mag; dy /= mag; }
-      joy.x = dx;
-      joy.y = dy;
-      knob.style.transform = `translate(${dx * 18}px, ${dy * 18}px)`;
+      const reach = Math.max(36, box.width * 0.36);
+      let dx = (e.clientX - cx) / reach;
+      let dy = (e.clientY - cy) / reach;
+      const mag = Math.hypot(dx, dy);
+      if (mag < 0.05) {
+        joy.x = 0;
+        joy.y = 0;
+        knob.style.transform = 'translate(0,0)';
+        return;
+      }
+      const nx = dx / mag;
+      const ny = dy / mag;
+      const t = Math.min(1, (mag - 0.05) / 0.78);
+      const spd = Math.pow(t, 0.55);
+      joy.x = nx * spd;
+      joy.y = ny * spd;
+      const travel = 30;
+      knob.style.transform = `translate(${nx * Math.min(mag, 1) * travel}px, ${ny * Math.min(mag, 1) * travel}px)`;
     }
     function joyStart(e) {
       e.preventDefault();
@@ -1295,20 +1387,37 @@ const MiniGames = (() => {
 
   function startDressUp(root, hud) {
     beginSession();
-    hud.innerHTML = '<span>👗 Mix & match!</span>';
-    let look = loadDress();
+    hud.innerHTML = '<span>👗 Pick a pal, then mix & match!</span>';
     const stars = totalStars();
-    let lastCheer = 'You look cosmic!';
+    const state = loadDressState();
+    let activeId = state.active;
+    if ((DRESS_CHARS.find(c => c.id === activeId) || {}).unlockStars > stars) activeId = 'cosmo';
+    let look = lookForChar(activeId);
+    let lastCheer = 'Pick a character — then dress them up!';
 
     function locked(item) {
       return stars < item.unlockStars;
     }
 
+    function charLocked(ch) {
+      return stars < ch.unlockStars;
+    }
+
     function paint() {
+      const active = DRESS_CHARS.find(c => c.id === activeId) || DRESS_CHARS[0];
+      const picker = DRESS_CHARS.map(ch => {
+        const isLock = charLocked(ch);
+        return `<button type="button" class="dress-char ${ch.id === activeId ? 'on' : ''} ${isLock ? 'locked' : ''}"
+          data-char="${ch.id}" ${isLock ? 'disabled' : ''}>
+          <span class="dress-char-emoji">${isLock ? '🔒' : ch.emoji}</span>
+          <span>${isLock ? ch.unlockStars + '⭐' : ch.name}</span>
+        </button>`;
+      }).join('');
       root.innerHTML = `
         <div class="mg-cheer" id="mg-cheer">${lastCheer}</div>
+        <div class="dress-chars" role="tablist" aria-label="Dress-up characters">${picker}</div>
         <div class="dress-layout">
-          ${dressedStage('dressup', look, 'play-size')}
+          ${dressedStage('dressup', look, 'play-size', active.id)}
           <div class="dress-cols">
             ${section('Colour', COLORS.map(c => ({
               id: c.id, emoji: '●', name: c.label, unlockStars: 0, swatch: true, hue: c.hue
@@ -1318,8 +1427,25 @@ const MiniGames = (() => {
             ${section('Extras', EXTRAS, 'extra')}
           </div>
         </div>
-        <p class="mg-hint">Looks save automatically. Cosmo wears this on the galaxy map!</p>
+        <p class="mg-hint">Looks save per character. Cosmo still wears Cosmo’s look on the galaxy map!</p>
       `;
+      root.querySelectorAll('[data-char]').forEach(btn => {
+        pointerTap(btn, () => {
+          if (btn.classList.contains('locked')) {
+            playSound('warning');
+            cheer('Earn more stars to unlock this pal!', false);
+            return;
+          }
+          activeId = btn.dataset.char;
+          look = lookForChar(activeId);
+          const st = loadDressState();
+          st.active = activeId;
+          saveDressState(st);
+          playSound('tap');
+          lastCheer = 'Let’s dress ' + (DRESS_CHARS.find(c => c.id === activeId).name) + '!';
+          paint();
+        });
+      });
       root.querySelectorAll('[data-dress]').forEach(btn => {
         pointerTap(btn, () => {
           if (btn.classList.contains('locked')) {
@@ -1329,11 +1455,14 @@ const MiniGames = (() => {
           }
           const slot = btn.dataset.slot;
           look[slot] = btn.dataset.dress;
-          saveDress(look);
+          const st = loadDressState();
+          st.active = activeId;
+          st.looks[activeId] = { ...DEFAULT_LOOK, ...look };
+          saveDressState(st);
           playSound('tap');
           lastCheer = 'Ooh fancy!';
           paint();
-          renderGalaxyCosmo();
+          if (activeId === 'cosmo') renderGalaxyCosmo();
         });
       });
     }
@@ -1385,7 +1514,7 @@ const MiniGames = (() => {
       id: 'dress-up',
       title: 'Cosmo Dress-Up',
       emoji: '👗',
-      blurb: 'Hats, colours, and sparkly outfits.',
+      blurb: 'Pick Cosmo, Starlet, Nibble or Boop and dress them up!',
       unlockStars: 22,
       start: startDressUp,
     },

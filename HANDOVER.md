@@ -57,7 +57,7 @@ Load order in `index.html` **matters** (globals, no modules):
 - `space_quest_mastery_v1` — `{facts:{key:{a,c,t}}, modes:{tag:{a,c,t}}}`.
 - `space_quest_pokedex_v1` — array of caught ids.
 - `space_quest_squishies_v1` — array of unlocked squishy ids.
-- `space_quest_dressup_v1` — Cosmo Dress-Up look `{color, hat, outfit, extra}` (also drawn on the galaxy-map mascot).
+- `space_quest_dressup_v1` — Cosmo Dress-Up `{active, looks:{cosmo,starlet,nibble,boop:{color,hat,outfit,extra}}}` (legacy flat looks migrate to Cosmo). Galaxy map still shows Cosmo’s look.
 - `space_quest_steal_pet_v1` — Steal a Pet bests `{bestScore, bestPets, bestLegendary}` (run coins stay in-session only).
 - `space_quest_high_score`, `space_quest_tests_completed`, `space_quest_unlocked_badges`.
 - `space_quest_family_goal_v1` — **not namespaced** (shared by every player on the device): `{kind:'stars'|'dailies', target, period:'week', weekId, progress, pendingCelebrate}`. Cooperative family total only — never per-child scores.
@@ -107,7 +107,7 @@ The Poké Galaxy uses Nintendo-owned names and artwork. Acceptable as a private 
 
 Everything described above is **built**, plus:
 
-- **Mini Games arcade** — galaxy teaser + hub; six original games (**Steal a Pet**, Zoom Zoom Planet Pop, Purple Blip Tap, Cosmo Dress-Up, Wiggle Walk, Moon Boing). Steal a Pet is a single-player steal→carry-home loop vs 4 NPC bases (original Cosmo space pets only — no copied Roblox characters). **Legendaries** (Aurora Drake, Nova Whale, Prism Phoenix, Lunar Unicorn, Galaxy Panda, Comet Axolotl, Eclipse Lynx) spawn only at Nova Nest, need a wake-tap mini-challenge (Lucky sniff / Super hug wakes in 1 tap), a pulsing gold gate, extra star-guards, heavier carry, and an alert chase; locking one in fires Cosmo cheer + confetti + victory jingle. Star-gated by total stars earned (Steal a Pet still unlocks at 8); dress-up look persists per player and shows on the galaxy Cosmo.
+- **Mini Games arcade** — galaxy teaser + hub; six original games (**Steal a Pet**, Zoom Zoom Planet Pop, Purple Blip Tap, Cosmo Dress-Up, Wiggle Walk, Moon Boing). Steal a Pet is a single-player steal→carry-home loop vs 4 NPC bases (original Cosmo space pets only — no copied Roblox characters). **Legendaries** (Aurora Drake, Nova Whale, Prism Phoenix, Lunar Unicorn, Galaxy Panda, Comet Axolotl, Eclipse Lynx) spawn only at Nova Nest, need a wake-tap mini-challenge (Lucky sniff / Super hug wakes in 1 tap), a pulsing gold gate, extra star-guards, heavier carry, and an alert chase; locking one in fires Cosmo cheer + confetti + victory jingle. Star-gated by total stars earned (Steal a Pet still unlocks at 8); the on-screen joystick is larger with a wide grab pad for little hands; dress-up has a character picker (Cosmo, Starlet, Nibble, Boop) with looks saved per character, while Cosmo still shows on the galaxy map.
 - **Co-op family goals** — shared weekly target (stars or daily missions) on the galaxy map; Grown-Up Zone can set/reset; Cosmo + confetti celebration when the family finishes together. Storage: `space_quest_family_goal_v1` (not per-player).
 - **Tricky Facts on-demand** — galaxy + custom-setup buttons launch a 10-question mission via `Mastery.buildTrickyMission` / `weightedSample`; rematch + teaching moments; `missionKey: 'tricky'`; **Fact Crusher** badge on a clean 100% run.
 - **Per-table Lightning Round bests** — picker for ×2–×12 plus mixed “all tables”; `profile.sprintBests`; legacy `sprintBest` migrates to `sprintBests.all` only (not copied onto every table).
