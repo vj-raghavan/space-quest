@@ -198,44 +198,89 @@ const MiniGames = (() => {
     { id: 'star-sloth', name: 'Star Sloth', emoji: '🦥', rarity: 'rare', hue: '#ff9bb0' },
     { id: 'aurora-drake', name: 'Aurora Drake', emoji: '🐲', rarity: 'legendary', hue: '#ffd25a' },
     { id: 'nova-whale', name: 'Nova Whale', emoji: '🐋', rarity: 'legendary', hue: '#c084fc' },
+    { id: 'prism-phoenix', name: 'Prism Phoenix', emoji: '🐦', rarity: 'legendary', hue: '#ff7a45' },
+    { id: 'lunar-unicorn', name: 'Lunar Unicorn', emoji: '🦄', rarity: 'legendary', hue: '#f0abfc' },
+    { id: 'galaxy-panda', name: 'Galaxy Panda', emoji: '🐼', rarity: 'legendary', hue: '#a5b4fc' },
+    { id: 'comet-axolotl', name: 'Comet Axolotl', emoji: '🦎', rarity: 'legendary', hue: '#fda4af' },
+    { id: 'eclipse-lynx', name: 'Eclipse Lynx', emoji: '🐈', rarity: 'legendary', hue: '#e9d5ff' },
   ];
 
   const PET_RARITY = {
     common: { label: 'Common', power: 8, income: 1 },
     uncommon: { label: 'Uncommon', power: 16, income: 2 },
     rare: { label: 'Rare', power: 32, income: 3 },
-    legendary: { label: 'Legendary', power: 64, income: 5 },
+    legendary: { label: 'Legendary', power: 96, income: 8 },
   };
+
+  const NOVA_NEST_ID = 3;
+  const LEGEND_WAKE_TAPS = 3;
+  const GATE_CYCLE = 5000;
+  const GATE_LOCKED = 2800;
+
+  function petArtHtml(def, mark) {
+    const hue = def.hue || '#ffd25a';
+    if (def.rarity !== 'legendary') {
+      return `<span class="sap-pet-emoji">${def.emoji}</span>`;
+    }
+    const uid = 'sap' + String(mark || def.id).replace(/[^a-z0-9]/g, '');
+    return `<span class="sap-pet-art" aria-hidden="true">${legendarySvg(def.id, hue, uid)}</span>`;
+  }
+
+  function legendarySvg(id, hue, uid) {
+    const g1 = uid + 'a';
+    const g2 = uid + 'b';
+    if (id === 'nova-whale') {
+      return `<svg viewBox="0 0 64 64" class="sap-svg"><defs><linearGradient id="${g1}" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#c084fc"/><stop offset="1" stop-color="#7dd3fc"/></linearGradient></defs><ellipse cx="32" cy="36" rx="22" ry="12" fill="url(#${g1})"/><path d="M50 32c6 2 10-4 12-8-8 1-12 6-12 10z" fill="#a78bfa"/><circle cx="20" cy="34" r="2.2" fill="#1e1b4b"/><path d="M14 38c-6 4-8 10-4 12 6-2 10-6 12-10" fill="#ddd6fe"/></svg>`;
+    }
+    if (id === 'prism-phoenix') {
+      return `<svg viewBox="0 0 64 64" class="sap-svg"><path d="M32 14c8 6 18 8 22 4-2 10-10 16-18 18 8 2 14 10 16 18-12-6-20-8-22-8s-10 2-22 8c2-8 8-16 16-18-8-2-16-8-18-18 4 4 14 2 22-4z" fill="${hue}"/><circle cx="32" cy="30" r="7" fill="#ffe29a"/><circle cx="30" cy="29" r="1.4" fill="#3b1d0b"/><circle cx="35" cy="29" r="1.4" fill="#3b1d0b"/></svg>`;
+    }
+    if (id === 'lunar-unicorn') {
+      return `<svg viewBox="0 0 64 64" class="sap-svg"><path d="M32 10l4 14h-8z" fill="#fde68a"/><ellipse cx="34" cy="36" rx="16" ry="14" fill="${hue}"/><circle cx="24" cy="28" r="8" fill="#f5d0fe"/><circle cx="21" cy="26" r="1.6" fill="#3b0764"/><path d="M18 22c-6-8 2-14 8-10" fill="#c084fc"/><path d="M40 28c8-2 16 6 12 12" stroke="#fff" stroke-width="3" fill="none"/></svg>`;
+    }
+    if (id === 'galaxy-panda') {
+      return `<svg viewBox="0 0 64 64" class="sap-svg"><circle cx="32" cy="34" r="16" fill="#e0e7ff"/><circle cx="22" cy="22" r="7" fill="#312e81"/><circle cx="42" cy="22" r="7" fill="#312e81"/><circle cx="26" cy="32" r="4" fill="#1e1b4b"/><circle cx="38" cy="32" r="4" fill="#1e1b4b"/><circle cx="27" cy="31" r="1.4" fill="#fff"/><circle cx="39" cy="31" r="1.4" fill="#fff"/><ellipse cx="32" cy="42" rx="5" ry="3" fill="#4338ca"/><circle cx="18" cy="16" r="1.5" fill="#fde68a"/><circle cx="48" cy="14" r="1.2" fill="#fde68a"/></svg>`;
+    }
+    if (id === 'comet-axolotl') {
+      return `<svg viewBox="0 0 64 64" class="sap-svg"><ellipse cx="32" cy="36" rx="16" ry="12" fill="${hue}"/><path d="M16 24c-8-8 2-16 10-8M48 24c8-8-2-16-10-8M14 40c-10 2-10 14-2 12M50 40c10 2 10 14 2 12" fill="#fb7185"/><circle cx="26" cy="34" r="2" fill="#4c0519"/><circle cx="38" cy="34" r="2" fill="#4c0519"/><path d="M44 20l14-8-4 12" fill="#fde68a"/></svg>`;
+    }
+    if (id === 'eclipse-lynx') {
+      return `<svg viewBox="0 0 64 64" class="sap-svg"><ellipse cx="34" cy="38" rx="16" ry="13" fill="${hue}"/><path d="M20 22l-6-12 12 6M44 20l8-12-4 14" fill="#6b21a8"/><circle cx="26" cy="34" r="3" fill="#1e1b4b"/><circle cx="27" cy="33" r="1" fill="#fde68a"/><path d="M40 18c8 0 14 8 10 14" fill="#c4b5fd"/><circle cx="48" cy="14" r="6" fill="#fef3c7" opacity=".85"/></svg>`;
+    }
+    // Aurora Drake default
+    return `<svg viewBox="0 0 64 64" class="sap-svg"><defs><linearGradient id="${g2}" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#ffd25a"/><stop offset="1" stop-color="#34d399"/></linearGradient></defs><path d="M18 40c2-16 14-24 28-22 2 8-2 16-10 20 10 0 16 6 18 14-16-4-24-2-28 2-2-6-6-10-8-14z" fill="url(#${g2})"/><circle cx="40" cy="26" r="2" fill="#1e1b4b"/><path d="M48 22l10-6-2 10" fill="#fb7185"/></svg>`;
+  }
 
   function loadStealBest() {
     try {
       const raw = localStorage.getItem(Players.key(STEAL_KEY));
-      if (raw) return { bestScore: 0, bestPets: 0, ...JSON.parse(raw) };
+      if (raw) return { bestScore: 0, bestPets: 0, bestLegendary: 0, ...JSON.parse(raw) };
     } catch (e) { /* defaults */ }
-    return { bestScore: 0, bestPets: 0 };
+    return { bestScore: 0, bestPets: 0, bestLegendary: 0 };
   }
 
   function saveStealBest(rec) {
     localStorage.setItem(Players.key(STEAL_KEY), JSON.stringify(rec));
   }
 
-  function pickSpacePet(rarity, luck) {
-    let pool = SPACE_PETS.filter(p => p.rarity === rarity);
-    if (!pool.length) {
-      const weights = luck
-        ? { common: 32, uncommon: 30, rare: 24, legendary: 14 }
-        : { common: 52, uncommon: 28, rare: 14, legendary: 6 };
-      const entries = Object.keys(weights);
-      const total = entries.reduce((s, k) => s + weights[k], 0);
-      let roll = Math.random() * total;
-      let picked = 'common';
-      for (const k of entries) {
-        roll -= weights[k];
-        if (roll <= 0) { picked = k; break; }
-      }
-      pool = SPACE_PETS.filter(p => p.rarity === picked);
-    }
+  function nestGateOpen(now) {
+    return (now % GATE_CYCLE) >= GATE_LOCKED;
+  }
+
+  function pickSpacePet(rarity) {
+    const pool = SPACE_PETS.filter(p => p.rarity === rarity);
+    if (!pool.length) return SPACE_PETS[0];
     return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  function restockRarity(rival, luck) {
+    if (rival.id === NOVA_NEST_ID) {
+      const chance = luck >= 2 ? 0.48 : luck >= 1 ? 0.32 : 0.18;
+      if (Math.random() < chance) return 'legendary';
+      return Math.random() < 0.55 ? 'rare' : 'uncommon';
+    }
+    const bump = Math.min(2, rival.id + luck);
+    return ['common', 'uncommon', 'rare'][bump];
   }
 
   function startStealAPet(root, hud) {
@@ -251,6 +296,9 @@ const MiniGames = (() => {
     let lastTs = t0;
     let stunUntil = 0;
     let stealGraceUntil = 0;
+    let alertUntil = 0;
+    let lastGateOpen = nestGateOpen(t0);
+    let gateHintAt = 0;
     const upgrades = { speed: 0, hug: 0, luck: 0 };
     const keys = { u: false, d: false, l: false, r: false };
     const joy = { active: false, x: 0, y: 0 };
@@ -272,25 +320,39 @@ const MiniGames = (() => {
       rivalId: b.id,
       angle: i * 1.4,
       speed: 1.05 + i * 0.18,
-      orbit: 8 + (i === 3 ? 1.5 : 0),
+      orbit: 8 + (i === NOVA_NEST_ID ? 1.8 : 0),
+      chase: 0,
       x: b.x, y: b.y,
     }));
+    guards.push({
+      rivalId: NOVA_NEST_ID,
+      angle: 3.6,
+      speed: 1.55,
+      orbit: 11.5,
+      chase: 0,
+      x: rivals[NOVA_NEST_ID].x,
+      y: rivals[NOVA_NEST_ID].y,
+    });
     const worldPets = [];
     const collection = [];
     const carried = [];
 
     function makePet(rarity, rival) {
-      const def = pickSpacePet(rarity, upgrades.luck > 0);
-      const inward = rival.x < 50 ? 14 : -14;
+      const def = pickSpacePet(rarity);
+      const legendary = rarity === 'legendary';
+      const inward = rival.x < 50 ? (legendary ? 6 : 14) : (legendary ? -6 : -14);
+      const down = legendary ? 5 : 14;
       return {
         uid: petUid++,
         def,
         rivalId: rival.id,
         x: rival.x + inward,
-        y: rival.y + 14,
+        y: rival.y + down,
         homeX: rival.x + inward,
-        homeY: rival.y + 14,
+        homeY: rival.y + down,
         state: 'parked',
+        awake: !legendary,
+        wakes: 0,
       };
     }
 
@@ -307,14 +369,23 @@ const MiniGames = (() => {
       return 1 + upgrades.hug;
     }
 
+    function carryingLegendary() {
+      return carried.some(p => p.def.rarity === 'legendary');
+    }
+
     function speedMul() {
       const boots = 1 + upgrades.speed * 0.22;
-      const load = carried.length ? 0.52 : 1;
+      if (!carried.length) return boots;
+      const load = carryingLegendary() ? 0.32 : 0.52;
       return boots * load;
     }
 
+    function wakeNeed() {
+      return (upgrades.luck > 0 || upgrades.hug > 0) ? 1 : LEGEND_WAKE_TAPS;
+    }
+
     root.innerHTML = `
-      <p class="mg-hint">Tap the map or drag the stick. Steal a space pet, then run home to your base!</p>
+      <p class="mg-hint">Tap the map or drag the stick. Legendaries sparkle at Nova Nest — wake them, wait for the gold gate, then dash home!</p>
       <div class="mg-cheer" id="mg-cheer">Go, Cosmo — sneak a pet!</div>
       <div class="mg-arena mg-steal" id="mg-arena"></div>
     `;
@@ -342,9 +413,9 @@ const MiniGames = (() => {
     });
     guards.forEach((g, i) => {
       const el = document.createElement('div');
-      el.className = 'sap-guard';
+      el.className = 'sap-guard' + (g.rivalId === NOVA_NEST_ID ? ' sap-guard-nova' : '');
       el.dataset.guard = String(i);
-      el.textContent = '🛡️';
+      el.textContent = g.rivalId === NOVA_NEST_ID ? '🌟' : '🛡️';
       arena.appendChild(el);
     });
     const playerEl = document.createElement('div');
@@ -372,10 +443,18 @@ const MiniGames = (() => {
 
     function petButton(pet) {
       const r = PET_RARITY[pet.def.rarity];
-      return `<button type="button" class="sap-pet r-${pet.def.rarity}" data-pet="${pet.uid}" style="--pet:${pet.def.hue}" aria-label="${pet.def.name}">
-        <span class="sap-pet-emoji">${pet.def.emoji}</span>
+      const legendary = pet.def.rarity === 'legendary';
+      const gateShut = legendary && !nestGateOpen(performance.now());
+      const sleepy = legendary && !pet.awake;
+      const lockClass = (gateShut || sleepy) ? ' sap-locked' : '';
+      const wakeMark = sleepy ? `<span class="sap-wake">${pet.wakes}/${wakeNeed()}</span>` : '';
+      const lockMark = gateShut && pet.awake ? '<span class="sap-gate">🔒</span>' : (sleepy ? '<span class="sap-gate">✨</span>' : '');
+      return `<button type="button" class="sap-pet r-${pet.def.rarity}${lockClass}" data-pet="${pet.uid}" style="--pet:${pet.def.hue}" aria-label="${pet.def.name}">
+        ${lockMark}
+        ${petArtHtml(pet.def, pet.uid)}
         <span class="sap-pet-tag">${pet.def.name}</span>
-        <span class="sap-pet-rare">${r.label}</span>
+        <span class="sap-pet-rare">${legendary ? '⭐ ' : ''}${r.label}</span>
+        ${wakeMark}
       </button>`;
     }
 
@@ -393,6 +472,35 @@ const MiniGames = (() => {
     }
     layoutStatic();
 
+    function tryWakeLegendary(pet) {
+      if (pet.def.rarity !== 'legendary' || pet.state !== 'parked') return;
+      if (dist(player, pet) > 14) {
+        cheer('Scoot closer to wake the legendary!');
+        return;
+      }
+      if (pet.awake) {
+        if (!nestGateOpen(performance.now())) {
+          cheer('Wait for Nova Nest’s gold sparkle gate!');
+        } else {
+          cheer('It’s awake — steal and run home!');
+        }
+        return;
+      }
+      pet.wakes += 1;
+      const need = wakeNeed();
+      if (pet.wakes >= need) {
+        pet.awake = true;
+        playSound('correct');
+        cheer(need === 1
+          ? 'Upgrade magic woke the legendary!'
+          : `${pet.def.name} is awake! Wait for the gold gate!`);
+      } else {
+        playSound('tap');
+        cheer(`Tap sparkles ${pet.wakes}/${need} to wake ${pet.def.name}!`);
+      }
+      renderPets();
+    }
+
     function bindPetTaps() {
       petLayer.querySelectorAll('[data-pet]').forEach(btn => {
         pointerTap(btn, () => {
@@ -400,7 +508,8 @@ const MiniGames = (() => {
           const pet = worldPets.find(p => p.uid === Number(btn.dataset.pet) && p.state === 'parked');
           if (!pet) return;
           dest = { x: pet.x, y: pet.y };
-          playSound('tap');
+          if (pet.def.rarity === 'legendary') tryWakeLegendary(pet);
+          else playSound('tap');
         });
       });
     }
@@ -414,14 +523,18 @@ const MiniGames = (() => {
       bindPetTaps();
       const stack = playerEl.querySelector('#sap-carry-stack');
       stack.innerHTML = carried.map(p =>
-        `<span class="sap-carry-chip r-${p.def.rarity}">${p.def.emoji}</span>`
+        `<span class="sap-carry-chip r-${p.def.rarity}">${p.def.rarity === 'legendary' ? '⭐' : ''}${p.def.emoji}</span>`
       ).join('');
       const homePets = homeEl.querySelector('#sap-home-pets');
       homePets.innerHTML = collection.map(p =>
-        `<span class="sap-home-chip r-${p.def.rarity}" title="${p.def.name}">${p.def.emoji}</span>`
+        `<span class="sap-home-chip r-${p.def.rarity}" title="${p.def.name}">${p.def.rarity === 'legendary' ? '⭐' : ''}${p.def.emoji}</span>`
       ).join('');
       playerEl.classList.toggle('carrying', carried.length > 0);
+      playerEl.classList.toggle('carrying-legendary', carryingLegendary());
       playerEl.classList.toggle('stunned', performance.now() < stunUntil);
+      arena.classList.toggle('sap-alerting', performance.now() < alertUntil);
+      const nova = arena.querySelector(`[data-rival="${NOVA_NEST_ID}"]`);
+      if (nova) nova.classList.toggle('sap-gate-shut', !nestGateOpen(performance.now()));
     }
 
     function shopHtml() {
@@ -459,13 +572,13 @@ const MiniGames = (() => {
         if (upgrades.hug || coins < 14) return;
         coins -= 14;
         upgrades.hug = 1;
-        cheer('Super hug! Carry two pets!');
+        cheer('Super hug! Carry two pets — and wake legendaries faster!');
       } else if (kind === 'luck') {
         const cost = [10, 18][upgrades.luck];
         if (!cost || coins < cost) return;
         coins -= cost;
         upgrades.luck += 1;
-        cheer('Lucky sniff! Rarer pets incoming!');
+        cheer('Lucky sniff! Legendaries at Nova Nest get easier to find!');
       }
       playSound('correct');
       paintHud();
@@ -474,7 +587,7 @@ const MiniGames = (() => {
 
     function paintHud() {
       const left = Math.max(0, Math.ceil((duration - (performance.now() - t0)) / 1000));
-      hud.innerHTML = `<span>🐾 ${collection.length}/${homeMax}</span><span>⚡ ${petPower()}</span><span>🪙 ${coins}</span><span>⏱️ ${left}</span>`;
+      hud.innerHTML = `<span>🐾 ${collection.length}/${homeMax}</span><span>⚡ ${petPower()}</span><span>⭐ ${collection.filter(p => p.def.rarity === 'legendary').length}</span><span>🪙 ${coins}</span><span>⏱️ ${left}</span>`;
     }
 
     function dist(a, b) {
@@ -494,40 +607,73 @@ const MiniGames = (() => {
       if (inHazard()) return;
       const near = worldPets.find(p => p.state === 'parked' && dist(player, p) < 9);
       if (!near) return;
+      if (near.def.rarity === 'legendary') {
+        if (!near.awake) return;
+        if (!nestGateOpen(performance.now())) {
+          if (performance.now() - gateHintAt > 1600) {
+            gateHintAt = performance.now();
+            cheer('Gold gate is closed — wait for the sparkle!');
+          }
+          return;
+        }
+      }
       near.state = 'carried';
       carried.push(near);
-      stealGraceUntil = performance.now() + 700;
-      playSound('correct');
-      cheer(`Got ${near.def.name}! Run home!`);
+      stealGraceUntil = performance.now() + (near.def.rarity === 'legendary' ? 420 : 700);
+      if (near.def.rarity === 'legendary') {
+        alertUntil = performance.now() + 4200;
+        guards.forEach(g => { if (g.rivalId === NOVA_NEST_ID) g.chase = alertUntil; });
+        arena.classList.add('sap-alerting');
+        playSound('legendary');
+        cheer(`⭐ LEGENDARY ${near.def.name}! Heavy hugs — dash home!`);
+        if (typeof setMascotMood === 'function') setMascotMood('correct');
+      } else {
+        playSound('correct');
+        cheer(`Got ${near.def.name}! Run home!`);
+      }
       renderPets();
+    }
+
+    function celebrateLegendary(pet) {
+      homeEl.classList.remove('sap-legend-land');
+      void homeEl.offsetWidth;
+      homeEl.classList.add('sap-legend-land');
+      sess.timers.push(setTimeout(() => homeEl.classList.remove('sap-legend-land'), 1800));
+      if (typeof startConfetti === 'function') startConfetti();
+      playSound('victory');
+      if (typeof setMascotMood === 'function') setMascotMood('correct');
+      cheer(`🌟 LEGENDARY locked in! ${pet.def.name} lives at YOUR base!`);
     }
 
     function lockIn() {
       if (!carried.length) return;
       if (dist(player, home) > home.r) return;
       const gained = carried.splice(0, carried.length);
+      const landedLegend = gained.filter(p => p.def.rarity === 'legendary');
       gained.forEach(p => {
         p.state = 'home';
         collection.push(p);
-        coins += 2;
+        coins += p.def.rarity === 'legendary' ? 10 : 2;
         const rival = rivals.find(r => r.id === p.rivalId);
         if (rival) {
           sess.timers.push(setTimeout(() => {
             if (!session || ended) return;
             const hasParked = worldPets.some(w => w.rivalId === rival.id && w.state === 'parked');
             if (!hasParked) {
-              const rarities = ['common', 'uncommon', 'rare', 'legendary'];
-              const bump = Math.min(3, rival.id + upgrades.luck);
-              worldPets.push(makePet(rarities[bump], rival));
+              worldPets.push(makePet(restockRarity(rival, upgrades.luck), rival));
               renderPets();
             }
           }, 1600));
         }
       });
-      playSound('correct');
-      cheer(collection.length >= homeMax
-        ? 'BASE FULL of space pets! Cosmo is dancing!'
-        : 'Safe at base! ' + gained.map(p => p.def.emoji).join(' '));
+      if (landedLegend.length) {
+        celebrateLegendary(landedLegend[0]);
+      } else {
+        playSound('correct');
+        cheer(collection.length >= homeMax
+          ? 'BASE FULL of space pets! Cosmo is dancing!'
+          : 'Safe at base! ' + gained.map(p => p.def.emoji).join(' '));
+      }
       renderPets();
       paintHud();
       paintShop();
@@ -541,6 +687,10 @@ const MiniGames = (() => {
         p.state = 'parked';
         p.x = p.homeX;
         p.y = p.homeY;
+        if (p.def.rarity === 'legendary') {
+          p.awake = false;
+          p.wakes = 0;
+        }
       });
       stunUntil = performance.now() + 900;
       dest = null;
@@ -557,15 +707,18 @@ const MiniGames = (() => {
       freeze(sess);
       const score = petPower();
       const rec = loadStealBest();
+      const legends = collection.filter(p => p.def.rarity === 'legendary').length;
       if (score > rec.bestScore) rec.bestScore = score;
       if (collection.length > rec.bestPets) rec.bestPets = collection.length;
+      if (legends > rec.bestLegendary) rec.bestLegendary = legends;
       saveStealBest(rec);
       const n = collection.length;
       const petWord = n === 1 ? 'pet' : 'pets';
       const names = collection.map(p => p.def.emoji).join(' ') || 'none yet';
+      const legendLine = legends ? ` · ⭐ ${legends} legendary` : '';
       const line = filled
-        ? 'Base full! Pet power ' + score + ' · ' + names
-        : 'You brought home ' + n + ' ' + petWord + ' · power ' + score + ' (best ' + rec.bestScore + ')';
+        ? 'Base full! Pet power ' + score + legendLine + ' · ' + names
+        : 'You brought home ' + n + ' ' + petWord + ' · power ' + score + legendLine + ' (best ' + rec.bestScore + ')';
       finishOverlay(root, 'steal-a-pet', 'Steal a Pet', line, () => {
         startStealAPet(root, hud);
       });
@@ -641,7 +794,7 @@ const MiniGames = (() => {
     paintShop();
     paintHud();
     cheer(records.bestScore
-      ? `Best pet power ${records.bestScore}! Steal and run home!`
+      ? `Best power ${records.bestScore}${records.bestLegendary ? ' · ⭐' + records.bestLegendary + ' legendary' : ''}! Hunt Nova Nest!`
       : 'Steal a pet, then dash back to YOUR base!');
 
     function tick(now) {
@@ -651,12 +804,33 @@ const MiniGames = (() => {
 
       guards.forEach((g, i) => {
         const b = rivals[g.rivalId];
-        g.angle += g.speed * dt;
-        g.x = b.x + Math.cos(g.angle) * g.orbit;
-        g.y = b.y + Math.sin(g.angle) * (g.orbit * 0.72);
+        const chasing = now < g.chase && carryingLegendary();
+        if (chasing) {
+          const dx = player.x - g.x;
+          const dy = player.y - g.y;
+          const m = Math.hypot(dx, dy) || 1;
+          g.x += (dx / m) * 18 * dt;
+          g.y += (dy / m) * 18 * dt;
+        } else {
+          const spd = g.speed * (now < alertUntil && g.rivalId === NOVA_NEST_ID ? 1.45 : 1);
+          g.angle += spd * dt;
+          g.x = b.x + Math.cos(g.angle) * g.orbit;
+          g.y = b.y + Math.sin(g.angle) * (g.orbit * 0.72);
+        }
         const el = arena.querySelector(`[data-guard="${i}"]`);
-        if (el) { el.style.left = g.x + '%'; el.style.top = g.y + '%'; }
+        if (el) {
+          el.style.left = g.x + '%';
+          el.style.top = g.y + '%';
+          el.classList.toggle('sap-guard-chase', chasing);
+        }
       });
+
+      const gateOpen = nestGateOpen(now);
+      if (gateOpen !== lastGateOpen) {
+        lastGateOpen = gateOpen;
+        renderPets();
+      }
+      if (now >= alertUntil) arena.classList.remove('sap-alerting');
 
       let vx = 0, vy = 0;
       if (joy.active) {
@@ -1145,7 +1319,7 @@ const MiniGames = (() => {
       id: 'steal-a-pet',
       title: 'Steal a Pet',
       emoji: '🐾',
-      blurb: 'Sneak a space pet and run it home to your base!',
+      blurb: 'Sneak space pets home — hunt sparkly legendaries at Nova Nest!',
       unlockStars: 8,
       start: startStealAPet,
     },
