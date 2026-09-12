@@ -24,17 +24,23 @@ const MiniGames = (() => {
     { id: 'helm', emoji: '⛑️', name: 'Moon helm', unlockStars: 10 },
     { id: 'prop', emoji: '🚁', name: 'Whirly', unlockStars: 16 },
     { id: 'flower', emoji: '🌸', name: 'Bloom', unlockStars: 22 },
+    { id: 'pigtails', emoji: '🎀', name: 'Twin bows', unlockStars: 0, chars: ['starlet'] },
+    { id: 'ears', emoji: '🐰', name: 'Bunny ears', unlockStars: 0, chars: ['nibble'] },
+    { id: 'saucer', emoji: '📡', name: 'Saucer lid', unlockStars: 0, chars: ['boop'] },
     { id: 'crown', emoji: '👑', name: 'Star crown', unlockStars: 40 },
     { id: 'comet', emoji: '☄️', name: 'Comet cap', unlockStars: 80 },
     { id: 'nova', emoji: '🌟', name: 'Nova halo', unlockStars: 140 },
   ];
 
   const OUTFITS = [
-    { id: 'none', emoji: '🛸', name: 'Just Cosmo', unlockStars: 0 },
+    { id: 'none', emoji: '🛸', name: 'No outfit', unlockStars: 0 },
     { id: 'cape', emoji: '🦸', name: 'Sparkle cape', unlockStars: 0 },
     { id: 'tutu', emoji: '🩰', name: 'Star tutu', unlockStars: 15 },
     { id: 'stripes', emoji: '🎽', name: 'Zoom stripes', unlockStars: 25 },
     { id: 'pack', emoji: '🎒', name: 'Rocket pack', unlockStars: 30 },
+    { id: 'overalls', emoji: '👖', name: 'Moon overalls', unlockStars: 0, chars: ['starlet'] },
+    { id: 'fluff', emoji: '🧶', name: 'Cozy fluff', unlockStars: 0, chars: ['nibble'] },
+    { id: 'rings', emoji: '💿', name: 'Hover rings', unlockStars: 0, chars: ['boop'] },
     { id: 'cape2', emoji: '🌈', name: 'Rainbow trail', unlockStars: 120 },
   ];
 
@@ -44,6 +50,9 @@ const MiniGames = (() => {
     { id: 'bow', emoji: '🎀', name: 'Bow-wow', unlockStars: 12 },
     { id: 'stache', emoji: '🥸', name: 'Silly stache', unlockStars: 18 },
     { id: 'sparkle', emoji: '✨', name: 'Sparkles', unlockStars: 28 },
+    { id: 'badge', emoji: '🏅', name: 'Star badge', unlockStars: 0, chars: ['starlet'] },
+    { id: 'collar', emoji: '🔔', name: 'Star bell', unlockStars: 0, chars: ['nibble'] },
+    { id: 'googly', emoji: '👀', name: 'Googly wow', unlockStars: 0, chars: ['boop'] },
     { id: 'glitter', emoji: '💖', name: 'Heart glitter', unlockStars: 180 },
   ];
 
@@ -1395,6 +1404,10 @@ const MiniGames = (() => {
     let look = lookForChar(activeId);
     let lastCheer = 'Pick a character — then dress them up!';
 
+    function wardrobeFor(items, charId) {
+      return items.filter(item => !item.chars || item.chars.includes(charId));
+    }
+
     function locked(item) {
       return stars < item.unlockStars;
     }
@@ -1408,7 +1421,7 @@ const MiniGames = (() => {
       const picker = DRESS_CHARS.map(ch => {
         const isLock = charLocked(ch);
         return `<button type="button" class="dress-char ${ch.id === activeId ? 'on' : ''} ${isLock ? 'locked' : ''}"
-          data-char="${ch.id}" ${isLock ? 'disabled' : ''}>
+          data-char="${ch.id}">
           <span class="dress-char-emoji">${isLock ? '🔒' : ch.emoji}</span>
           <span>${isLock ? ch.unlockStars + '⭐' : ch.name}</span>
         </button>`;
@@ -1422,9 +1435,9 @@ const MiniGames = (() => {
             ${section('Colour', COLORS.map(c => ({
               id: c.id, emoji: '●', name: c.label, unlockStars: 0, swatch: true, hue: c.hue
             })), 'color')}
-            ${section('Hats', HATS, 'hat')}
-            ${section('Outfits', OUTFITS, 'outfit')}
-            ${section('Extras', EXTRAS, 'extra')}
+            ${section('Hats', wardrobeFor(HATS, activeId), 'hat')}
+            ${section('Outfits', wardrobeFor(OUTFITS, activeId), 'outfit')}
+            ${section('Extras', wardrobeFor(EXTRAS, activeId), 'extra')}
           </div>
         </div>
         <p class="mg-hint">Looks save per character. Cosmo still wears Cosmo’s look on the galaxy map!</p>
