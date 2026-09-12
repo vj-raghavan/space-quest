@@ -896,7 +896,26 @@ const MiniGames = (() => {
       e.stopPropagation();
       joy.active = true;
       dest = null;
+      if (e.pointerId != null && stick.setPointerCapture) {
+        try { stick.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+      }
       setJoyFromEvent(e);
+    }
+    function joyMove(e) {
+      if (!joy.active) return;
+      e.preventDefault();
+      setJoyFromEvent(e);
+    }
+    function joyEnd(e) {
+      if (!joy.active) return;
+      e.preventDefault();
+      joy.active = false;
+      joy.x = 0;
+      joy.y = 0;
+      knob.style.transform = 'translate(0,0)';
+      if (e.pointerId != null && stick.releasePointerCapture) {
+        try { stick.releasePointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+      }
     }
     function joyMove(e) {
       if (!joy.active) return;
