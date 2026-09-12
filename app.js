@@ -491,6 +491,25 @@ function playSound(type) {
       }
       break;
     }
+    case 'legendary': {
+      const sparkle = (freq, start, duration) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, start);
+        gain.gain.setValueAtTime(0.12, start);
+        gain.gain.exponentialRampToValueAtTime(0.01, start + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(start);
+        osc.stop(start + duration + 0.04);
+      };
+      sparkle(659.25, now, 0.12);
+      sparkle(880.00, now + 0.08, 0.14);
+      sparkle(1174.66, now + 0.16, 0.18);
+      sparkle(1567.98, now + 0.28, 0.28);
+      break;
+    }
   }
 }
 
