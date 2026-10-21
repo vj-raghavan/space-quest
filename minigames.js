@@ -9,14 +9,18 @@ const MiniGames = (() => {
   const DRESS_KEY = 'space_quest_dressup_v1';
   const STEAL_KEY = 'space_quest_steal_pet_v1';
 
+  // hue-rotate is relative to each pal's own paint. These are the hues a kid
+  // should see (and the swatch should show). Mint means "no tint".
   const COLORS = [
-    { id: 'mint', label: 'Mint', hue: 0 },
-    { id: 'blush', label: 'Blush', hue: 300 },
-    { id: 'sky', label: 'Sky', hue: 155 },
-    { id: 'sunny', label: 'Sunny', hue: 42 },
-    { id: 'grape', label: 'Grape', hue: 248 },
-    { id: 'lava', label: 'Lava', hue: 332 },
+    { id: 'mint', label: 'Mint', hue: null },
+    { id: 'blush', label: 'Blush', hue: 338 },
+    { id: 'sky', label: 'Sky', hue: 206 },
+    { id: 'sunny', label: 'Sunny', hue: 48 },
+    { id: 'grape', label: 'Grape', hue: 276 },
+    { id: 'lava', label: 'Lava', hue: 14 },
   ];
+  // Dominant hue of each body before any tint, sampled from the main fill.
+  const BODY_HUE = { cosmo: 161, starlet: 207, nibble: 350, boop: 262 };
 
   const HATS = [
     { id: 'none', emoji: '✨', name: 'No hat', unlockStars: 0 },
@@ -211,18 +215,33 @@ const MiniGames = (() => {
     });
   }
 
+  function hueRotateFor(colorId, charId) {
+    const color = COLORS.find(c => c.id === colorId) || COLORS[0];
+    if (color.hue == null) return 0;
+    const base = BODY_HUE[charId] != null ? BODY_HUE[charId] : BODY_HUE.cosmo;
+    return (color.hue - base + 360) % 360;
+  }
+
+  function swatchHue(colorId, charId) {
+    const color = COLORS.find(c => c.id === colorId) || COLORS[0];
+    if (color.hue == null) {
+      return BODY_HUE[charId] != null ? BODY_HUE[charId] : BODY_HUE.cosmo;
+    }
+    return color.hue;
+  }
+
   function dressedStage(uid, look, sizeClass, charId) {
-    const color = COLORS.find(c => c.id === look.color) || COLORS[0];
     const char = DRESS_CHARS.find(c => c.id === (charId || 'cosmo')) || DRESS_CHARS[0];
     const svg = char.kind === 'cosmo'
       ? ((typeof mascotSVG === 'function') ? mascotSVG(uid) : '')
       : Characters.body(char.kind, uid);
-    const layers = Characters.dressLayers(look, uid + 'fit');
+    const layers = Characters.dressLayers(look, uid + 'fit', char.id);
+    const rotate = hueRotateFor(look.color, char.id);
     return `
       <div class="cosmo-dress-stage ${sizeClass || ''}">
         <div class="char-idle">
           ${layers.back || ''}
-          <div class="cosmo-dress-body" style="filter:hue-rotate(${color.hue}deg)">
+          <div class="cosmo-dress-body" style="filter:hue-rotate(${rotate}deg)">
             <div class="mascot-svg">${svg}</div>
           </div>
           ${layers.front || ''}
@@ -1393,7 +1412,7 @@ const MiniGames = (() => {
           ${dressedStage('dressup', look, 'play-size', active.id)}
           <div class="dress-cols">
             ${section('Colour', COLORS.map(c => ({
-              id: c.id, emoji: '●', name: c.label, unlockStars: 0, swatch: true, hue: c.hue
+              id: c.id, emoji: '●', name: c.label, unlockStars: 0, swatch: true, hue: swatchHue(c.id, activeId)
             })), 'color')}
             ${section('Hats', wardrobeFor(HATS, activeId), 'hat')}
             ${section('Outfits', wardrobeFor(OUTFITS, activeId), 'outfit')}
@@ -1447,8 +1466,7 @@ const MiniGames = (() => {
         let visual;
         if (isLock) visual = Characters.lock();
         else if (item.swatch) {
-          const hue = (150 + (item.hue || 0)) % 360;
-          visual = `<span class="dress-swatch" style="background:hsl(${hue} 62% 58%)"></span>`;
+          visual = `<span class="dress-swatch" style="background:hsl(${item.hue} 64% 54%)"></span>`;
         } else if (item.id === 'none') visual = Characters.noneIcon();
         else visual = Characters.dressIcon(slot === 'color' ? 'extra' : slot, item.id, 'ico' + slot + item.id);
         return `<button type="button" class="dress-item ${on ? 'on' : ''} ${isLock ? 'locked' : ''}"

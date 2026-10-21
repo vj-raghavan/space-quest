@@ -470,17 +470,17 @@ const Characters = (() => {
         <circle cx="136" cy="72" r="4" fill="#fda4af"/>`;
     }
     if (id === 'ears') {
-      return `<ellipse cx="78" cy="40" rx="10" ry="26" fill="#fff" ${INK}/>
-        <ellipse cx="122" cy="40" rx="10" ry="26" fill="#fff" ${INK}/>
-        <ellipse cx="78" cy="42" rx="5" ry="16" fill="#fecdd3"/>
-        <ellipse cx="122" cy="42" rx="5" ry="16" fill="#fecdd3"/>`;
+      return `<ellipse cx="68" cy="36" rx="12" ry="28" fill="#fff" ${INK}/>
+        <ellipse cx="132" cy="36" rx="12" ry="28" fill="#fff" ${INK}/>
+        <ellipse cx="68" cy="40" rx="6" ry="16" fill="#fecdd3"/>
+        <ellipse cx="132" cy="40" rx="6" ry="16" fill="#fecdd3"/>`;
     }
     if (id === 'saucer') {
-      return `<ellipse cx="100" cy="42" rx="36" ry="12" fill="#c4b5fd" ${INK}/>
-        <ellipse cx="100" cy="38" rx="16" ry="10" fill="#8b5cf6" ${INK}/>
-        <circle cx="74" cy="42" r="3" fill="#ffd25a"/>
-        <circle cx="100" cy="46" r="3" fill="#67e8f9"/>
-        <circle cx="126" cy="42" r="3" fill="#fb7185"/>`;
+      return `<ellipse cx="100" cy="64" rx="48" ry="14" fill="#c4b5fd" ${INK}/>
+        <ellipse cx="100" cy="52" rx="18" ry="12" fill="#8b5cf6" ${INK}/>
+        <circle cx="64" cy="64" r="3.2" fill="#ffd25a"/>
+        <circle cx="100" cy="70" r="3" fill="#67e8f9"/>
+        <circle cx="136" cy="64" r="3.2" fill="#fb7185"/>`;
     }
     if (id === 'crown') {
       return `<path d="M70 66 L78 36 L92 54 L100 26 L108 54 L122 36 L130 66 Z" fill="#ffd25a" ${INK}/>
@@ -619,14 +619,27 @@ const Characters = (() => {
     return `<div class="dress-layer ${cls}"><svg viewBox="0 0 200 200" class="char-svg" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${inner}</svg></div>`;
   }
 
-  function dressLayers(look, uid) {
+  // Nudge shared costume art onto each silhouette. Eyes stay at y=86;
+  // these shifts only seat hats whose rest-line was drawn for Cosmo.
+  const HAT_SHIFT = { cosmo: 0, starlet: 8, nibble: 8, boop: 4 };
+  const EXTRA_SHIFT = { cosmo: 0, starlet: 0, nibble: 2, boop: 0 };
+  const OWN_HAT = { ears: 'nibble', saucer: 'boop', pigtails: 'starlet' };
+
+  function anchor(inner, dy) {
+    if (!inner || !dy) return inner;
+    return `<g class="dress-anchor" transform="translate(0 ${dy})">${inner}</g>`;
+  }
+
+  function dressLayers(look, uid, charId) {
     uid = clean(uid);
+    const who = charId || 'cosmo';
     const hatId = look && look.hat;
     const outfitId = look && look.outfit;
     const extraId = look && look.extra;
-    const hat = hatId && hatId !== 'none' ? hatInner(hatId, uid) : '';
+    const hatDy = OWN_HAT[hatId] === who ? 0 : (HAT_SHIFT[who] || 0);
+    const hat = hatId && hatId !== 'none' ? anchor(hatInner(hatId, uid), hatDy) : '';
     const outfit = outfitId && outfitId !== 'none' ? outfitInner(outfitId, uid) : '';
-    const extra = extraId && extraId !== 'none' ? extraInner(extraId) : '';
+    const extra = extraId && extraId !== 'none' ? anchor(extraInner(extraId), EXTRA_SHIFT[who] || 0) : '';
     const back = BACK_OUTFITS[outfitId] ? wrapLayer(outfit, 'dress-back') : '';
     const front = outfit && !BACK_OUTFITS[outfitId] ? wrapLayer(outfit, 'dress-front') : '';
     return {
