@@ -426,18 +426,27 @@ const Progression = (() => {
     const displayName = profile.petName || stage.name;
     const fedToday = profile.dailyHistory.includes(dateStr());
     const isEgg = stage.min === 0 && totalStars < 10;
-    const mood = isEgg ? '✨' : fedToday ? '😊' : '🥺';
     const moodText = isEgg
       ? 'Something is wiggling inside… keep playing to hatch it!'
       : fedToday
         ? `${displayName} is fed and full of star power!`
         : `${displayName} is hungry — finish the Daily Mission to feed it!`;
+    const useArt = typeof Characters !== 'undefined';
+    const moodKind = isEgg ? 'egg' : fedToday ? 'fed' : 'hungry';
+    const artInner = useArt
+      ? Characters.spacePet(stage.min, 'galaxy-pet')
+      : `<span class="pet-emoji">${stage.emoji}</span>`;
+    const moodInner = useArt ? Characters.petMood(moodKind) : (isEgg ? '✨' : fedToday ? '😊' : '🥺');
+    const accInner = acc
+      ? (useArt ? Characters.petAccessory(acc.id, 'galaxy-acc') : acc.emoji)
+      : '';
+    const accSlot = acc && useArt ? Characters.accessorySlot(acc.id) : 'hat';
 
     card.innerHTML = `
       <div class="pet-visual">
-        ${acc ? `<span class="pet-acc">${acc.emoji}</span>` : ''}
-        <span class="pet-emoji">${stage.emoji}</span>
-        <span class="pet-mood">${mood}</span>
+        ${accInner ? `<div class="pet-acc slot-${accSlot}">${accInner}</div>` : ''}
+        <div class="pet-art char-bob">${artInner}</div>
+        <div class="pet-mood">${moodInner}</div>
       </div>
       <div class="pet-info">
         <h2>${displayName} <button id="btn-pet-rename" class="btn-edit-name" title="Rename pet">✏️</button></h2>
@@ -1059,9 +1068,12 @@ const Progression = (() => {
       const card = document.createElement('div');
       card.className = `shop-item ${equipped ? 'equipped' : ''}`;
 
-      const visual = item.color
-        ? `<span class="shop-emoji trail-swatch" style="background:${item.color}"></span>`
-        : `<span class="shop-emoji">${item.emoji}</span>`;
+      const accessoryArt = slot === 'petAccessory' && typeof Characters !== 'undefined';
+      const visual = accessoryArt
+        ? `<span class="shop-emoji shop-art">${item.id === 'none' ? Characters.noneIcon() : Characters.petAccessory(item.id, 'shop' + item.id)}</span>`
+        : item.color
+          ? `<span class="shop-emoji trail-swatch" style="background:${item.color}"></span>`
+          : `<span class="shop-emoji">${item.emoji}</span>`;
 
       let btnLabel, btnClass;
       if (equipped) { btnLabel = '✓ Equipped'; btnClass = 'equipped'; }

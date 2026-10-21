@@ -11,64 +11,72 @@ function mascotSVG(uid) {
   return `
 <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-label="Cosmo the space alien">
   <defs>
-    <radialGradient id="cosmoBody-${uid}" cx="50%" cy="35%" r="75%">
-      <stop offset="0%" stop-color="#9df5d6"/>
-      <stop offset="100%" stop-color="#2fb78f"/>
+    <radialGradient id="cosmoBody-${uid}" cx="42%" cy="32%" r="75%">
+      <stop offset="0%" stop-color="#e7fff6"/>
+      <stop offset="42%" stop-color="#7eebc8"/>
+      <stop offset="100%" stop-color="#14967a"/>
     </radialGradient>
-    <radialGradient id="cosmoBubble-${uid}" cx="35%" cy="30%" r="80%">
-      <stop offset="0%" stop-color="rgba(170, 225, 255, 0.18)"/>
-      <stop offset="100%" stop-color="rgba(120, 180, 255, 0.05)"/>
+    <radialGradient id="cosmoBubble-${uid}" cx="32%" cy="28%" r="78%">
+      <stop offset="0%" stop-color="rgba(210,245,255,0.42)"/>
+      <stop offset="58%" stop-color="rgba(140,200,255,0.08)"/>
+      <stop offset="100%" stop-color="rgba(80,120,220,0.04)"/>
+    </radialGradient>
+    <radialGradient id="cosmoBelly-${uid}" cx="50%" cy="40%" r="70%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#b6f3df"/>
     </radialGradient>
   </defs>
 
-  <!-- Space bubble -->
-  <circle cx="100" cy="100" r="84" fill="url(#cosmoBubble-${uid})" stroke="rgba(255,255,255,0.4)" stroke-width="2.5"/>
-  <path d="M 42 62 Q 56 36 84 28" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="100" cy="100" r="86" fill="rgba(8,14,32,0.18)"/>
+  <circle cx="100" cy="100" r="84" fill="url(#cosmoBubble-${uid})" stroke="rgba(255,255,255,0.72)" stroke-width="3"/>
+  <path d="M40 58 Q58 30 88 24" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="46" cy="66" r="3" fill="#fff" opacity="0.85"/>
 
-  <!-- Antenna -->
-  <line x1="100" y1="50" x2="100" y2="28" stroke="#2fb78f" stroke-width="5" stroke-linecap="round"/>
-  <circle class="m-antenna-tip" cx="100" cy="22" r="7" fill="#ffd25a"/>
+  <line x1="100" y1="52" x2="100" y2="26" stroke="#146b56" stroke-width="6" stroke-linecap="round"/>
+  <circle class="m-antenna-tip" cx="100" cy="20" r="8" fill="#ffd25a" stroke="#241b3a" stroke-width="2"/>
+  <circle cx="97" cy="17" r="2.2" fill="#fff"/>
 
-  <!-- Arms (right one waves) -->
-  <ellipse cx="54" cy="116" rx="9" ry="17" fill="#3cc9a0" transform="rotate(24 54 116)"/>
+  <ellipse cx="52" cy="118" rx="11" ry="18" fill="#2fb78f" stroke="#241b3a" stroke-width="2.2" transform="rotate(22 52 118)"/>
+  <ellipse cx="46" cy="132" rx="8" ry="6" fill="#9df5d6" stroke="#241b3a" stroke-width="2"/>
   <g class="m-arm-r">
-    <ellipse cx="146" cy="106" rx="9" ry="17" fill="#3cc9a0" transform="rotate(-34 146 106)"/>
+    <ellipse cx="148" cy="108" rx="11" ry="18" fill="#2fb78f" stroke="#241b3a" stroke-width="2.2" transform="rotate(-30 148 108)"/>
+    <ellipse cx="156" cy="94" rx="8" ry="6" fill="#9df5d6" stroke="#241b3a" stroke-width="2"/>
   </g>
 
-  <!-- Feet -->
-  <ellipse cx="84" cy="155" rx="11" ry="7" fill="#2fb78f"/>
-  <ellipse cx="116" cy="155" rx="11" ry="7" fill="#2fb78f"/>
+  <ellipse cx="82" cy="162" rx="14" ry="8" fill="#146b56" stroke="#241b3a" stroke-width="2"/>
+  <ellipse cx="118" cy="162" rx="14" ry="8" fill="#146b56" stroke="#241b3a" stroke-width="2"/>
 
-  <!-- Body -->
-  <ellipse cx="100" cy="106" rx="45" ry="52" fill="url(#cosmoBody-${uid})"/>
-  <ellipse cx="100" cy="128" rx="26" ry="19" fill="#cdf9e9" opacity="0.65"/>
+  <ellipse cx="100" cy="108" rx="46" ry="52" fill="#0f6e5c"/>
+  <ellipse cx="100" cy="106" rx="45" ry="52" fill="url(#cosmoBody-${uid})" stroke="#241b3a" stroke-width="2.6"/>
+  <ellipse cx="100" cy="128" rx="24" ry="16" fill="url(#cosmoBelly-${uid})"/>
+  <path d="M100 118 l2.6 5.2 5.6.6-4.2 3.6 1.3 5.4L100 130.2 94.7 132.8l1.3-5.4-4.2-3.6 5.6-.6z" fill="#ffd25a" stroke="#b45309" stroke-width="0.6"/>
 
-  <!-- Cheeks -->
-  <ellipse cx="74" cy="98" rx="6.5" ry="4.5" fill="#ff9bb0" opacity="0.55"/>
-  <ellipse cx="126" cy="98" rx="6.5" ry="4.5" fill="#ff9bb0" opacity="0.55"/>
+  <ellipse cx="70" cy="100" rx="7" ry="4.5" fill="#ff8fab" opacity="0.7"/>
+  <ellipse cx="130" cy="100" rx="7" ry="4.5" fill="#ff8fab" opacity="0.7"/>
 
-  <!-- Eyes: normal (blinking) -->
   <g class="m-eyes-normal">
     <g class="m-eye">
-      <ellipse cx="84" cy="86" rx="8" ry="10" fill="#15203a"/>
-      <circle cx="86.5" cy="82" r="3" fill="#ffffff"/>
+      <ellipse cx="84" cy="86" rx="9" ry="11" fill="#15203a"/>
+      <ellipse cx="84" cy="87.5" rx="6.2" ry="7.6" fill="#2a3558"/>
+      <circle cx="86.8" cy="82" r="3.2" fill="#fff"/>
+      <circle cx="82.2" cy="90" r="1.5" fill="#9ad7ff"/>
     </g>
     <g class="m-eye">
-      <ellipse cx="116" cy="86" rx="8" ry="10" fill="#15203a"/>
-      <circle cx="118.5" cy="82" r="3" fill="#ffffff"/>
+      <ellipse cx="116" cy="86" rx="9" ry="11" fill="#15203a"/>
+      <ellipse cx="116" cy="87.5" rx="6.2" ry="7.6" fill="#2a3558"/>
+      <circle cx="118.8" cy="82" r="3.2" fill="#fff"/>
+      <circle cx="114.2" cy="90" r="1.5" fill="#9ad7ff"/>
     </g>
   </g>
 
-  <!-- Eyes: happy arcs (shown on correct answers) -->
   <g class="m-eyes-happy">
-    <path d="M 75 89 Q 84 79 93 89" fill="none" stroke="#15203a" stroke-width="5" stroke-linecap="round"/>
-    <path d="M 107 89 Q 116 79 125 89" fill="none" stroke="#15203a" stroke-width="5" stroke-linecap="round"/>
+    <path d="M74 90 Q84 76 94 90" fill="none" stroke="#15203a" stroke-width="5" stroke-linecap="round"/>
+    <path d="M106 90 Q116 76 126 90" fill="none" stroke="#15203a" stroke-width="5" stroke-linecap="round"/>
   </g>
 
-  <!-- Mouths -->
-  <path class="m-smile" d="M 89 104 Q 100 113 111 104" fill="none" stroke="#15203a" stroke-width="4.5" stroke-linecap="round"/>
-  <path class="m-grin" d="M 85 102 Q 100 124 115 102 Q 100 108 85 102 Z" fill="#15203a"/>
-  <circle class="m-o" cx="100" cy="107" r="6.5" fill="#15203a"/>
+  <path class="m-smile" d="M88 106 Q100 116 112 106" fill="none" stroke="#15203a" stroke-width="4.5" stroke-linecap="round"/>
+  <path class="m-grin" d="M84 104 Q100 126 116 104 Q100 110 84 104 Z" fill="#15203a"/>
+  <circle class="m-o" cx="100" cy="110" r="7" fill="#15203a"/>
 </svg>`;
 }
 

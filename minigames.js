@@ -9,14 +9,18 @@ const MiniGames = (() => {
   const DRESS_KEY = 'space_quest_dressup_v1';
   const STEAL_KEY = 'space_quest_steal_pet_v1';
 
+  // hue-rotate is relative to each pal's own paint. These are the hues a kid
+  // should see (and the swatch should show). Mint means "no tint".
   const COLORS = [
-    { id: 'mint', label: 'Mint', hue: 0 },
-    { id: 'blush', label: 'Blush', hue: 300 },
-    { id: 'sky', label: 'Sky', hue: 155 },
-    { id: 'sunny', label: 'Sunny', hue: 42 },
-    { id: 'grape', label: 'Grape', hue: 248 },
-    { id: 'lava', label: 'Lava', hue: 332 },
+    { id: 'mint', label: 'Mint', hue: null },
+    { id: 'blush', label: 'Blush', hue: 338 },
+    { id: 'sky', label: 'Sky', hue: 206 },
+    { id: 'sunny', label: 'Sunny', hue: 48 },
+    { id: 'grape', label: 'Grape', hue: 276 },
+    { id: 'lava', label: 'Lava', hue: 14 },
   ];
+  // Dominant hue of each body before any tint, sampled from the main fill.
+  const BODY_HUE = { cosmo: 161, starlet: 207, nibble: 350, boop: 262 };
 
   const HATS = [
     { id: 'none', emoji: '✨', name: 'No hat', unlockStars: 0 },
@@ -84,7 +88,9 @@ const MiniGames = (() => {
         const active = DRESS_CHARS.some(c => c.id === data.active) ? data.active : 'cosmo';
         return { active, looks };
       }
-      return { active: 'cosmo', looks: { cosmo: { ...DEFAULT_LOOK, ...data } } };
+      const migrated = defaultDressState();
+      migrated.looks.cosmo = { ...DEFAULT_LOOK, ...data };
+      return migrated;
     } catch (e) { /* defaults */ }
     return defaultDressState();
   }
@@ -209,63 +215,38 @@ const MiniGames = (() => {
     });
   }
 
-  function characterBodySvg(kind, uid) {
-    if (kind === 'kid') {
-      return `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-label="Starlet the space kid">
-        <circle cx="100" cy="100" r="84" fill="rgba(170,225,255,0.14)" stroke="rgba(255,255,255,0.4)" stroke-width="2.5"/>
-        <ellipse cx="100" cy="128" rx="38" ry="42" fill="#7dd3fc"/>
-        <circle cx="100" cy="78" r="28" fill="#fde68a"/>
-        <circle cx="90" cy="76" r="4" fill="#15203a"/>
-        <circle cx="110" cy="76" r="4" fill="#15203a"/>
-        <path d="M90 90 Q100 98 110 90" fill="none" stroke="#15203a" stroke-width="3" stroke-linecap="round"/>
-        <path d="M72 62 Q100 42 128 62" fill="#38bdf8"/>
-        <ellipse cx="70" cy="128" rx="8" ry="16" fill="#38bdf8"/>
-        <ellipse cx="130" cy="128" rx="8" ry="16" fill="#38bdf8"/>
-      </svg>`;
+  function hueRotateFor(colorId, charId) {
+    const color = COLORS.find(c => c.id === colorId) || COLORS[0];
+    if (color.hue == null) return 0;
+    const base = BODY_HUE[charId] != null ? BODY_HUE[charId] : BODY_HUE.cosmo;
+    return (color.hue - base + 360) % 360;
+  }
+
+  function swatchHue(colorId, charId) {
+    const color = COLORS.find(c => c.id === colorId) || COLORS[0];
+    if (color.hue == null) {
+      return BODY_HUE[charId] != null ? BODY_HUE[charId] : BODY_HUE.cosmo;
     }
-    if (kind === 'pet') {
-      return `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-label="Nibble the space pet">
-        <circle cx="100" cy="100" r="84" fill="rgba(255,210,90,0.12)" stroke="rgba(255,255,255,0.4)" stroke-width="2.5"/>
-        <ellipse cx="100" cy="118" rx="52" ry="40" fill="#fda4af"/>
-        <circle cx="78" cy="72" r="16" fill="#fb7185"/>
-        <circle cx="122" cy="72" r="16" fill="#fb7185"/>
-        <circle cx="88" cy="108" r="6" fill="#15203a"/>
-        <circle cx="112" cy="108" r="6" fill="#15203a"/>
-        <ellipse cx="100" cy="124" rx="8" ry="5" fill="#9f1239"/>
-        <circle cx="70" cy="118" r="6" fill="#fff" opacity="0.7"/>
-      </svg>`;
-    }
-    return `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-label="Boop the silly friend">
-      <circle cx="100" cy="100" r="84" fill="rgba(181,107,255,0.14)" stroke="rgba(255,255,255,0.4)" stroke-width="2.5"/>
-      <ellipse cx="100" cy="118" rx="56" ry="28" fill="#c4b5fd"/>
-      <ellipse cx="100" cy="108" rx="40" ry="36" fill="#a78bfa"/>
-      <circle cx="86" cy="104" r="7" fill="#15203a"/>
-      <circle cx="114" cy="104" r="7" fill="#15203a"/>
-      <circle cx="88" cy="102" r="2.4" fill="#fff"/>
-      <circle cx="116" cy="102" r="2.4" fill="#fff"/>
-      <path d="M88 122 Q100 132 112 122" fill="none" stroke="#15203a" stroke-width="4" stroke-linecap="round"/>
-      <rect x="70" y="78" width="60" height="10" rx="5" fill="#fde68a"/>
-    </svg>`;
+    return color.hue;
   }
 
   function dressedStage(uid, look, sizeClass, charId) {
-    const color = COLORS.find(c => c.id === look.color) || COLORS[0];
-    const hat = HATS.find(h => h.id === look.hat) || HATS[0];
-    const outfit = OUTFITS.find(o => o.id === look.outfit) || OUTFITS[0];
-    const extra = EXTRAS.find(x => x.id === look.extra) || EXTRAS[0];
-    const char = DRESS_CHARS.find(c => c.id === charId) || DRESS_CHARS[0];
+    const char = DRESS_CHARS.find(c => c.id === (charId || 'cosmo')) || DRESS_CHARS[0];
     const svg = char.kind === 'cosmo'
       ? ((typeof mascotSVG === 'function') ? mascotSVG(uid) : '')
-      : characterBodySvg(char.kind, uid);
+      : Characters.body(char.kind, uid);
+    const layers = Characters.dressLayers(look, uid + 'fit', char.id);
+    const rotate = hueRotateFor(look.color, char.id);
     return `
       <div class="cosmo-dress-stage ${sizeClass || ''}">
-        <div class="cosmo-dress-body" style="filter:hue-rotate(${color.hue}deg)">
-          <div class="mascot-svg">${svg}</div>
-        </div>
-        <div class="cosmo-overlays" aria-hidden="true">
-          ${outfit.id !== 'none' ? `<span class="dress-piece dress-outfit dress-outfit-${outfit.id}">${outfit.emoji}</span>` : ''}
-          ${hat.id !== 'none' ? `<span class="dress-piece dress-hat dress-hat-${hat.id}">${hat.emoji}</span>` : ''}
-          ${extra.id !== 'none' ? `<span class="dress-piece dress-extra dress-extra-${extra.id}">${extra.emoji}</span>` : ''}
+        <div class="char-idle">
+          ${layers.back || ''}
+          <div class="cosmo-dress-body" style="filter:hue-rotate(${rotate}deg)">
+            <div class="mascot-svg">${svg}</div>
+          </div>
+          ${layers.front || ''}
+          ${layers.extra || ''}
+          ${layers.hat || ''}
         </div>
       </div>`;
   }
@@ -308,37 +289,12 @@ const MiniGames = (() => {
   const GATE_LOCKED = 2800;
 
   function petArtHtml(def, mark) {
-    const hue = def.hue || '#ffd25a';
-    if (def.rarity !== 'legendary') {
-      return `<span class="sap-pet-emoji">${def.emoji}</span>`;
-    }
-    const uid = 'sap' + String(mark || def.id).replace(/[^a-z0-9]/g, '');
-    return `<span class="sap-pet-art" aria-hidden="true">${legendarySvg(def.id, hue, uid)}</span>`;
+    const uid = 'sap' + String(mark || def.id).replace(/[^a-z0-9]/gi, '');
+    return `<span class="sap-pet-art">${Characters.pet(def.id, uid)}</span>`;
   }
 
-  function legendarySvg(id, hue, uid) {
-    const g1 = uid + 'a';
-    const g2 = uid + 'b';
-    if (id === 'nova-whale') {
-      return `<svg viewBox="0 0 64 64" class="sap-svg"><defs><linearGradient id="${g1}" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#c084fc"/><stop offset="1" stop-color="#7dd3fc"/></linearGradient></defs><ellipse cx="32" cy="36" rx="22" ry="12" fill="url(#${g1})"/><path d="M50 32c6 2 10-4 12-8-8 1-12 6-12 10z" fill="#a78bfa"/><circle cx="20" cy="34" r="2.2" fill="#1e1b4b"/><path d="M14 38c-6 4-8 10-4 12 6-2 10-6 12-10" fill="#ddd6fe"/></svg>`;
-    }
-    if (id === 'prism-phoenix') {
-      return `<svg viewBox="0 0 64 64" class="sap-svg"><path d="M32 14c8 6 18 8 22 4-2 10-10 16-18 18 8 2 14 10 16 18-12-6-20-8-22-8s-10 2-22 8c2-8 8-16 16-18-8-2-16-8-18-18 4 4 14 2 22-4z" fill="${hue}"/><circle cx="32" cy="30" r="7" fill="#ffe29a"/><circle cx="30" cy="29" r="1.4" fill="#3b1d0b"/><circle cx="35" cy="29" r="1.4" fill="#3b1d0b"/></svg>`;
-    }
-    if (id === 'lunar-unicorn') {
-      return `<svg viewBox="0 0 64 64" class="sap-svg"><path d="M32 10l4 14h-8z" fill="#fde68a"/><ellipse cx="34" cy="36" rx="16" ry="14" fill="${hue}"/><circle cx="24" cy="28" r="8" fill="#f5d0fe"/><circle cx="21" cy="26" r="1.6" fill="#3b0764"/><path d="M18 22c-6-8 2-14 8-10" fill="#c084fc"/><path d="M40 28c8-2 16 6 12 12" stroke="#fff" stroke-width="3" fill="none"/></svg>`;
-    }
-    if (id === 'galaxy-panda') {
-      return `<svg viewBox="0 0 64 64" class="sap-svg"><circle cx="32" cy="34" r="16" fill="#e0e7ff"/><circle cx="22" cy="22" r="7" fill="#312e81"/><circle cx="42" cy="22" r="7" fill="#312e81"/><circle cx="26" cy="32" r="4" fill="#1e1b4b"/><circle cx="38" cy="32" r="4" fill="#1e1b4b"/><circle cx="27" cy="31" r="1.4" fill="#fff"/><circle cx="39" cy="31" r="1.4" fill="#fff"/><ellipse cx="32" cy="42" rx="5" ry="3" fill="#4338ca"/><circle cx="18" cy="16" r="1.5" fill="#fde68a"/><circle cx="48" cy="14" r="1.2" fill="#fde68a"/></svg>`;
-    }
-    if (id === 'comet-axolotl') {
-      return `<svg viewBox="0 0 64 64" class="sap-svg"><ellipse cx="32" cy="36" rx="16" ry="12" fill="${hue}"/><path d="M16 24c-8-8 2-16 10-8M48 24c8-8-2-16-10-8M14 40c-10 2-10 14-2 12M50 40c10 2 10 14 2 12" fill="#fb7185"/><circle cx="26" cy="34" r="2" fill="#4c0519"/><circle cx="38" cy="34" r="2" fill="#4c0519"/><path d="M44 20l14-8-4 12" fill="#fde68a"/></svg>`;
-    }
-    if (id === 'eclipse-lynx') {
-      return `<svg viewBox="0 0 64 64" class="sap-svg"><ellipse cx="34" cy="38" rx="16" ry="13" fill="${hue}"/><path d="M20 22l-6-12 12 6M44 20l8-12-4 14" fill="#6b21a8"/><circle cx="26" cy="34" r="3" fill="#1e1b4b"/><circle cx="27" cy="33" r="1" fill="#fde68a"/><path d="M40 18c8 0 14 8 10 14" fill="#c4b5fd"/><circle cx="48" cy="14" r="6" fill="#fef3c7" opacity=".85"/></svg>`;
-    }
-    // Aurora Drake default
-    return `<svg viewBox="0 0 64 64" class="sap-svg"><defs><linearGradient id="${g2}" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#ffd25a"/><stop offset="1" stop-color="#34d399"/></linearGradient></defs><path d="M18 40c2-16 14-24 28-22 2 8-2 16-10 20 10 0 16 6 18 14-16-4-24-2-28 2-2-6-6-10-8-14z" fill="url(#${g2})"/><circle cx="40" cy="26" r="2" fill="#1e1b4b"/><path d="M48 22l10-6-2 10" fill="#fb7185"/></svg>`;
+  function petChip(p, cls) {
+    return `<span class="${cls} r-${p.def.rarity}" title="${p.def.name}">${Characters.pet(p.def.id, cls + p.uid)}</span>`;
   }
 
   function loadStealBest() {
@@ -396,10 +352,10 @@ const MiniGames = (() => {
     const player = { x: 50, y: 78 };
     const home = { x: 50, y: 88, r: 13 };
     const rivals = [
-      { id: 0, name: 'Crater Keep', emoji: '🧡', x: 16, y: 18, color: '#ff8a5b' },
-      { id: 1, name: 'Ring Ranch', emoji: '💜', x: 84, y: 18, color: '#b56bff' },
-      { id: 2, name: 'Goo Grove', emoji: '💚', x: 14, y: 48, color: '#3cc9a0' },
-      { id: 3, name: 'Nova Nest', emoji: '💛', x: 86, y: 48, color: '#ffd25a' },
+      { id: 0, name: 'Crater Keep', x: 16, y: 18, color: '#ff8a5b' },
+      { id: 1, name: 'Ring Ranch', x: 84, y: 18, color: '#b56bff' },
+      { id: 2, name: 'Goo Grove', x: 14, y: 48, color: '#3cc9a0' },
+      { id: 3, name: 'Nova Nest', x: 86, y: 48, color: '#ffd25a' },
     ];
     const goos = [
       { x: 42, y: 36 },
@@ -485,19 +441,19 @@ const MiniGames = (() => {
       const el = document.createElement('div');
       el.className = 'sap-base sap-rival';
       el.dataset.rival = String(b.id);
-      el.innerHTML = `<span class="sap-base-name">${b.emoji} ${b.name}</span>`;
+      el.innerHTML = `<div class="sap-rival-art${b.id === NOVA_NEST_ID ? ' is-nova' : ''}">${Characters.rival(b.id)}</div><span class="sap-base-name">${b.name}</span>`;
       el.style.setProperty('--base', b.color);
       arena.appendChild(el);
     });
     const homeEl = document.createElement('div');
     homeEl.className = 'sap-base sap-home';
     homeEl.id = 'sap-home';
-    homeEl.innerHTML = '<span class="sap-base-name">🏠 Your Base</span><div class="sap-home-pets" id="sap-home-pets"></div>';
+    homeEl.innerHTML = `<div class="sap-rival-art">${Characters.homeBase()}</div><span class="sap-base-name">Your Base</span><div class="sap-home-pets" id="sap-home-pets"></div>`;
     arena.appendChild(homeEl);
     goos.forEach((g, i) => {
       const el = document.createElement('div');
       el.className = 'sap-goo';
-      el.textContent = '🟢';
+      el.innerHTML = Characters.goo('goo' + i);
       el.dataset.goo = String(i);
       arena.appendChild(el);
     });
@@ -505,7 +461,7 @@ const MiniGames = (() => {
       const el = document.createElement('div');
       el.className = 'sap-guard' + (g.rivalId === NOVA_NEST_ID ? ' sap-guard-nova' : '');
       el.dataset.guard = String(i);
-      el.textContent = g.rivalId === NOVA_NEST_ID ? '🌟' : '🛡️';
+      el.innerHTML = Characters.guard(g.rivalId === NOVA_NEST_ID, 'guard' + i);
       arena.appendChild(el);
     });
     const playerEl = document.createElement('div');
@@ -538,7 +494,9 @@ const MiniGames = (() => {
       const sleepy = legendary && !pet.awake;
       const lockClass = (gateShut || sleepy) ? ' sap-locked' : '';
       const wakeMark = sleepy ? `<span class="sap-wake">${pet.wakes}/${wakeNeed()}</span>` : '';
-      const lockMark = gateShut && pet.awake ? '<span class="sap-gate">🔒</span>' : (sleepy ? '<span class="sap-gate">✨</span>' : '');
+      const lockMark = gateShut && pet.awake
+        ? `<span class="sap-gate">${Characters.lock()}</span>`
+        : (sleepy ? `<span class="sap-gate">${Characters.sparkle()}</span>` : '');
       return `<button type="button" class="sap-pet r-${pet.def.rarity}${lockClass}" data-pet="${pet.uid}" style="--pet:${pet.def.hue}" aria-label="${pet.def.name}">
         ${lockMark}
         ${petArtHtml(pet.def, pet.uid)}
@@ -612,13 +570,9 @@ const MiniGames = (() => {
       });
       bindPetTaps();
       const stack = playerEl.querySelector('#sap-carry-stack');
-      stack.innerHTML = carried.map(p =>
-        `<span class="sap-carry-chip r-${p.def.rarity}">${p.def.rarity === 'legendary' ? '⭐' : ''}${p.def.emoji}</span>`
-      ).join('');
+      stack.innerHTML = carried.map(p => petChip(p, 'sap-carry-chip')).join('');
       const homePets = homeEl.querySelector('#sap-home-pets');
-      homePets.innerHTML = collection.map(p =>
-        `<span class="sap-home-chip r-${p.def.rarity}" title="${p.def.name}">${p.def.rarity === 'legendary' ? '⭐' : ''}${p.def.emoji}</span>`
-      ).join('');
+      homePets.innerHTML = collection.map(p => petChip(p, 'sap-home-chip')).join('');
       playerEl.classList.toggle('carrying', carried.length > 0);
       playerEl.classList.toggle('carrying-legendary', carryingLegendary());
       playerEl.classList.toggle('stunned', performance.now() < stunUntil);
@@ -644,14 +598,14 @@ const MiniGames = (() => {
             mark.className = 'sap-gate';
             el.prepend(mark);
           }
-          mark.textContent = '🔒';
+          mark.innerHTML = Characters.lock();
         } else if (sleepy) {
           if (!mark) {
             mark = document.createElement('span');
             mark.className = 'sap-gate';
             el.prepend(mark);
           }
-          mark.textContent = '✨';
+          mark.innerHTML = Characters.sparkle();
         } else if (mark) {
           mark.remove();
         }
@@ -808,7 +762,7 @@ const MiniGames = (() => {
         playSound('correct');
         cheer(collection.length >= homeMax
           ? 'BASE FULL of space pets! Cosmo is dancing!'
-          : 'Safe at base! ' + gained.map(p => p.def.emoji).join(' '));
+          : 'Safe at base! ' + gained.map(p => p.def.name).join(', '));
       }
       persistBests();
       renderPets();
@@ -845,7 +799,7 @@ const MiniGames = (() => {
       const rec = persistBests();
       const n = collection.length;
       const petWord = n === 1 ? 'pet' : 'pets';
-      const names = collection.map(p => p.def.emoji).join(' ') || 'none yet';
+      const names = collection.map(p => p.def.name).join(', ') || 'none yet';
       const legends = collection.filter(p => p.def.rarity === 'legendary').length;
       const legendLine = legends ? ` · ⭐ ${legends} legendary` : '';
       const line = filled
@@ -916,19 +870,6 @@ const MiniGames = (() => {
       if (e.pointerId != null && stick.releasePointerCapture) {
         try { stick.releasePointerCapture(e.pointerId); } catch (err) { /* ignore */ }
       }
-    }
-    function joyMove(e) {
-      if (!joy.active) return;
-      e.preventDefault();
-      setJoyFromEvent(e);
-    }
-    function joyEnd(e) {
-      if (!joy.active) return;
-      e.preventDefault();
-      joy.active = false;
-      joy.x = 0;
-      joy.y = 0;
-      knob.style.transform = 'translate(0,0)';
     }
     stick.addEventListener('pointerdown', joyStart);
     window.addEventListener('pointermove', joyMove);
@@ -1055,7 +996,7 @@ const MiniGames = (() => {
     let score = 0;
     let combo = 0;
     const t0 = performance.now();
-    const faces = ['🪐', '🌍', '🌕', '🫧', '🟣', '🟡'];
+    let planetN = 0;
     root.innerHTML = `
       <p class="mg-hint">Pop the zoom-zoom planets!</p>
       <div class="mg-cheer" id="mg-cheer">ZOOM ZOOM!</div>
@@ -1068,7 +1009,8 @@ const MiniGames = (() => {
       const el = document.createElement('button');
       el.type = 'button';
       el.className = 'mg-planet';
-      el.textContent = faces[Math.floor(Math.random() * faces.length)];
+      const face = planetN++;
+      el.innerHTML = Characters.planet(face, 'pop' + face);
       el.style.left = (6 + Math.random() * 78) + '%';
       el.style.top = (10 + Math.random() * 62) + '%';
       const size = 58 + Math.random() * 36;
@@ -1156,8 +1098,9 @@ const MiniGames = (() => {
         const el = document.createElement('button');
         el.type = 'button';
         el.className = 'mg-blip';
-        el.style.background = pick.color;
-        el.textContent = pick.emoji;
+        el.style.background = 'rgba(8, 12, 28, 0.35)';
+        el.style.border = '4px solid ' + pick.color;
+        el.innerHTML = Characters.blip(pick.id, 'blip' + pick.id + score + Math.floor(Math.random() * 999));
         pointerTap(el, () => {
           if (!session) return;
           if (pick.ok) {
@@ -1213,8 +1156,8 @@ const MiniGames = (() => {
       <div class="mg-arena mg-wiggle" id="mg-arena">
         <canvas id="mg-wiggle-canvas"></canvas>
         <div id="mg-wiggle-cosmo" class="mg-wiggle-cosmo mascot-svg"></div>
-        <button type="button" class="mg-steer mg-steer-l" aria-label="Left">👈</button>
-        <button type="button" class="mg-steer mg-steer-r" aria-label="Right">👉</button>
+        <button type="button" class="mg-steer mg-steer-l" aria-label="Left">${Characters.arrow('left')}</button>
+        <button type="button" class="mg-steer mg-steer-r" aria-label="Right">${Characters.arrow('right')}</button>
       </div>
     `;
     const arena = root.querySelector('#mg-arena');
@@ -1298,9 +1241,26 @@ const MiniGames = (() => {
         const cy = h * 0.72 - ((c.t - (t % 8)) * 70);
         const cx = pathX(c.t + t * 0.15, w);
         if (cy < -20 || cy > h + 20) return;
-        ctx.font = '28px serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('🪙', cx, cy);
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.fillStyle = '#ffd25a';
+        ctx.beginPath();
+        ctx.arc(0, 0, 14, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#b45309';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.fillStyle = '#fff6c8';
+        ctx.beginPath();
+        for (let s = 0; s < 5; s++) {
+          const a = -Math.PI / 2 + s * Math.PI * 2 / 5;
+          const b = a + Math.PI / 5;
+          ctx.lineTo(Math.cos(a) * 8, Math.sin(a) * 8);
+          ctx.lineTo(Math.cos(b) * 3.4, Math.sin(b) * 3.4);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
         const near = Math.hypot(px - cx, py - cy) < 48;
         if (near) {
           c.taken = true;
@@ -1344,8 +1304,8 @@ const MiniGames = (() => {
       <p class="mg-hint">Tap when the moon is in the hoop!</p>
       <div class="mg-cheer" id="mg-cheer">Boing boing!</div>
       <div class="mg-arena mg-boing" id="mg-arena">
-        <div class="mg-hoop" id="mg-hoop">⭕</div>
-        <button type="button" class="mg-moon" id="mg-moon">🌕</button>
+        <div class="mg-hoop" id="mg-hoop">${Characters.hoop()}</div>
+        <button type="button" class="mg-moon" id="mg-moon" aria-label="Moon">${Characters.moon()}</button>
       </div>
     `;
     const moon = root.querySelector('#mg-moon');
@@ -1441,7 +1401,7 @@ const MiniGames = (() => {
         const isLock = charLocked(ch);
         return `<button type="button" class="dress-char ${ch.id === activeId ? 'on' : ''} ${isLock ? 'locked' : ''}"
           data-char="${ch.id}">
-          <span class="dress-char-emoji">${isLock ? '🔒' : ch.emoji}</span>
+          <span class="dress-char-emoji">${isLock ? Characters.lock() : (ch.kind === 'cosmo' ? mascotSVG('pick-' + ch.id) : Characters.body(ch.kind, 'pick-' + ch.id))}</span>
           <span>${isLock ? ch.unlockStars + '⭐' : ch.name}</span>
         </button>`;
       }).join('');
@@ -1452,7 +1412,7 @@ const MiniGames = (() => {
           ${dressedStage('dressup', look, 'play-size', active.id)}
           <div class="dress-cols">
             ${section('Colour', COLORS.map(c => ({
-              id: c.id, emoji: '●', name: c.label, unlockStars: 0, swatch: true, hue: c.hue
+              id: c.id, emoji: '●', name: c.label, unlockStars: 0, swatch: true, hue: swatchHue(c.id, activeId)
             })), 'color')}
             ${section('Hats', wardrobeFor(HATS, activeId), 'hat')}
             ${section('Outfits', wardrobeFor(OUTFITS, activeId), 'outfit')}
@@ -1503,10 +1463,15 @@ const MiniGames = (() => {
       const cells = items.map(item => {
         const isLock = locked(item);
         const on = look[slot] === item.id;
-        const hueStyle = item.swatch ? `style="color:hsl(${(item.hue + 140) % 360} 70% 60%)"` : '';
+        let visual;
+        if (isLock) visual = Characters.lock();
+        else if (item.swatch) {
+          visual = `<span class="dress-swatch" style="background:hsl(${item.hue} 64% 54%)"></span>`;
+        } else if (item.id === 'none') visual = Characters.noneIcon();
+        else visual = Characters.dressIcon(slot === 'color' ? 'extra' : slot, item.id, 'ico' + slot + item.id);
         return `<button type="button" class="dress-item ${on ? 'on' : ''} ${isLock ? 'locked' : ''}"
           data-dress="${item.id}" data-slot="${slot}">
-          <span class="dress-emoji" ${hueStyle}>${isLock ? '🔒' : item.emoji}</span>
+          <span class="dress-emoji">${visual}</span>
           <span>${isLock ? item.unlockStars + '⭐' : item.name}</span>
         </button>`;
       }).join('');
@@ -1514,6 +1479,448 @@ const MiniGames = (() => {
     }
 
     paint();
+  }
+
+  function shuffle(list) {
+    const a = list.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const t = a[i];
+      a[i] = a[j];
+      a[j] = t;
+    }
+    return a;
+  }
+
+  function startPetPicnic(root, hud) {
+    const sess = beginSession();
+    const foods = Characters.FOODS;
+    const pets = shuffle(Characters.PET_IDS);
+    const total = 8;
+    let round = 0;
+    let fed = 0;
+    let misses = 0;
+    let craving = foods[0].id;
+
+    function paintHud() {
+      hud.innerHTML = `<span>Snack ${Math.min(round + 1, total)}/${total}</span><span>Fed ${fed}</span>`;
+    }
+
+    function paint() {
+      if (round >= total) {
+        freeze(sess);
+        finishOverlay(root, 'pet-picnic', 'Pet Picnic', `You fed ${fed} hungry pals!`, () => startPetPicnic(root, hud));
+        return;
+      }
+      const petId = pets[round % pets.length];
+      craving = foods[Math.floor(Math.random() * foods.length)].id;
+      misses = 0;
+      const buttons = shuffle(foods).map(f => `
+        <button type="button" class="picnic-food" data-food="${f.id}" aria-label="${f.name}">
+          ${Characters.food(f.id)}
+          <span>${f.name}</span>
+        </button>`).join('');
+      root.innerHTML = `
+        <p class="mg-hint">Match the snack in the dream bubble. Big pictures!</p>
+        <div class="mg-cheer" id="mg-cheer">Snack time!</div>
+        <div class="mg-arena mg-picnic" id="mg-arena">
+          <div class="picnic-pet">${Characters.pet(petId, 'pic' + round)}</div>
+          <div class="picnic-dream">${Characters.food(craving)}<span>I want this!</span></div>
+          <div class="picnic-foods">${buttons}</div>
+        </div>`;
+      root.querySelectorAll('[data-food]').forEach(btn => {
+        pointerTap(btn, () => choose(btn));
+      });
+      paintHud();
+    }
+
+    function choose(btn) {
+      if (!session) return;
+      if (btn.dataset.food === craving) {
+        fed += 1;
+        round += 1;
+        playSound('correct');
+        const msg = ['Yum!', 'Happy tummy!', 'What a good snack!'][fed % 3];
+        paint();
+        cheer(msg);
+        return;
+      }
+      misses += 1;
+      playSound('tap');
+      const right = root.querySelector(`[data-food="${craving}"]`);
+      if (right) right.classList.add('picnic-hint');
+      cheer(misses >= 2 ? 'Here it is — give them this one!' : 'Almost! Look at the dream bubble.');
+    }
+
+    paint();
+  }
+
+  function startMemoryStars(root, hud) {
+    const sess = beginSession();
+    const pool = [
+      { kind: 'pet', id: 'spark-pup' },
+      { kind: 'pet', id: 'moon-kit' },
+      { kind: 'pet', id: 'comet-fox' },
+      { kind: 'pet', id: 'aurora-drake' },
+      { kind: 'pet', id: 'lunar-unicorn' },
+      { kind: 'pet', id: 'galaxy-panda' },
+      { kind: 'dress', id: 'starlet', body: 'kid' },
+      { kind: 'dress', id: 'nibble', body: 'pet' },
+      { kind: 'dress', id: 'boop', body: 'friend' },
+      { kind: 'cosmo', id: 'cosmo' },
+    ];
+    const picks = shuffle(pool).slice(0, 6);
+    const cards = shuffle(picks.concat(picks.map(p => Object.assign({}, p)))).map((p, i) => (
+      Object.assign({ i: i, up: false, matched: false }, p)
+    ));
+    let lock = false;
+    let open = [];
+    let matches = 0;
+
+    function art(card) {
+      if (card.kind === 'pet') return Characters.pet(card.id, 'mem' + card.i);
+      if (card.kind === 'cosmo') return mascotSVG('mem' + card.i);
+      return Characters.body(card.body, 'mem' + card.i);
+    }
+
+    function paintHud() {
+      hud.innerHTML = `<span>Pairs ${matches}/6</span>`;
+    }
+
+    root.innerHTML = `
+      <p class="mg-hint">Flip two cards. Find the matching pals!</p>
+      <div class="mg-cheer" id="mg-cheer">Memory stars!</div>
+      <div class="mg-arena mg-memory" id="mg-arena">
+        <div class="mg-memory-grid">
+          ${cards.map(c => `<button type="button" class="mg-mem-card" data-i="${c.i}" aria-label="Star card">
+            <span class="back">${Characters.cardBack('memback' + c.i)}</span>
+            <span class="front">${art(c)}</span>
+          </button>`).join('')}
+        </div>
+      </div>`;
+    const arena = root.querySelector('#mg-arena');
+
+    function paintCards() {
+      cards.forEach(c => {
+        const el = arena.querySelector(`[data-i="${c.i}"]`);
+        if (!el) return;
+        el.classList.toggle('flipped', c.up || c.matched);
+        el.classList.toggle('matched', c.matched);
+      });
+      paintHud();
+    }
+
+    arena.querySelectorAll('.mg-mem-card').forEach(btn => {
+      pointerTap(btn, () => {
+        if (!session || lock) return;
+        const card = cards[Number(btn.dataset.i)];
+        if (!card || card.matched || card.up) return;
+        card.up = true;
+        playSound('tap');
+        open.push(card);
+        paintCards();
+        if (open.length < 2) return;
+        const a = open[0];
+        const b = open[1];
+        if (a.id === b.id && a.kind === b.kind) {
+          a.matched = true;
+          b.matched = true;
+          matches += 1;
+          open = [];
+          playSound('correct');
+          cheer(matches === 6 ? 'All pairs found!' : 'Match!');
+          paintCards();
+          if (matches === 6) {
+            freeze(sess);
+            sess.timers.push(setTimeout(() => {
+              finishOverlay(root, 'memory-stars', 'Memory Stars', 'You found all 6 pairs!', () => startMemoryStars(root, hud));
+            }, 450));
+          }
+          return;
+        }
+        lock = true;
+        cheer('Not this time — try another pair!');
+        sess.timers.push(setTimeout(() => {
+          a.up = false;
+          b.up = false;
+          open = [];
+          lock = false;
+          if (session) paintCards();
+        }, 800));
+      });
+    });
+    paintHud();
+  }
+
+  function startCometCatch(root, hud) {
+    const sess = beginSession();
+    const duration = 40000;
+    const t0 = performance.now();
+    let score = 0;
+    let x = 50;
+    let target = 50;
+    let uid = 1;
+    const items = [];
+    root.innerHTML = `
+      <p class="mg-hint">Tap a treat, or tap where Cosmo should stand. Goo is just silly!</p>
+      <div class="mg-cheer" id="mg-cheer">Catch the comets!</div>
+      <div class="mg-arena mg-catch" id="mg-arena">
+        <div class="mg-catch-player" id="mg-catch-player">${dressedStage('catch', loadDress(), 'tiny-size')}</div>
+        <div class="mg-catch-controls">
+          <button type="button" class="mg-steer" id="mg-catch-l" aria-label="Left">${Characters.arrow('left')}</button>
+          <button type="button" class="mg-steer" id="mg-catch-r" aria-label="Right">${Characters.arrow('right')}</button>
+        </div>
+      </div>`;
+    const arena = root.querySelector('#mg-arena');
+    const playerEl = root.querySelector('#mg-catch-player');
+    playerEl.style.left = '50%';
+
+    function paintHud() {
+      const left = Math.max(0, Math.ceil((duration - (performance.now() - t0)) / 1000));
+      hud.innerHTML = `<span>Caught ${score}</span><span>⏱️ ${left}</span>`;
+    }
+
+    function spawn() {
+      if (!session || items.length >= 4) return;
+      const roll = Math.random();
+      const kind = roll < 0.18 ? 'goo' : roll < 0.55 ? 'star' : 'pet';
+      const id = uid++;
+      const petId = Characters.PET_IDS[Math.floor(Math.random() * Characters.PET_IDS.length)];
+      const el = document.createElement('button');
+      el.type = 'button';
+      el.className = 'mg-fall-item';
+      if (kind === 'goo') el.innerHTML = Characters.goo('fall' + id);
+      else if (kind === 'star') el.innerHTML = Characters.planet(id % 6, 'fall' + id);
+      else el.innerHTML = Characters.pet(petId, 'fall' + id);
+      const item = { id, kind, x: 12 + Math.random() * 76, y: -10, vy: 16 + Math.random() * 8, el };
+      el.style.left = item.x + '%';
+      el.style.top = item.y + '%';
+      pointerTap(el, () => grab(item, true));
+      arena.appendChild(el);
+      items.push(item);
+    }
+
+    function grab(item, direct) {
+      if (!item.el || !item.el.parentNode) return;
+      if (!direct && Math.abs(item.x - x) > 14) return;
+      if (direct) target = item.x;
+      item.el.remove();
+      item.el = null;
+      if (item.kind === 'goo') {
+        playSound('tap');
+        cheer('Slippery goo! Cosmo giggles and keeps going!');
+      } else {
+        score += item.kind === 'pet' ? 2 : 1;
+        playSound('correct');
+        cheer(item.kind === 'pet' ? 'Pet hug!' : 'Star catch!');
+      }
+      paintHud();
+    }
+
+    const down = { l: false, r: false };
+    function bindHold(btn, side) {
+      const on = e => { e.preventDefault(); down[side] = true; };
+      const off = e => { e.preventDefault(); down[side] = false; };
+      btn.addEventListener('pointerdown', on);
+      btn.addEventListener('pointerup', off);
+      btn.addEventListener('pointerleave', off);
+      btn.addEventListener('pointercancel', off);
+    }
+    bindHold(root.querySelector('#mg-catch-l'), 'l');
+    bindHold(root.querySelector('#mg-catch-r'), 'r');
+    arena.addEventListener('pointerdown', e => {
+      if (e.target.closest('.mg-fall-item') || e.target.closest('.mg-catch-controls')) return;
+      const box = arena.getBoundingClientRect();
+      target = ((e.clientX - box.left) / box.width) * 100;
+    });
+
+    sess.intervals.push(setInterval(spawn, 900));
+    spawn();
+
+    function tick(now) {
+      if (!session) return;
+      if (down.l) target -= 1.3;
+      if (down.r) target += 1.3;
+      target = Math.max(8, Math.min(92, target));
+      x += (target - x) * 0.2;
+      playerEl.style.left = x + '%';
+      items.forEach(item => {
+        if (!item.el) return;
+        item.y += item.vy * 0.016;
+        item.el.style.top = item.y + '%';
+        if (item.y > 76 && item.y < 98 && Math.abs(item.x - x) < 14) grab(item, false);
+        else if (item.y > 110) {
+          item.el.remove();
+          item.el = null;
+        }
+      });
+      for (let i = items.length - 1; i >= 0; i--) if (!items[i].el) items.splice(i, 1);
+      paintHud();
+      if (now - t0 >= duration) {
+        freeze(sess);
+        const line = score ? `You caught ${score} treats!` : 'Cosmo loved zooming with you!';
+        finishOverlay(root, 'comet-catch', 'Comet Catch', line, () => startCometCatch(root, hud));
+        return;
+      }
+      session.raf = requestAnimationFrame(tick);
+    }
+    sess.raf = requestAnimationFrame(tick);
+  }
+
+  function startCozyBase(root, hud) {
+    beginSession();
+    const placed = [];
+    let selected = Characters.DECOR[0].id;
+    hud.innerHTML = '<span>Tap a sticker, then tap the room</span>';
+
+    function paint() {
+      root.innerHTML = `
+        <p class="mg-hint">Decorate the base. Every spot is a good spot!</p>
+        <div class="mg-cheer" id="mg-cheer">${placed.length ? placed.length + ' cozy things!' : 'Make it cozy!'}</div>
+        <div class="mg-arena mg-cozy" id="mg-arena">
+          <div class="mg-room" id="mg-room">
+            ${Characters.roomShell('cozy')}
+            <div class="mg-placed">${placed.map(p => `<div class="mg-room-item" style="left:${p.x}%;top:${p.y}%">${Characters.decor(p.id)}</div>`).join('')}</div>
+          </div>
+          <div class="mg-tray">
+            ${Characters.DECOR.map(d => `<button type="button" class="mg-tray-btn ${d.id === selected ? 'on' : ''}" data-decor="${d.id}">
+              ${Characters.decor(d.id)}<span>${d.name}</span>
+            </button>`).join('')}
+          </div>
+          <div class="mg-cozy-actions">
+            <button type="button" class="btn btn-secondary" id="mg-undo">Undo</button>
+            <button type="button" class="btn btn-primary" id="mg-done">All done!</button>
+          </div>
+        </div>`;
+      const room = root.querySelector('#mg-room');
+      root.querySelectorAll('[data-decor]').forEach(btn => {
+        pointerTap(btn, () => {
+          selected = btn.dataset.decor;
+          playSound('tap');
+          paint();
+        });
+      });
+      room.addEventListener('pointerdown', e => {
+        if (placed.length >= 14) {
+          cheer('The base is wonderfully full!');
+          return;
+        }
+        const box = room.getBoundingClientRect();
+        const px = ((e.clientX - box.left) / box.width) * 100;
+        const py = ((e.clientY - box.top) / box.height) * 100;
+        placed.push({
+          id: selected,
+          x: Math.max(10, Math.min(90, px)),
+          y: Math.max(16, Math.min(86, py)),
+        });
+        playSound('tap');
+        paint();
+        cheer('Looks cozy!');
+      });
+      root.querySelector('#mg-undo').addEventListener('click', () => {
+        playSound('tap');
+        if (!placed.length) {
+          cheer('Nothing to undo — the room is a fresh start!');
+          return;
+        }
+        placed.pop();
+        paint();
+      });
+      root.querySelector('#mg-done').addEventListener('click', () => {
+        const line = placed.length
+          ? `You placed ${placed.length} cozy decorations!`
+          : 'A quiet base is cozy too!';
+        finishOverlay(root, 'cozy-base', 'Cozy Base', line, () => startCozyBase(root, hud));
+      });
+    }
+    paint();
+  }
+
+  function startStarParade(root, hud) {
+    const sess = beginSession();
+    const duration = 36000;
+    const t0 = performance.now();
+    let score = 0;
+    let uid = 1;
+    const pals = [];
+    const cast = [
+      { kind: 'pet', id: 'spark-pup' },
+      { kind: 'pet', id: 'moon-kit' },
+      { kind: 'pet', id: 'dust-hopper' },
+      { kind: 'pet', id: 'comet-fox' },
+      { kind: 'pet', id: 'aurora-drake' },
+      { kind: 'pet', id: 'nova-whale' },
+      { kind: 'pet', id: 'prism-phoenix' },
+      { kind: 'pet', id: 'eclipse-lynx' },
+      { kind: 'dress', body: 'kid' },
+      { kind: 'dress', body: 'pet' },
+      { kind: 'dress', body: 'friend' },
+      { kind: 'cosmo' },
+    ];
+    root.innerHTML = `
+      <p class="mg-hint">Tap each pal as they parade by. A wave is plenty!</p>
+      <div class="mg-cheer" id="mg-cheer">Parade time!</div>
+      <div class="mg-arena mg-parade" id="mg-arena"></div>`;
+    const arena = root.querySelector('#mg-arena');
+
+    function paintHud() {
+      const left = Math.max(0, Math.ceil((duration - (performance.now() - t0)) / 1000));
+      hud.innerHTML = `<span>Cheers ${score}</span><span>⏱️ ${left}</span>`;
+    }
+
+    function artFor(c, id) {
+      if (c.kind === 'pet') return Characters.pet(c.id, 'par' + id);
+      if (c.kind === 'cosmo') return mascotSVG('par' + id);
+      return Characters.body(c.body, 'par' + id);
+    }
+
+    function spawn() {
+      if (!session) return;
+      const c = cast[Math.floor(Math.random() * cast.length)];
+      const id = uid++;
+      const el = document.createElement('button');
+      el.type = 'button';
+      el.className = 'parade-pal';
+      el.innerHTML = artFor(c, id);
+      const pal = { x: -14, y: 22 + Math.random() * 52, vx: 14 + Math.random() * 8, cheered: false, el };
+      el.style.top = pal.y + '%';
+      el.style.left = pal.x + '%';
+      pointerTap(el, () => {
+        if (pal.cheered) return;
+        pal.cheered = true;
+        score += 1;
+        el.classList.add('cheered');
+        playSound('correct');
+        cheer(['Yay!', 'Hello, pal!', 'Nice wave!'][score % 3]);
+        paintHud();
+      });
+      arena.appendChild(el);
+      pals.push(pal);
+    }
+
+    sess.intervals.push(setInterval(spawn, 1000));
+    spawn();
+
+    function tick(now) {
+      if (!session) return;
+      pals.forEach(p => {
+        if (!p.el) return;
+        p.x += p.vx * 0.016;
+        p.el.style.left = p.x + '%';
+        if (p.x > 118) {
+          p.el.remove();
+          p.el = null;
+        }
+      });
+      paintHud();
+      if (now - t0 >= duration) {
+        freeze(sess);
+        finishOverlay(root, 'star-parade', 'Star Parade', `You cheered ${score} pals!`, () => startStarParade(root, hud));
+        return;
+      }
+      session.raf = requestAnimationFrame(tick);
+    }
+    sess.raf = requestAnimationFrame(tick);
   }
 
   // Registry — add games here. Hub renders this list.
@@ -1551,6 +1958,14 @@ const MiniGames = (() => {
       start: startDressUp,
     },
     {
+      id: 'pet-picnic',
+      title: 'Pet Picnic',
+      emoji: '🍓',
+      blurb: 'Feed hungry space pals the snack they dreamed about.',
+      unlockStars: 36,
+      start: startPetPicnic,
+    },
+    {
       id: 'wiggle-walk',
       title: 'Wiggle Walk',
       emoji: '〰️',
@@ -1559,12 +1974,44 @@ const MiniGames = (() => {
       start: startWiggleWalk,
     },
     {
+      id: 'memory-stars',
+      title: 'Memory Stars',
+      emoji: '🃏',
+      blurb: 'Flip cards and match Cosmo’s pals.',
+      unlockStars: 78,
+      start: startMemoryStars,
+    },
+    {
       id: 'moon-boing',
       title: 'Moon Boing',
       emoji: '🌕',
       blurb: 'Tap when the moon boings through the hoop.',
       unlockStars: 90,
       start: startMoonBoing,
+    },
+    {
+      id: 'comet-catch',
+      title: 'Comet Catch',
+      emoji: '☄️',
+      blurb: 'Help Cosmo catch falling stars and pets.',
+      unlockStars: 145,
+      start: startCometCatch,
+    },
+    {
+      id: 'cozy-base',
+      title: 'Cozy Base',
+      emoji: '🏠',
+      blurb: 'Decorate a starry base with stickers.',
+      unlockStars: 200,
+      start: startCozyBase,
+    },
+    {
+      id: 'star-parade',
+      title: 'Star Parade',
+      emoji: '🎉',
+      blurb: 'Wave at pals as they parade across the sky.',
+      unlockStars: 270,
+      start: startStarParade,
     },
   ];
 
@@ -1581,7 +2028,7 @@ const MiniGames = (() => {
       btn.type = 'button';
       btn.className = 'minigame-card glass-panel' + (open ? '' : ' locked');
       btn.innerHTML = `
-        <span class="minigame-emoji">${open ? game.emoji : '🔒'}</span>
+        <span class="minigame-emoji">${open ? Characters.gameBadge(game.id) : Characters.lock()}</span>
         <span class="minigame-title">${game.title}</span>
         <span class="minigame-blurb">${open ? game.blurb : 'Earn ' + game.unlockStars + ' stars to unlock'}</span>
         <span class="minigame-req">${open ? 'Play!' : game.unlockStars + ' ⭐'}</span>
@@ -1607,7 +2054,7 @@ const MiniGames = (() => {
   function launch(game) {
     stop();
     const title = document.getElementById('mg-play-title');
-    if (title) title.textContent = `${game.emoji} ${game.title}`;
+    if (title) title.innerHTML = `<span class="mg-title-art">${Characters.gameBadge(game.id)}</span> ${game.title}`;
     const hud = document.getElementById('mg-play-hud');
     const root = document.getElementById('mg-play-root');
     if (hud) hud.innerHTML = '';
